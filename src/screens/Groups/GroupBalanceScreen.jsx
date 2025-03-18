@@ -1,0 +1,105 @@
+import { FlatList, StyleSheet, View } from 'react-native'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux';
+import LoadingScreen from '../LoadingScreen';
+import { useTheme, Text, Icon, Divider } from 'react-native-paper';
+import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
+import BalanceComponent from '../../components/BalanceComponent';
+import { listenToBalances } from '../../redux/listeners/balanceListener';
+import { clearBalances } from '../../redux/slices/balancesSlice';
+
+const GroupBalanceScreen = () => {
+    const theme = useTheme();
+    const dispatch = useDispatch();
+    const { balances, loading, error } = useSelector((state) => state.balance);
+    const { user } = useSelector(state => state.userAuth);
+    const { groupDetails } = useSelector(state => state.group)
+    const uid = user?.uid;
+    const groupId = groupDetails?.groupId;
+
+    if (!user) {
+        return null;
+    }
+
+    useEffect(() => {
+        dispatch(listenToBalances({ uid, groupId }));
+
+        return () => {
+            dispatch(clearBalances()); // 🔹 Cleanup listener when unmounting
+        };
+    }, [dispatch, uid, groupId]);
+
+    if (loading) {
+        return <LoadingScreen />
+    }
+
+    const renderEmptyComponent = () => (
+        <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
+            <View style={styles.emptyContent}>
+                <Icon source="cash" size={rfs(8)} color={theme.colors.primary} />
+                <Text style={styles.emptyText}>No expenses yet</Text>
+                <Text style={styles.emptySubtext}>
+                    No Balances Remaining.
+                </Text>
+            </View>
+        </View>
+    );
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.title, { backgroundColor: theme.colors.secondaryContainer }]}>
+                <Text style={[styles.sectionTitle, { color: theme.colors.primary }, { padding: rh(1) }]}>My Balances</Text>
+            </View>
+            <FlatList
+                data={balances}
+                keyExtractor={(item) => item.balanceId}
+                renderItem={({ item }) => (
+                    <BalanceComponent balance={item} />
+                )}
+                ListEmptyComponent={renderEmptyComponent}
+                contentContainerStyle={balances.length === 0 ? { flex: 1 } : null}
+                ItemSeparatorComponent={() => <Divider bold style={styles.divider} />}
+            />
+        </View>
+    )
+}
+
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        paddingVertical: rh(1)
+    },
+    title: {
+        marginHorizontal: rw(2),
+        marginBottom: rh(1)
+    },
+    sectionTitle: {
+        fontWeight: 'bold'
+    },
+    emptyContainer: {
+        margin: rh(2),
+        flex: 1,
+        justifyContent: 'center',
+    },
+    emptyContent: {
+        alignItems: 'center',
+        padding: rh(3),
+    },
+    emptyText: {
+        fontSize: rfs(3),
+        fontWeight: 'bold',
+        marginBottom: rh(1),
+    },
+    emptySubtext: {
+        fontSize: rfs(2),
+        textAlign: 'center',
+        opacity: 0.7,
+        marginBottom: rh(3),
+    },
+    divider: {
+        marginVertical: rh(0.5),
+    },
+})
+
+export default GroupBalanceScreen

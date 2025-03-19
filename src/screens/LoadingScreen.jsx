@@ -5,11 +5,11 @@ import { responsiveFontSize as rfs, responsiveHeight as rh } from 'react-native-
 
 const LoadingScreen = ({ message = "Loading..." }) => {
     const theme = useTheme();
-    
+
     return (
         <View style={styles.container}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={[styles.text, { color: theme.colors.onSurface }]}>{message}</Text>
+            <Text style={[styles.text, { color: theme.colors.secondary }]}>{message}</Text>
         </View>
     );
 };

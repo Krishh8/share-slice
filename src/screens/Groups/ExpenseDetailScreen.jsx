@@ -72,7 +72,7 @@ const ExpenseDetailScreen = () => {
         <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <Animated.View style={{ opacity: fadeAnim }}>
                 <HeaderComponent title="Expense" />
-                <Surface style={[styles.headerCard, { backgroundColor: theme.colors.surface }]}>
+                <Surface style={[styles.headerCard,]}>
                     <View style={[styles.headerContent,]}>
                         <View style={[styles.expenseHeader]}>
                             <Avatar.Icon
@@ -122,7 +122,7 @@ const ExpenseDetailScreen = () => {
                     </View>
                 </Surface>
 
-                <Card style={[styles.detailCard, { backgroundColor: theme.colors.surface }]}>
+                <Card style={[styles.detailCard,]}>
                     <Card.Content>
                         <View style={styles.sectionHeader}>
                             <Avatar.Icon
@@ -147,7 +147,7 @@ const ExpenseDetailScreen = () => {
                     </Card.Content>
                 </Card>
 
-                <Card style={[styles.detailCard, { backgroundColor: theme.colors.surface }]}>
+                <Card style={[styles.detailCard]}>
                     <Card.Content>
                         <View style={styles.sectionHeader}>
                             <Avatar.Icon
@@ -177,7 +177,7 @@ const ExpenseDetailScreen = () => {
                     </Card.Content>
                 </Card>
 
-                <Card style={[styles.detailCard, { backgroundColor: theme.colors.surface }]}>
+                <Card style={[styles.detailCard,]}>
                     <Card.Content>
                         <View style={styles.sectionHeader}>
                             <Avatar.Icon
@@ -314,8 +314,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         paddingVertical: rh(1.5),
-        borderBottomWidth: 1,
-        borderBottomColor: "#f0f0f0",
     },
     payerInfo: {
         flexDirection: "row",
@@ -334,8 +332,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         paddingVertical: rh(1.5),
-        borderBottomWidth: 1,
-        borderBottomColor: "#f0f0f0",
     },
     participantInfo: {
         flexDirection: "row",

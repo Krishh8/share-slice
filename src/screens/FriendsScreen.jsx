@@ -35,7 +35,7 @@ const FriendsScreen = () => {
 
         if (!acc[otherUserId]) {
             acc[otherUserId] = {
-                user: otherUser,
+                otherUser: otherUser,
                 totalAmount: 0,
             };
         }
@@ -105,8 +105,8 @@ const styles = StyleSheet.create({
     surface: {
         flex: 1,
         paddingVertical: rh(2),
+        marginTop: rh(2),
         paddingHorizontal: rw(1),
-
     },
     searchbar: {
         marginHorizontal: rw(2),

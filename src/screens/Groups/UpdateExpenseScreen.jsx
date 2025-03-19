@@ -185,7 +185,7 @@ const UpdateExpenseScreen = () => {
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView
-                    contentContainerStyle={[styles.expenseContainer,]}
+                    contentContainerStyle={[styles.expenseContainer, { backgroundColor: theme.colors.background }]}
                 >
                     <HeaderComponent title="Update Expense" />
                     <View style={[styles.expenseCard, {
@@ -396,12 +396,6 @@ const UpdateExpenseScreen = () => {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    divider: {
-        marginVertical: rh(2),
-    },
     expenseContainer: {
         flexGrow: 1,
         // padding: rw(4),

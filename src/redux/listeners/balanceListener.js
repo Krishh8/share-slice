@@ -1,15 +1,16 @@
-import firestore from "@react-native-firebase/firestore";
-import { setBalances, setError, setLoading, setUnsubscribe } from "../slices/balancesSlice";
+// import firestore from "@react-native-firebase/firestore";
+// import { setBalances, setError, setLoading, setUnsubscribe } from "../slices/balancesSlice";
 
 
-// export const listenToBalances = ({ uid, groupId }) => async (dispatch, getState) => {
+// export const listenToBalances = ({ uid, groupId = null }) => async (dispatch) => {
 //     dispatch(setLoading(true));
 
 //     try {
-//         const balancesRef = firestore()
-//             .collection("balances")
-//             .where("groupId", "==", groupId)
-//             .where("amountOwed", ">", 0);
+//         let balancesRef = firestore().collection("balances").where("amountOwed", ">", 0);
+
+//         if (groupId) {
+//             balancesRef = balancesRef.where("groupId", "==", groupId); // ✅ Filter by group
+//         }
 
 //         const unsubscribe = balancesRef.onSnapshot(async (snapshot) => {
 //             let userBalances = [];
@@ -41,9 +42,9 @@ import { setBalances, setError, setLoading, setUnsubscribe } from "../slices/bal
 //                 userMap[doc.id] = doc.data();
 //             });
 
-//             // 🔹 Map user details to balances
 //             const balancesWithUserDetails = userBalances.map((balance) => ({
 //                 ...balance,
+//                 updatedAt: balance.updatedAt.toDate().toISOString(),
 //                 creditor: {
 //                     uid: userMap[balance.creditorId]?.uid || "",
 //                     fullName: userMap[balance.creditorId]?.fullName || "Unknown",
@@ -64,6 +65,7 @@ import { setBalances, setError, setLoading, setUnsubscribe } from "../slices/bal
 
 //             console.log("Updated Balances:", balancesWithUserDetails);
 //             dispatch(setBalances(balancesWithUserDetails));
+
 //         });
 
 //         dispatch(setUnsubscribe(unsubscribe)); // 🔹 Store unsubscribe function
@@ -71,6 +73,12 @@ import { setBalances, setError, setLoading, setUnsubscribe } from "../slices/bal
 //         dispatch(setError(error.message));
 //     }
 // };
+
+import firestore from "@react-native-firebase/firestore";
+import { setBalances, setError, setLoading } from "../slices/balancesSlice";
+
+
+let balanceUnsubscribe = null; // 🔹 Store listener outside Redux
 
 export const listenToBalances = ({ uid, groupId = null }) => async (dispatch) => {
     dispatch(setLoading(true));
@@ -82,7 +90,11 @@ export const listenToBalances = ({ uid, groupId = null }) => async (dispatch) =>
             balancesRef = balancesRef.where("groupId", "==", groupId); // ✅ Filter by group
         }
 
-        const unsubscribe = balancesRef.onSnapshot(async (snapshot) => {
+        if (balanceUnsubscribe) {
+            balanceUnsubscribe(); // 🛑 Unsubscribe from previous listener before setting a new one
+        }
+
+        balanceUnsubscribe = balancesRef.onSnapshot(async (snapshot) => {
             let userBalances = [];
             let userIds = new Set();
 
@@ -101,19 +113,19 @@ export const listenToBalances = ({ uid, groupId = null }) => async (dispatch) =>
             }
 
             // 🔹 Fetch user details for involved users
-            const usersRef = firestore()
+            const usersSnapshot = await firestore()
                 .collection("users")
-                .where(firestore.FieldPath.documentId(), "in", Array.from(userIds));
+                .where(firestore.FieldPath.documentId(), "in", Array.from(userIds))
+                .get();
 
-            const usersSnapshot = await usersRef.get();
             let userMap = {};
-
             usersSnapshot.forEach((doc) => {
                 userMap[doc.id] = doc.data();
             });
 
             const balancesWithUserDetails = userBalances.map((balance) => ({
                 ...balance,
+                updatedAt: balance.updatedAt.toDate().toISOString(),
                 creditor: {
                     uid: userMap[balance.creditorId]?.uid || "",
                     fullName: userMap[balance.creditorId]?.fullName || "Unknown",
@@ -134,11 +146,17 @@ export const listenToBalances = ({ uid, groupId = null }) => async (dispatch) =>
 
             console.log("Updated Balances:", balancesWithUserDetails);
             dispatch(setBalances(balancesWithUserDetails));
-
         });
 
-        dispatch(setUnsubscribe(unsubscribe)); // 🔹 Store unsubscribe function
     } catch (error) {
         dispatch(setError(error.message));
+    }
+};
+
+// ✅ Cleanup function to stop listening
+export const stopListeningToBalances = () => {
+    if (balanceUnsubscribe) {
+        balanceUnsubscribe();
+        balanceUnsubscribe = null;
     }
 };

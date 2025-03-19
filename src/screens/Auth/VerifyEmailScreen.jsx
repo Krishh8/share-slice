@@ -1,106 +1,3 @@
-// import { useState, useEffect } from "react";
-// import { View, StyleSheet, Alert } from "react-native";
-// import { Button, Text, ActivityIndicator } from "react-native-paper";
-// import { useNavigation } from "@react-navigation/native";
-// import auth from '@react-native-firebase/auth';
-// import { useDispatch, useSelector } from 'react-redux';
-// import { checkEmailVerification, checkSession, resendVerificationEmail } from "../../redux/slices/userAuthSlice";
-
-// const VerifyEmailScreen = () => {
-//     const [disabled, setDisabled] = useState(false);
-//     const navigation = useNavigation();
-//     const dispatch = useDispatch();
-//     const { isEmailVerified, loading } = useSelector(state => state.userAuth)
-
-
-//     useEffect(() => {
-//         if (isEmailVerified) {
-//             navigation.replace('MainStack', { screen: 'TabNavigator' });
-//         }
-//         else {
-//             console.log('not verified')
-//         }
-//     }, [isEmailVerified, navigation]);
-
-//     const handleResendEmail = async () => {
-//         try {
-//             await dispatch(resendVerificationEmail()).unwrap();
-//             Alert.alert("Verification Email Sent", "Please check your email again.");
-//         } catch (error) {
-//             Alert.alert("Error", error);
-//         }
-//     };
-
-//     const handleCheckEmailVerification = async () => {
-//         try {
-//             console.log("Calling checkEmailVerification...");
-//             const result = await dispatch(checkEmailVerification()).unwrap();
-//             console.log("Dispatch result:", result);
-//         } catch (error) {
-//             console.error(error);
-//             Alert.alert("Error", error.message);
-//         }
-//     };
-
-//     return (
-//         <View style={styles.container}>
-//             <Text style={styles.title}>Verify Your Email</Text>
-//             <Text style={styles.message}>
-//                 We've sent a verification email to {auth().currentUser?.email}. Please verify your email before continuing.
-//             </Text>
-//             <View style={styles.buttonContainer}>
-//                 <Button
-//                     mode="contained"
-//                     onPress={handleResendEmail}
-//                     disabled={disabled || loading}
-//                     style={styles.button}
-//                 >
-//                     {loading ? 'Sending...' : 'Resend Verification Email'}
-//                 </Button>
-//                 <Button
-//                     mode="outlined"
-//                     onPress={handleCheckEmailVerification}
-//                     disabled={loading}
-//                     style={styles.button}
-//                 >
-//                     {loading ? 'Checking...' : 'Check Verification Status'}
-//                 </Button>
-//             </View>
-//             {loading && <ActivityIndicator style={styles.loader} />}
-//         </View>
-//     );
-// };
-
-// export default VerifyEmailScreen;
-
-// const styles = StyleSheet.create({
-//     container: {
-//         flex: 1,
-//         justifyContent: "center",
-//         alignItems: "center",
-//         padding: 20,
-//     },
-//     title: {
-//         fontSize: 24,
-//         fontWeight: "bold",
-//         marginBottom: 20,
-//     },
-//     message: {
-//         textAlign: "center",
-//         marginBottom: 20,
-//     },
-//     buttonContainer: {
-//         width: "100%",
-//     },
-//     button: {
-//         marginVertical: 10,
-//     },
-//     loader: {
-//         marginTop: 20,
-//     },
-// });
-
-
 import { useState, useEffect } from "react";
 import { View, StyleSheet, Alert } from "react-native";
 import { Button, Text, ActivityIndicator, Card, Surface, useTheme, Icon } from "react-native-paper";
@@ -120,7 +17,7 @@ const VerifyEmailScreen = () => {
     if (!user) {
         return null; // Don't render anything if user is null
     }
-    const { isEmailVerified } = user    
+    const { isEmailVerified } = user
 
     useEffect(() => {
         if (isEmailVerified) {

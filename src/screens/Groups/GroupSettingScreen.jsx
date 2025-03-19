@@ -188,7 +188,8 @@ const GroupSettingScreen = () => {
                     <ScrollView style={styles.membersList} contentContainerStyle={{ paddingBottom: rh(10) }}>
                         {members?.map((member) => {
                             const isOwner = member.uid === groupDetails?.createdBy;
-                            const isAdmin = groupDetails?.admins?.includes(member.uid);
+                            // const isAdmin = groupDetails?.admins?.includes(member.uid);
+                            const isMemberAdmin = groupDetails?.admins?.includes(member.uid);
 
                             return (
                                 <View key={member.uid} style={[styles.memberItem, { borderBottomColor: theme.colors.primary }]}>
@@ -212,7 +213,7 @@ const GroupSettingScreen = () => {
                                         >
                                             Owner
                                         </Chip>
-                                    ) : isAdmin ? (
+                                    ) : isMemberAdmin ? (
                                         <Chip
                                             mode="outlined"
                                             textStyle={{ fontSize: rfs(1.5) }}
@@ -227,7 +228,18 @@ const GroupSettingScreen = () => {
                                     {!isOwner &&
                                         <View style={styles.actions}>
                                             {/* Remove Member (except the Owner) */}
-                                            {!isOwner && (
+                                            {/* {(isAdmin || member.uid === user?.uid) &&
+
+                                                <Tooltip title="Remove Member">
+                                                    <IconButton
+                                                        icon="account-remove"
+                                                        iconColor={theme.colors.primary}
+                                                        onPress={() => dispatch(removeMember({ groupId, userId: member.uid }))}
+                                                    />
+                                                </Tooltip>
+                                            } */}
+
+                                            {isAdmin && (
                                                 <Tooltip title="Remove Member">
                                                     <IconButton
                                                         icon="account-remove"
@@ -237,8 +249,20 @@ const GroupSettingScreen = () => {
                                                 </Tooltip>
                                             )}
 
-                                            {/* Make Admin (Only if not an admin) */}
-                                            {!isAdmin && (
+                                            {/* Only Admin or Owner can Make Others Admin */}
+                                            {/* {isAdmin || isOwner ? (
+                                                !isAdmin && (
+                                                    <Tooltip title="Make Admin">
+                                                        <IconButton
+                                                            icon="shield-account"
+                                                            iconColor={theme.colors.primary}
+                                                            onPress={() => dispatch(makeAdmin({ groupId, userId: member.uid }))}
+                                                        />
+                                                    </Tooltip>
+                                                )
+                                            ) : null} */}
+
+                                            {isAdmin && !isMemberAdmin && (
                                                 <Tooltip title="Make Admin">
                                                     <IconButton
                                                         icon="shield-account"
@@ -248,8 +272,18 @@ const GroupSettingScreen = () => {
                                                 </Tooltip>
                                             )}
 
-                                            {/* Remove Admin (Only if they are an admin but NOT the owner) */}
-                                            {isAdmin && !isOwner && (
+                                            {/* Only Admin can Remove Other Admins (Except Owner) */}
+                                            {/* {isAdmin && !isOwner && (
+                                                <Tooltip title="Remove Admin">
+                                                    <IconButton
+                                                        icon="shield-off"
+                                                        iconColor={theme.colors.primary}
+                                                        onPress={() => dispatch(removeAdmin({ groupId, userId: member.uid }))}
+                                                    />
+                                                </Tooltip>
+                                            )} */}
+
+                                            {isAdmin && isMemberAdmin && !isOwner && (
                                                 <Tooltip title="Remove Admin">
                                                     <IconButton
                                                         icon="shield-off"

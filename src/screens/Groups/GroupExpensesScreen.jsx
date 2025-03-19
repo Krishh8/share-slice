@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import BillComponent from '../../components/BillComponent';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import LoadingScreen from '../LoadingScreen';
-import { Surface, useTheme, Button, Card, Divider, Icon, IconButton } from 'react-native-paper';
+import { Surface, useTheme, Button, Card, Divider, Icon, IconButton, Avatar } from 'react-native-paper';
 
 const GroupExpensesScreen = () => {
     const [state, setState] = useState({ open: false });
@@ -97,7 +97,7 @@ const GroupExpensesScreen = () => {
                 renderSectionHeader={({ section: { title, data } }) => (
                     <View style={[{ backgroundColor: theme.colors.secondaryContainer }, styles.sectionHeader]}>
                         <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>{title}</Text>
-                        <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>{data.length}</Text>
+                        <Avatar.Text style={{ fontWeight: 'bold' }} size={rfs(2.5)} label={data.length} />
                     </View>
                 )}
 
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: rh(1),
+        borderRadius: rh(1)
     },
     sectionTitle: {
         fontWeight: 'bold'

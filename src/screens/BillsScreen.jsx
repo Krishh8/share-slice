@@ -17,6 +17,7 @@ import {
     Searchbar,
     IconButton,
     Divider,
+    Avatar,
 } from 'react-native-paper';
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -131,7 +132,7 @@ const BillsScreen = () => {
                     renderSectionHeader={({ section: { title, data } }) => (
                         <View style={[{ backgroundColor: theme.colors.secondaryContainer }, styles.sectionHeader]}>
                             <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>{title}</Text>
-                            {/* <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>{data.length}</Text> */}
+                            <Avatar.Text style={{ fontWeight: 'bold' }} size={rfs(2.5)} label={data.length} />
                         </View>
                     )}
                     ListEmptyComponent={

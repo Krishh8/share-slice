@@ -37,8 +37,8 @@ const GroupBalanceScreen = () => {
         <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
             <View style={styles.emptyContent}>
                 <Icon source="cash" size={rfs(8)} color={theme.colors.primary} />
-                <Text style={styles.emptyText}>No expenses yet</Text>
-                <Text style={styles.emptySubtext}>
+                <Text style={[styles.emptyText, { color: theme.colors.secondary }]}>No expenses yet</Text>
+                <Text style={[styles.emptySubtext, { color: theme.colors.secondary }]}>
                     No Balances Remaining.
                 </Text>
             </View>
@@ -72,7 +72,8 @@ const styles = StyleSheet.create({
     },
     title: {
         marginHorizontal: rw(2),
-        marginBottom: rh(1)
+        marginVertical: rh(1),
+        borderRadius: rh(1)
     },
     sectionTitle: {
         fontWeight: 'bold'

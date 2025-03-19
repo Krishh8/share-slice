@@ -10,13 +10,17 @@ import AddFriendsScreen from '../screens/Groups/AddFriendsScreen';
 import { createStackNavigator } from '@react-navigation/stack';
 import ExpenseDetailScreen from '../screens/Groups/ExpenseDetailScreen';
 import UpdateExpenseScreen from '../screens/Groups/UpdateExpenseScreen';
+import { customScreenInterpolator } from '../animation/customScreenInterpolator';
+import { Easing } from 'react-native';
 
 
 const MainStack = createStackNavigator();
 
 const MainNavigator = () => {
     return (
-        <MainStack.Navigator screenOptions={{ headerShown: false }}>
+        <MainStack.Navigator screenOptions={{
+            headerShown: false,
+        }}>
             <MainStack.Screen name="TabNavigator" component={TabNavigator} />
             <MainStack.Screen name="GroupSettings" component={GroupSettingScreen} />
             <MainStack.Screen name="Account" component={AccountScreen} />

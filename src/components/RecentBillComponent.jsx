@@ -34,21 +34,23 @@ const RecentBillComponent = () => {
     );
 
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             <FlatList
                 data={expenses}
                 keyExtractor={(item) => item.expenseId}
                 renderItem={({ item }) => (
                     <BillComponent expenseDetails={item} isShrink={false} />
                 )}
-                ListEmptyComponent={<Card style={styles.comingSoonCard}>
-                    <Card.Content style={styles.comingSoonContent}>
-                        <Icon source="receipt" size={rfs(6)} color={theme.colors.primary} />
-                        <Text variant="titleMedium" style={[styles.comingSoonText, { color: theme.colors.secondary }]}>
-                            Your recent bills will appear here
-                        </Text>
-                    </Card.Content>
-                </Card>}
+                ListEmptyComponent={
+                    <Card style={styles.comingSoonCard}>
+                        <Card.Content style={styles.comingSoonContent}>
+                            <Icon source="receipt" size={rfs(6)} color={theme.colors.primary} />
+                            <Text variant="titleMedium" style={[styles.comingSoonText, { color: theme.colors.secondary }]}>
+                                Your recent bills will appear here
+                            </Text>
+                        </Card.Content>
+                    </Card>
+                }
                 ItemSeparatorComponent={() => <Divider bold style={styles.divider} />}
                 contentContainerStyle={expenses.length === 0 ? { flex: 1, justifyContent: 'center' } : { paddingHorizontal: rw(2) }}
             />

@@ -1,4 +1,4 @@
-import { StyleSheet, View, ScrollView, FlatList } from 'react-native';
+import { StyleSheet, View, ScrollView, FlatList, SafeAreaView } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { FAB, useTheme, Text, Icon, Surface, Card, Avatar, Appbar, Chip } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
@@ -42,24 +42,28 @@ const HomeScreen = () => {
                 <TotalBalanceComponent />
             </View>
 
-            {/* Main Content - Takes up Remaining Height */}
-            <ScrollView
-                style={[styles.container, { backgroundColor: theme.colors.background }]}
+            <FlatList
+                data={[]} // No data needed; using ListHeaderComponent and ListFooterComponent
+                keyExtractor={(item, index) => index.toString()}
+                ListHeaderComponent={() => (
+                    <>
+                        <Text variant="titleLarge" style={styles.sectionTitle1}>Recent Groups</Text>
+                        <RecentGroupsComponent />
+                    </>
+                )}
+                ListFooterComponent={() => (
+                    <>
+                        <View style={styles.recentBillContainer}>
+                            <Text variant="titleLarge" style={styles.sectionTitle2}>Recent Bills</Text>
+                        </View>
+                        <View style={styles.comingSoonCard}>
+                            <RecentBillComponent />
+                        </View>
+                    </>
+                )}
+                contentContainerStyle={[{ backgroundColor: theme.colors.background },]}
                 showsVerticalScrollIndicator={false}
-            >
-                <Text variant="titleLarge" style={styles.sectionTitle1}>Recent Groups</Text>
-
-                <RecentGroupsComponent />
-
-                <View style={styles.recentBillContainer}>
-                    <Text variant="titleLarge" style={styles.sectionTitle2}>Recent Bills</Text>
-                    <View style={[styles.comingSoonCard]}>
-                        <RecentBillComponent />
-                    </View>
-                </View>
-
-            </ScrollView >
-
+            />
             <CreateGroupModal visible={modalVisible} onDismiss={() => setModalVisible(false)} />
         </View >
     );
@@ -73,13 +77,14 @@ const styles = StyleSheet.create({
         marginHorizontal: rw(2)
     },
     container: {
-        flex: 1,
         borderTopLeftRadius: rh(3),
         borderTopRightRadius: rh(3),
-        marginTop: rh(-3),
+        marginTop: rh(-3)
     },
     headerContainer: {
         paddingBottom: rh(5),
+        borderBottomStartRadius: rh(4),
+        borderBottomEndRadius: rh(4)
     },
     sectionTitle1: {
         marginTop: rh(2),

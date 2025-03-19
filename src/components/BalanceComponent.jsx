@@ -1,19 +1,42 @@
-import { StyleSheet, View } from 'react-native'
-import React from 'react'
+import { Linking, StyleSheet, View } from 'react-native'
+import React, { useState } from 'react'
 import { useSelector } from 'react-redux';
 import { Avatar, useTheme, Text, Icon, Card, Surface, Button, Chip, Divider } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import avatars from '../data/Avatar';
-import { ThemeContext } from '@react-navigation/native';
+import MarkAsPaidModal from './MarkAsPaidModal';
+import { openUPIAppForGroupSettlement } from '../services/upiHandler';
 
 const BalanceComponent = ({ balance }) => {
     const theme = useTheme()
     const { user } = useSelector(state => state.userAuth);
     const uid = user?.uid
+    const [visible, setVisible] = useState(false)
 
     if (!user) {
         return null;
     }
+
+    // const openUPIApp = (creditor, amount) => {
+    //     console.log("Opening UPI for:", creditor);
+
+    //     if (!creditor.upiId) {
+    //         Alert.alert("Error", "No UPI ID available");
+    //         return;
+    //     }
+
+    //     const upiUri = `upi://pay?pa=${creditor.upiId}&pn=${encodeURIComponent(creditor.name)}&am=${amount}&cu=INR`;
+
+    //     Linking.openURL(upiUri).catch((err) => {
+    //         console.error("Error opening UPI app:", err);
+    //         Alert.alert("No UPI app found!");
+    //     });
+    // };
+
+    const payViaUPI = () => {
+        openUPIAppForGroupSettlement(balance.creditor, (balance.amountOwed).toFixed(2), balance.debtorId, balance.groupId)
+    }
+
     return (
         <View style={[styles.balanceItem, { backgroundColor: theme.colors.background }]}>
             <View style={[styles.user]}>
@@ -35,9 +58,12 @@ const BalanceComponent = ({ balance }) => {
             </View>
 
             <View style={[styles.btns]}>
-                {uid == balance.debtor.uid && <Chip mode='flat' style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
+                {uid == balance.debtor.uid && <Chip mode='flat' onPress={payViaUPI} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
                 {uid == balance.creditor.uid && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }}>Remind</Chip>}
+                {uid == balance.creditor.uid && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }} onPress={() => setVisible(true)}>Settle Up</Chip>}
             </View>
+
+            <MarkAsPaidModal visible={visible} onDismiss={() => setVisible(false)} balance={balance} />
         </View>
     )
 }
@@ -73,5 +99,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     },
     btns: {
+        gap: rh(1)
     }
 })

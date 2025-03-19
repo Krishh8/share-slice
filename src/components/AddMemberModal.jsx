@@ -58,9 +58,9 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         try {
             const link = await dynamicLinks().buildShortLink({
                 link: `https://shareslice.com/groupInvite?groupId=${groupId}`,
-                domainUriPrefix: 'https://shareslice.page.link',
+                domainUriPrefix: 'https://sharesliceapp.page.link',
                 android: {
-                    packageName: 'com.fairshare',
+                    packageName: 'com.shareslice',
                 },
                 // ios: {
                 //     bundleId: 'com.yourapp.ios',
@@ -98,6 +98,10 @@ const AddMemberModal = ({ visible, onDismiss }) => {
             }
 
             const contacts = await Contacts.getAll();
+            if (!contacts) {
+                return <ActivityIndicator size="large" color="blue" />;
+            }
+
             console.log("Contacts fetched:", contacts);
 
             const filteredContacts = contacts
@@ -238,6 +242,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         borderBottomWidth: rw(0.2),
+        borderStyle: 'dashed',
         paddingBottom: rh(1)
     },
     searchbar: {

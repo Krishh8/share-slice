@@ -121,8 +121,7 @@ const TotalBalanceComponent = () => {
 const styles = StyleSheet.create({
     container: {
         marginHorizontal: rw(4),
-        marginVertical: rh(3),
-        borderRadius: rh(2),
+        marginTop: rh(3),
         elevation: 4,
     },
     cardContent: {

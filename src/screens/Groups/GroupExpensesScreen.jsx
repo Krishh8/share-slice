@@ -34,6 +34,7 @@ const GroupExpensesScreen = () => {
     );
 
     const groupExpensesByMonth = (expenses) => {
+        console.log('reach 2')
         const grouped = expenses
             .slice() // ✅ Clone the array to avoid modifying Redux state
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by date (newest first)
@@ -52,9 +53,10 @@ const GroupExpensesScreen = () => {
         return Object.values(grouped);
     };
 
+    // const expensesList = [...(groupExpenses[groupId] || [])]; // ✅ Clone to prevent mutation
+    const expensesList = Array.isArray(groupExpenses[groupId]) ? [...groupExpenses[groupId]] : [];
+    console.log('reach')
 
-
-    const expensesList = [...(groupExpenses[groupId] || [])]; // ✅ Clone to prevent mutation
 
     const groupedExpenses = groupExpensesByMonth(expensesList); // ✅ Grouped expenses
 

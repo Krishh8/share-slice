@@ -36,6 +36,7 @@
     "react-native-pager-view": "^6.7.0",
     "react-native-paper": "^5.13.1",
     "react-native-permissions": "^5.2.6",
+    "react-native-reanimated": "^3.17.1",
     "react-native-responsive-dimensions": "^3.1.1",
     "react-native-safe-area-context": "^5.1.0",
     "react-native-screens": "^4.5.0",

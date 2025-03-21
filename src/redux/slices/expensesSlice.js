@@ -87,7 +87,7 @@ export const fetchGroupExpenses = createAsyncThunk(
                 const snapshot = await firestore()
                     .collection("expenses")
                     .where("groupId", "==", groupId)
-                    .orderBy("createdAt", "desc")
+                    // .orderBy("createdAt", "desc")
                     .limit(80) // Fetch the most recent 80 expenses
                     .get();
 
@@ -304,7 +304,8 @@ const expensesSlice = createSlice({
             .addCase(fetchGroupExpenses.fulfilled, (state, action) => {
                 state.groupExpensesLoading = false;
                 const { groupId, expenses } = action.payload;
-                state.groupExpenses[groupId] = expenses;
+                // state.groupExpenses[groupId] = expenses;
+                state.groupExpenses = { ...state.groupExpenses, [groupId]: expenses };
             })
             .addCase(fetchGroupExpenses.rejected, (state, action) => {
                 state.groupExpensesLoading = false;
@@ -323,7 +324,12 @@ const expensesSlice = createSlice({
                 // Add to general expenses
                 state.expenses = [...state.expenses, { expenseId, ...expenseData, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) }];
 
-                state.groupExpenses[groupId] = [...(state.groupExpenses[groupId] || []), { expenseId, ...expenseData, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) }];
+                // state.groupExpenses[groupId] = [...(state.groupExpenses[groupId] || []), { expenseId, ...expenseData, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) }];
+
+                state.groupExpenses = {
+                    ...state.groupExpenses,
+                    [groupId]: [...(state.groupExpenses[groupId] || []), { expenseId, ...expenseData, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) }],
+                };
             })
             .addCase(createExpense.rejected, (state, action) => {
                 state.expensesLoading = false;

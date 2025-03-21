@@ -12,6 +12,7 @@ import { fetchExpenseDetails } from "../../redux/slices/expensesSlice"
 import LoadingScreen from "../LoadingScreen"
 import avatars from "../../data/Avatar"
 import HeaderComponent from "../../components/HeaderComponent"
+import { fetchGroupDetails } from "../../redux/slices/groupSlice"
 
 const ExpenseDetailScreen = () => {
     const route = useRoute()
@@ -30,18 +31,19 @@ const ExpenseDetailScreen = () => {
         return null;
     }
 
-    // useFocusEffect(
-    //     useCallback(() => {
-    //         if (expenseId) {
-    //             dispatch(fetchExpenseDetails(expenseId)); // Refetch data
-    //         }
-    //     }, [dispatch, expenseId])
-    // );
+    useFocusEffect(
+        useCallback(() => {
+            if (expenseDetails?.groupId) {
+                dispatch(fetchGroupDetails(expenseDetails.groupId))
+            }
+        }, [dispatch, expenseDetails?.groupId])
+    );
 
     useEffect(() => {
         if (expenseId) {
             dispatch(fetchExpenseDetails(expenseId)); // Refetch data
         }
+
     }, [dispatch, expenseId])
 
     useEffect(() => {
@@ -180,7 +182,16 @@ const ExpenseDetailScreen = () => {
                                         />
                                         <Text style={[styles.payerName, { color: theme.colors.onSurface }]}>{payer.fullName}</Text>
                                     </View>
-                                    <Text style={[styles.payerAmount, { color: theme.colors.primary }]}>₹{payer.amount}</Text>
+                                    <View style={styles.shareContainer}>
+                                        <Chip
+                                            mode="flat"
+                                            style={[styles.shareChip, { backgroundColor: theme.colors.secondaryContainer }]}
+                                            textStyle={{ color: theme.colors.onSecondaryContainer }}
+                                        >
+                                            ₹ {payer.amount}
+                                        </Chip>
+                                    </View>
+                                    {/* <Text style={[styles.payerAmount, { color: theme.colors.primary }]}>₹{payer.amount}</Text> */}
                                 </View>
                             ))}
                         </View>
@@ -218,7 +229,7 @@ const ExpenseDetailScreen = () => {
                                             style={[styles.shareChip, { backgroundColor: theme.colors.secondaryContainer }]}
                                             textStyle={{ color: theme.colors.onSecondaryContainer }}
                                         >
-                                            {participant.share}
+                                            ₹ {participant.share}
                                         </Chip>
                                     </View>
                                 </View>

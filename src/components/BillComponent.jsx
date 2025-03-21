@@ -18,7 +18,6 @@ import { fetchGroupDetails } from '../redux/slices/groupSlice';
 const BillComponent = ({ expenseDetails, isShrink }) => {
     const dispatch = useDispatch();
     const navigation = useNavigation();
-    const { groupDetails } = useSelector(state => state.group)
     const { user } = useSelector(state => state.userAuth);
     if (!user) {
         return null; // Don't render anything if user is null
@@ -35,13 +34,8 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
         });
     };
 
-    const [payerName, setPayerName] = useState(null);
-
-    useEffect(() => {
-        if (groupId) {
-            dispatch(fetchGroupDetails(groupId))
-        }
-    }, [groupId])
+    const [payerName, setPayerName] = useState('' || "User");
+    const [groupName, setGroupName] = useState('' || "Group")
 
     let userOwes = 0;
 
@@ -71,14 +65,33 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
                 if (expenseDetails.paidBy[0].uid === uid) {
                     setPayerName('You');
                 } else {
-                    const name = await getUserByUserId(expenseDetails.paidBy[0].uid);
-                    setPayerName(name || 'Unknown User'); // Fallback in case name is null
+                    try {
+                        const name = await getUserByUserId(expenseDetails.paidBy[0].uid);
+                        setPayerName(name || 'Unknown User');
+                    } catch (error) {
+                        console.error("Error fetching payer name:", error);
+                    }
                 }
             }
         };
 
         fetchPayerName();
-    }, [expenseDetails.paidBy, uid, getUserByUserId]);
+    }, [expenseDetails.paidBy, uid]);
+
+
+    useEffect(() => {
+        const fetchGroupName = async () => {
+            try {
+                const name = await getGroupByGroupId(expenseDetails.groupId); // Ensure this function is async
+                setGroupName(name || "Group");
+            } catch (error) {
+                console.error("Error fetching group name:", error);
+            }
+        };
+
+        fetchGroupName();
+    }, [expenseDetails.groupId]);
+
 
     return (
 
@@ -103,7 +116,7 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
                             </View>
                             <View style={styles.details}>
                                 <Chip mode="outlined" style={{ alignSelf: "flex-start" }} textStyle={{ color: theme.colors.primary }}>
-                                    {groupDetails?.groupName}
+                                    {groupName}
                                 </Chip>
                             </View>
                         </View>

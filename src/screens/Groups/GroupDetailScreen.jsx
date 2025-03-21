@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import GroupTopTabNavigator from '../../navigation/GroupTopTabNavigator';
 import { useTheme, Text, IconButton, Surface, Appbar, Menu, Divider, Icon, Avatar } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
@@ -35,6 +35,13 @@ const GroupDetailScreen = () => {
         }
     }, [groupId, dispatch]);
 
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         if (groupId) {
+    //             dispatch(fetchGroupDetails(groupId))
+    //         }
+    //     }, [dispatch, groupId])
+    // );
 
     useEffect(() => {
         const updateGroupDetails = async () => {

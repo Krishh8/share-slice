@@ -19,136 +19,136 @@ const AddMemberModal = ({ visible, onDismiss }) => {
     const groupId = groupDetails?.groupId
     console.log('Group id in add member modal ', groupId)
 
-    useEffect(() => {
-        console.log('check contact permission')
-        checkContactsPermission(); // Check permission status on mount
-    }, []);
+    // useEffect(() => {
+    //     console.log('check contact permission')
+    //     checkContactsPermission(); // Check permission status on mount
+    // }, []);
 
-    useEffect(() => {
-        // Listen for Dynamic Links when app is opened from a link
-        const unsubscribe = dynamicLinks().onLink(handleDeepLink);
+    // useEffect(() => {
+    //     // Listen for Dynamic Links when app is opened from a link
+    //     const unsubscribe = dynamicLinks().onLink(handleDeepLink);
 
-        // Check if app was opened from a dynamic link
-        dynamicLinks().getInitialLink().then(handleDeepLink);
+    //     // Check if app was opened from a dynamic link
+    //     dynamicLinks().getInitialLink().then(handleDeepLink);
 
-        return () => unsubscribe();
-    }, []);
+    //     return () => unsubscribe();
+    // }, []);
 
-    const checkUserStatus = async (contactList) => {
-        const updatedContacts = await Promise.all(contactList.map(async (contact) => {
-            const isUser = await checkUserExists(contact.phoneNumber); // Call API to check
-            return { ...contact, isUser };
-        }));
-        setContacts(updatedContacts);
-        setFilteredContacts(filteredContacts);
-    };
+    // const checkUserStatus = async (contactList) => {
+    //     const updatedContacts = await Promise.all(contactList.map(async (contact) => {
+    //         const isUser = await checkUserExists(contact.phoneNumber); // Call API to check
+    //         return { ...contact, isUser };
+    //     }));
+    //     setContacts(updatedContacts);
+    //     setFilteredContacts(filteredContacts);
+    // };
 
-    const handleDeepLink = (link) => {
-        if (link) {
-            const groupId = new URL(link.url).searchParams.get('groupId');
-            if (groupId) {
-                console.log('User invited to group:', groupId);
-                // Navigate to Group Screen (Example using React Navigation)
-                // navigation.navigate('GroupDetails', { groupId });
-            }
-        }
-    };
+    // const handleDeepLink = (link) => {
+    //     if (link) {
+    //         const groupId = new URL(link.url).searchParams.get('groupId');
+    //         if (groupId) {
+    //             console.log('User invited to group:', groupId);
+    //             // Navigate to Group Screen (Example using React Navigation)
+    //             // navigation.navigate('GroupDetails', { groupId });
+    //         }
+    //     }
+    // };
 
-    const generateInviteLink = async (groupId) => {
-        try {
-            const link = await dynamicLinks().buildShortLink({
-                link: `https://shareslice.com/groupInvite?groupId=${groupId}`,
-                domainUriPrefix: 'https://sharesliceapp.page.link',
-                android: {
-                    packageName: 'com.shareslice',
-                },
-                // ios: {
-                //     bundleId: 'com.yourapp.ios',
-                //     appStoreId: 'YOUR_APP_STORE_ID', // Optional
-                // },
-            });
+    // const generateInviteLink = async (groupId) => {
+    //     try {
+    //         const link = await dynamicLinks().buildShortLink({
+    //             link: `https://shareslice.com/groupInvite?groupId=${groupId}`,
+    //             domainUriPrefix: 'https://sharesliceapp.page.link',
+    //             android: {
+    //                 packageName: 'com.shareslice',
+    //             },
+    //             // ios: {
+    //             //     bundleId: 'com.yourapp.ios',
+    //             //     appStoreId: 'YOUR_APP_STORE_ID', // Optional
+    //             // },
+    //         });
 
-            return link;
-        } catch (error) {
-            console.error('Error creating invite link:', error);
-            return null;
-        }
-    };
+    //         return link;
+    //     } catch (error) {
+    //         console.error('Error creating invite link:', error);
+    //         return null;
+    //     }
+    // };
 
-    const sendInvite = async (phoneNumber) => {
-        const inviteLink = await generateInviteLink(groupId);
-        if (!inviteLink) return;
+    // const sendInvite = async (phoneNumber) => {
+    //     const inviteLink = await generateInviteLink(groupId);
+    //     if (!inviteLink) return;
 
-        const options = {
-            title: 'Join My Group!',
-            message: `Hey! Join my group using this link: ${inviteLink}`,
-            url: inviteLink,
-        };
+    //     const options = {
+    //         title: 'Join My Group!',
+    //         message: `Hey! Join my group using this link: ${inviteLink}`,
+    //         url: inviteLink,
+    //     };
 
-        // await Share.open(options);
-    };
+    //     // await Share.open(options);
+    // };
 
-    const fetchContacts = async () => {
-        try {
-            console.log('Contacts Module:', Contacts);
+    // const fetchContacts = async () => {
+    //     try {
+    //         console.log('Contacts Module:', Contacts);
 
-            if (!Contacts || typeof Contacts.getAll !== 'function') {
-                console.error('react-native-contacts is not properly linked or is null.');
-                return;
-            }
+    //         if (!Contacts || typeof Contacts.getAll !== 'function') {
+    //             console.error('react-native-contacts is not properly linked or is null.');
+    //             return;
+    //         }
 
-            const contacts = await Contacts.getAll();
-            if (!contacts) {
-                return <ActivityIndicator size="large" color="blue" />;
-            }
+    //         const contacts = await Contacts.getAll();
+    //         if (!contacts) {
+    //             return <ActivityIndicator size="large" color="blue" />;
+    //         }
 
-            console.log("Contacts fetched:", contacts);
+    //         console.log("Contacts fetched:", contacts);
 
-            const filteredContacts = contacts
-                .filter(contact => contact.phoneNumbers.length > 0)
-                .map(contact => ({
-                    id: contact.recordID,
-                    name: contact.displayName,
-                    phoneNumber: contact.phoneNumbers[0].number,
-                    isUser: false, // Default false, check from backend
-                }));
+    //         const filteredContacts = contacts
+    //             .filter(contact => contact.phoneNumbers.length > 0)
+    //             .map(contact => ({
+    //                 id: contact.recordID,
+    //                 name: contact.displayName,
+    //                 phoneNumber: contact.phoneNumbers[0].number,
+    //                 isUser: false, // Default false, check from backend
+    //             }));
 
-            await checkUserStatus(filteredContacts);
-        } catch (error) {
-            console.error('Error fetching contacts:', error);
-        }
-    };
+    //         await checkUserStatus(filteredContacts);
+    //     } catch (error) {
+    //         console.error('Error fetching contacts:', error);
+    //     }
+    // };
 
-    const askContactsPermission = () => {
-        request(PERMISSIONS.ANDROID.READ_CONTACTS).then((status) => {
-            switch (status) {
-                case RESULTS.UNAVAILABLE:
-                    return console.log('This feature is not available (on this device / in this context)');
-                case RESULTS.DENIED:
-                    return console.log('The permission has not been requested / is denied but requestable');
-                case RESULTS.BLOCKED:
-                    return console.log('The permission is denied and not requestable');
-                case RESULTS.GRANTED:
-                    checkContactsPermission()
-                    return console.log('The permission is granted');
-                case RESULTS.LIMITED:
-                    return console.log('The permission is granted but with limitations');
-            }
-        });
-    }
+    // const askContactsPermission = () => {
+    //     request(PERMISSIONS.ANDROID.READ_CONTACTS).then((status) => {
+    //         switch (status) {
+    //             case RESULTS.UNAVAILABLE:
+    //                 return console.log('This feature is not available (on this device / in this context)');
+    //             case RESULTS.DENIED:
+    //                 return console.log('The permission has not been requested / is denied but requestable');
+    //             case RESULTS.BLOCKED:
+    //                 return console.log('The permission is denied and not requestable');
+    //             case RESULTS.GRANTED:
+    //                 checkContactsPermission()
+    //                 return console.log('The permission is granted');
+    //             case RESULTS.LIMITED:
+    //                 return console.log('The permission is granted but with limitations');
+    //         }
+    //     });
+    // }
 
-    const checkContactsPermission = async () => {
-        const status = await check(PERMISSIONS.ANDROID.READ_CONTACTS);
-        console.log('Permission status:', status);
+    // const checkContactsPermission = async () => {
+    //     const status = await check(PERMISSIONS.ANDROID.READ_CONTACTS);
+    //     console.log('Permission status:', status);
 
-        if (status === RESULTS.GRANTED) {
-            setPermissionGranted(true);
-            console.log('Permission granted. Fetching contacts...');
-            setTimeout(fetchContacts, 500);
-        } else {
-            console.log('Permission NOT granted:', status);
-        }
-    };
+    //     if (status === RESULTS.GRANTED) {
+    //         setPermissionGranted(true);
+    //         console.log('Permission granted. Fetching contacts...');
+    //         setTimeout(fetchContacts, 500);
+    //     } else {
+    //         console.log('Permission NOT granted:', status);
+    //     }
+    // };
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -202,9 +202,9 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                 <View>
                     <Text style={[{ fontSize: rfs(2) }]}>Friends</Text>
                 </View>
-                {!permissionGranted && (
+                {/* {!permissionGranted && (
                     <Button mode='contained' style={[styles.allowBtn]} onPress={askContactsPermission} >Allow contacts</Button>
-                )}
+                )} */}
                 <FlatList
                     data={filteredContacts}
                     keyExtractor={(item) => item.id}

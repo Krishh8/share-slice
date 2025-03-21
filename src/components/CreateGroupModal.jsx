@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Alert } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Alert, Animated } from 'react-native';
 import {
     Modal,
     Portal,
@@ -38,12 +38,54 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
         setSelectedCategory(category);
     };
 
+    // Animation values
+    // const scaleAnim = useRef(new Animated.Value(0)).current
+    // const opacityAnim = useRef(new Animated.Value(0)).current
+
+    // // Handle animation when visibility changes
+    // useEffect(() => {
+    //     if (visible) {
+    //         // Start opening animations
+    //         Animated.parallel([
+    //             Animated.timing(scaleAnim, {
+    //                 toValue: 1,
+    //                 duration: 500,
+    //                 useNativeDriver: true,
+    //             }),
+    //             Animated.timing(opacityAnim, {
+    //                 toValue: 1,
+    //                 duration: 500,
+    //                 useNativeDriver: true,
+    //             }),
+    //         ]).start()
+    //     } else {
+    //         // Reset animation values when modal is hidden
+    //         scaleAnim.setValue(0)
+    //         opacityAnim.setValue(0)
+    //     }
+    // }, [visible, scaleAnim, opacityAnim])
+
     const handleClose = () => {
-        setGroupName('');
-        setSelectedCategory(null);
-        setError('');
-        onDismiss(); // Close the modal
-    };
+        // Run closing animation
+        // Animated.parallel([
+        //     Animated.timing(scaleAnim, {
+        //         toValue: 0,
+        //         duration: 250,
+        //         useNativeDriver: true,
+        //     }),
+        //     Animated.timing(opacityAnim, {
+        //         toValue: 0,
+        //         duration: 250,
+        //         useNativeDriver: true,
+        //     }),
+        // ]).start(() => {
+        // After animation completes, reset form and dismiss modal
+        setGroupName("")
+        setSelectedCategory(categories[0])
+        setError("")
+        onDismiss() // Close the modal
+        // })
+    }
 
     const handleSubmit = async () => {
         if (!uid) {
@@ -64,12 +106,25 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
 
             if (createGroup.fulfilled.match(result)) {
                 console.log('Group created successfully:', result.payload);
-                onDismiss();
-                setGroupName('');
-                setSelectedCategory(categories[0]);
-                setError('');
+                // Animated.parallel([
+                //     Animated.timing(scaleAnim, {
+                //         toValue: 0,
+                //         duration: 250,
+                //         useNativeDriver: true,
+                //     }),
+                //     Animated.timing(opacityAnim, {
+                //         toValue: 0,
+                //         duration: 250,
+                //         useNativeDriver: true,
+                //     }),
+                // ]).start(() => {
+                onDismiss()
+                setGroupName("")
+                setSelectedCategory(categories[0])
+                setError("")
                 // Navigate to the GroupDetails screen with the newly created groupId
-                navigation.navigate('MainStack', { screen: 'GroupDetails', params: { groupId: result.payload.groupId } });
+                navigation.navigate("MainStack", { screen: "GroupDetails", params: { groupId: result.payload.groupId } })
+                // })
             } else {
                 console.error('Error creating group:', result.error.message);
                 Alert.alert('Error', result.error.message);
@@ -79,6 +134,11 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
         }
 
     };
+
+    // const animatedContainerStyle = {
+    //     transform: [{ scale: scaleAnim }],
+    //     opacity: opacityAnim,
+    // }
 
 
     return (
@@ -97,8 +157,8 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                     },
                 }}
             >
-                <View
-                    style={styles.scrollContainer}>
+                {/* <Animated.View style={[styles.scrollContainer, animatedContainerStyle]}> */}
+                <View style={[styles.scrollContainer,]}>
                     <Text
                         style={[
                             styles.modalTitle,
@@ -169,6 +229,7 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                         </Button>
                     </View>
                 </View>
+                {/* </Animated.View> */}
             </Modal>
         </Portal >
         // </PaperProvider>

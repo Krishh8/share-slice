@@ -36,7 +36,7 @@ const RecentBillComponent = () => {
     return (
         <View style={{ flex: 1 }}>
             <FlatList
-                data={expenses}
+                data={expenses.slice(0, 10)}
                 keyExtractor={(item) => item.expenseId}
                 renderItem={({ item }) => (
                     <BillComponent expenseDetails={item} isShrink={false} />

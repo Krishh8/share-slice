@@ -31,8 +31,6 @@ export const updateBalancesOnExpenseCreate = createAsyncThunk(
                         const balanceRef = balancesRef.doc(balanceId);
                         const reverseBalanceRef = balancesRef.doc(reverseBalanceId);
 
-                        console.log("Checking balance docs:", balanceId, reverseBalanceId);
-
                         if (!creditorId || !debtorId || !groupId) {
                             throw new Error("Invalid balance document ID");
                         }
@@ -52,8 +50,6 @@ export const updateBalancesOnExpenseCreate = createAsyncThunk(
                             // 🔹 Case 1: A reverse balance exists (debtor owes creditor)
                             const existingReverseAmount = reverseBalanceDoc.data()?.amountOwed || 0;
                             const netAmount = existingReverseAmount - amountOwed;
-
-                            console.log(`Reverse balance found: ${existingReverseAmount}, Net Amount: ${netAmount}`);
 
                             if (netAmount > 0) {
                                 // Debtor still owes some amount → Update reverse balance
@@ -79,8 +75,6 @@ export const updateBalancesOnExpenseCreate = createAsyncThunk(
                             // 🔹 Case 2: Update existing balance if it exists
                             const existingAmount = balanceDoc.data()?.amountOwed || 0;
                             const updatedAmount = existingAmount + amountOwed;
-
-                            console.log(`Existing balance found: ${existingAmount}, Updated Amount: ${updatedAmount}`);
 
                             if (updatedAmount === 0) {
                                 batch.delete(balanceRef); // Remove document if balance is settled
@@ -195,7 +189,7 @@ export const updateBalanceAfterPayment = createAsyncThunk(
                 paymentMethod,
                 timestamp: firestore.Timestamp.now()
             });
-
+            console.log("Balances updated after upi payment successfully.");
         } catch (error) {
             return rejectWithValue(error.message);
         }
@@ -230,6 +224,7 @@ export const updateBalanceAfterCashPayment = createAsyncThunk(
                 timestamp: firestore.Timestamp.now()
             });
 
+            console.log("Balances updated after cash payment successfully.");
             return { creditorId, debtorId, groupId, amountOwed: newBalance };
         } catch (error) {
             return rejectWithValue(error.message);
@@ -284,7 +279,8 @@ export const settleFullBalanceOutsideGroup = createAsyncThunk(
                 groupIds, // Store all affected group IDs
                 timestamp: firestore.Timestamp.now()
             });
-            console.log('Success')
+            console.log("Balances updated after FULL payment successfully.");
+
         } catch (error) {
             return rejectWithValue(error.message);
         }
@@ -311,45 +307,19 @@ const balancesSlice = createSlice({
             state.error = action.payload;
             state.loading = false;
         },
-        // setUnsubscribe: (state, action) => {
-        //     state.unsubscribe = action.payload;
-        // },
+        setUnsubscribe: (state, action) => {
+            state.unsubscribe = action.payload;
+        },
         clearBalances: (state) => {
             state.balances = [];
-            stopListeningToBalances();
-            // state.unsubscribe?.(); // 🔹 Stop the listener when user leaves
-            // state.unsubscribe = null;
+            if (state.unsubscribe) {
+                state.unsubscribe(); // ✅ Stop Firestore listener before clearing
+                state.unsubscribe = null;
+            }
         },
     },
-    // extraReducers: (builder) => {
-    //     builder
-    //         .addCase(fetchBalances.pending, (state) => {
-    //             state.loading = true;
-    //         })
-    //         .addCase(fetchBalances.fulfilled, (state, action) => {
-    //             console.log("Balances fetched:", action.payload);
-    //             state.balances = action.payload;
-    //             state.loading = false;
-    //         })
-    //         .addCase(fetchBalances.rejected, (state, action) => {
-    //             state.error = action.payload;
-    //             state.loading = false;
-    //         })
 
-    //         .addCase(updateBalancesOnExpenseCreate.pending, (state) => {
-    //             state.loading = true;
-    //         })
-    //         .addCase(updateBalancesOnExpenseCreate.fulfilled, (state, action) => {
-    //             state.loading = false;
-    //             console.log("Balances updated successfully in Redux:", action.payload);
-    //         })
-    //         .addCase(updateBalancesOnExpenseCreate.rejected, (state, action) => {
-    //             state.loading = false;
-    //             state.error = action.payload;
-    //             console.error("Failed to update balances:", action.payload);
-    //         });
-    // }
 })
 
-export const { setBalances, setLoading, setError, clearBalances } = balancesSlice.actions;
+export const { setBalances, setLoading, setError, clearBalances, setUnsubscribe } = balancesSlice.actions;
 export default balancesSlice.reducer

@@ -3,19 +3,19 @@ import React, { useEffect, useState } from 'react';
 import AddExpensesGroupButtonComponent from '../../components/AddExpensesGroupButtonComponent';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchGroupExpenses } from '../../redux/slices/expensesSlice';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import BillComponent from '../../components/BillComponent';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import LoadingScreen from '../LoadingScreen';
 import { Surface, useTheme, Button, Card, Divider, Icon, IconButton, Avatar } from 'react-native-paper';
 
 const GroupExpensesScreen = () => {
+    const route = useRoute();
+    const { groupId } = route.params;
     const [state, setState] = useState({ open: false });
     const dispatch = useDispatch();
     const navigation = useNavigation();
     const theme = useTheme();
-    const { groupDetails } = useSelector(state => state.group);
-    const groupId = groupDetails?.groupId;
     const { groupExpenses, groupExpensesLoading, groupExpensesError } = useSelector(state => state.expense);
     const onStateChange = ({ open }) => setState({ open });
     const [isShrink, setIsShrink] = useState(false);

@@ -38,7 +38,6 @@ export const fetchExpenses = createAsyncThunk(
 
                 allExpenses = [...allExpenses, ...expenses];
             }
-            console.log('ALL EXPENSES', allExpenses)
 
             return allExpenses;
         } catch (error) {
@@ -128,12 +127,12 @@ export const createExpense = createAsyncThunk(
                 expenses: firestore.FieldValue.arrayUnion(expenseId),
             });
 
-            console.log("Expense added successfully");
-
             await dispatch(updateBalancesOnExpenseCreate({ expenseData, groupId }));
 
             const expenseSnapshot = await expenseRef.get();
             const expenseDataFetched = expenseSnapshot.data();
+
+            console.log("Expense added successfully");
 
             return {
                 expenseId,
@@ -163,17 +162,31 @@ export const updateExpense = createAsyncThunk(
 
             const oldExpenseData = expenseSnapshot.data();
 
-            await dispatch(revertOldBalances({ oldExpenseData }));
+            const balanceAffectingFields = ["amount", "paidBy", "splitDetails"];
+            const isBalanceAffected = balanceAffectingFields.some(
+                field => updatedExpenseData[field] !== oldExpenseData[field]
+            );
 
+            if (isBalanceAffected) {
+                // Only revert old balances if amount, paidBy, or splitAmong changed
+                await dispatch(revertOldBalances({ oldExpenseData }));
+            }
             // 🔹 Update the expense document
             await expenseRef.update({
                 ...updatedExpenseData,
                 updatedAt: firestore.Timestamp.now(),
             });
 
-            await dispatch(updateBalancesOnExpenseCreate({ expenseData: updatedExpenseData, groupId: oldExpenseData.groupId }));
+            if (isBalanceAffected) {
+                // Only update balances if necessary
+                await dispatch(
+                    updateBalancesOnExpenseCreate({
+                        expenseData: updatedExpenseData,
+                        groupId: oldExpenseData.groupId,
+                    })
+                );
+            }
 
-            console.log(updatedExpenseData)
             console.log("Expense updated successfully");
 
             return {

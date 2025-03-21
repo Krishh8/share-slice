@@ -58,9 +58,10 @@ import React, { useEffect } from 'react';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import { useTheme, Text, Card, Divider, Icon } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
-import { listenToBalances } from '../redux/listeners/balanceListener';
+import { listenToBalances, stopListeningToBalances } from '../redux/listeners/balanceListener';
 import { clearBalances } from '../redux/slices/balancesSlice';
 import LoadingScreen from '../screens/LoadingScreen';
+import { useFocusEffect } from '@react-navigation/native';
 
 const TotalBalanceComponent = () => {
     const theme = useTheme();
@@ -69,13 +70,17 @@ const TotalBalanceComponent = () => {
     const { balances, loading } = useSelector((state) => state.balance);
     const dispatch = useDispatch()
 
-    useEffect(() => {
-        dispatch(listenToBalances({ uid })); // 🔹 Fetch all balances
 
-        return () => {
-            dispatch(clearBalances());
-        };
-    }, [dispatch, uid]);
+    useFocusEffect(
+        React.useCallback(() => {
+            dispatch(listenToBalances({ uid }));
+
+            return () => {
+                dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
+            };
+        }, [dispatch, uid])
+    );
+
 
     // Calculate total amount the user owes (debts)
     const totalOwed = balances

@@ -83,8 +83,8 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
         paddingBottom: rh(5),
-        borderBottomStartRadius: rh(4),
-        borderBottomEndRadius: rh(4)
+        borderBottomStartRadius: rh(2),
+        borderBottomEndRadius: rh(2)
     },
     sectionTitle1: {
         marginTop: rh(2),

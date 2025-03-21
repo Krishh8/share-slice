@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { View, StyleSheet, FlatList, ScrollView, TouchableWithoutFeedback, Keyboard } from "react-native"
 import { Text, Button, Searchbar, Surface, useTheme, Avatar, Card, IconButton, Icon } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
+import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import { useDispatch, useSelector } from "react-redux"
 import {
     responsiveFontSize as rfs,
@@ -10,7 +10,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import CreateGroupModal from "../components/CreateGroupModal"
 import GroupComponent from "../components/GroupComponent"
-import { listenToBalances } from "../redux/listeners/balanceListener"
+import { listenToBalances, stopListeningToBalances } from "../redux/listeners/balanceListener"
 import { clearBalances } from "../redux/slices/balancesSlice"
 
 const GroupsScreen = () => {
@@ -26,13 +26,17 @@ const GroupsScreen = () => {
     const [displayGroups, setDisplayGroups] = useState([])
     const { balances, loading, error } = useSelector((state) => state.balance);
 
-    useEffect(() => {
-        dispatch(listenToBalances({ uid }));
 
-        return () => {
-            dispatch(clearBalances()); // 🔹 Cleanup listener when unmounting
-        };
-    }, [dispatch, uid]);
+    useFocusEffect(
+        React.useCallback(() => {
+            dispatch(listenToBalances({ uid }));
+
+            return () => {
+                dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
+            };
+        }, [dispatch, uid])
+    );
+
 
     const groupedBalances = balances.reduce((acc, balance) => {
         const { groupId, creditorId, debtorId, amountOwed } = balance;
@@ -57,6 +61,7 @@ const GroupsScreen = () => {
 
 
     useEffect(() => {
+        console.log("Updated groups:", groups);
         setDisplayGroups(groups)
     }, [groups])
 
@@ -153,9 +158,7 @@ const GroupsScreen = () => {
 
                 {/* Groups List */}
                 <View style={[styles.groupListContainer, { backgroundColor: theme.colors.background }]}>
-                    {/* {displayGroups.length === 0 ? (
-                    <NoGroups />
-                ) : ( */}
+
                     <FlatList
                         data={displayGroups}
                         keyExtractor={(item) => item.groupId}

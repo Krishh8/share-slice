@@ -11,4 +11,9 @@ export const store = configureStore({
         expense: expenseReducer,
         balance: balanceReducer,
     },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            immutableCheck: false,  // Disable mutation checks
+            serializableCheck: false, // Disable serializable checks
+        }),
 })

@@ -1,4 +1,5 @@
 import './gesture-handler';
+globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 import { AppRegistry, useColorScheme } from 'react-native';
 import { name as appName } from './app.json';
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';

@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { StyleSheet, View, FlatList, RefreshControl, TouchableWithoutFeedback, Keyboard } from "react-native"
 import { Searchbar, List, Avatar, Surface, useTheme } from "react-native-paper"
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import TotalBalanceComponent from "../components/TotalBalanceComponent";
 import { useDispatch, useSelector } from "react-redux";
-import { listenToBalances } from "../redux/listeners/balanceListener";
+import { listenToBalances, stopListeningToBalances } from "../redux/listeners/balanceListener";
 import { clearBalances } from "../redux/slices/balancesSlice";
 import avatars from "../data/Avatar";
 import FriendComponent from "../components/FriendComponent";
+import { useFocusEffect } from "@react-navigation/native";
 
 const FriendsScreen = () => {
     const theme = useTheme();
@@ -20,13 +21,16 @@ const FriendsScreen = () => {
     const [groupedBalancesArray, setGroupedBalancesArray] = useState([]);
     const [filteredFriends, setFilteredFriends] = useState([]); // 🔹 Separate state for search
 
-    useEffect(() => {
-        dispatch(listenToBalances({ uid })); // 🔹 Fetch all balances
+    useFocusEffect(
+        React.useCallback(() => {
+            dispatch(listenToBalances({ uid }));
 
-        return () => {
-            dispatch(clearBalances());
-        };
-    }, [dispatch, uid]);
+            return () => {
+                dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
+            };
+        }, [dispatch, uid])
+    );
+
 
     const groupedBalances = balances.reduce((acc, balance) => {
         const otherUserId = balance.creditorId === uid ? balance.debtorId : balance.creditorId;

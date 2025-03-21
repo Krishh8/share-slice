@@ -67,16 +67,17 @@ export const fetchGroups = createAsyncThunk(
                 .where(firestore.FieldPath.documentId(), 'in', userGroups)
                 .get();
 
-            const groups = snapshot.docs.map(doc => {
+            let groups = snapshot.docs.map(doc => {
                 const data = doc.data();
 
                 return {
                     ...data,
                     groupId: doc.id,
-                    createdAt: data.createdAt?.toDate().toISOString() || null, // ✅ Convert Firestore Timestamp to string
+                    createdAt: data.createdAt?.toDate() || null, // ✅ Convert Firestore Timestamp to string
                 };
             });
 
+            groups.sort((a, b) => b.createdAt - a.createdAt)
             return groups;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.message);
@@ -316,7 +317,7 @@ const groupSlice = createSlice({
             })
             .addCase(createGroup.fulfilled, (state, action) => {
                 state.loadingGroups = false;
-                state.groups = [...state.groups, action.payload];
+                state.groups = [action.payload, ...state.groups];
             })
             .addCase(createGroup.rejected, (state, action) => {
                 state.loadingGroups = false;
@@ -367,13 +368,16 @@ const groupSlice = createSlice({
             })
             .addCase(deleteGroup.fulfilled, (state, action) => {
                 state.loadingGroups = false;
-                const { groupId } = action.payload;
-                if (state.groups) {
-                    state.groups = state.groups.filter(
-                        group => group.groupId !== groupId,
-                    );
+
+                console.log("Delete action payload:", action.payload); // Debugging
+
+                const groupId = action.payload; // Since payload is just a string
+
+                if (state.groups && Array.isArray(state.groups)) {
+                    state.groups = state.groups.filter(group => group.groupId !== groupId);
                 }
             })
+
             .addCase(deleteGroup.rejected, (state, action) => {
                 state.loadingGroups = false;
                 state.errorGroups = action.payload;

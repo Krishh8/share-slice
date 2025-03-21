@@ -7,7 +7,7 @@ import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as r
 
 const TopTab = createMaterialTopTabNavigator();
 
-const GroupTopTabNavigator = () => {
+const GroupTopTabNavigator = ({ groupId }) => {
     const theme = useTheme()
     return (
         <TopTab.Navigator
@@ -29,9 +29,25 @@ const GroupTopTabNavigator = () => {
             }
             initialRouteName='GroupExpenses'
         >
-            <TopTab.Screen name="GroupExpenses" component={GroupExpensesScreen} options={{ title: "Expenses" }} />
-            <TopTab.Screen name="GroupBalance" component={GroupBalanceScreen} options={{ title: "Balance" }} />
-            <TopTab.Screen name="GroupSummary" component={GroupSummaryScreen} options={{ title: "Summary" }} />
+            <TopTab.Screen
+                name="GroupExpenses"
+                component={GroupExpensesScreen}
+                options={{ title: "Expenses" }}
+                initialParams={{ groupId }} // ✅ Pass groupId as an initial param
+            />
+            <TopTab.Screen
+                name="GroupBalance"
+                component={GroupBalanceScreen}
+                options={{ title: "Balance" }}
+                initialParams={{ groupId }} // ✅ Pass groupId
+            />
+            <TopTab.Screen
+                name="SummaryTopTab"
+                component={GroupSummaryScreen}
+                options={{ title: "Summary" }}
+                initialParams={{ groupId }} // ✅ Pass groupId
+            />
+
         </TopTab.Navigator >
     );
 }

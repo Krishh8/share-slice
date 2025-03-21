@@ -71,7 +71,17 @@ const ExpenseDetailScreen = () => {
     return (
         <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <Animated.View style={{ opacity: fadeAnim }}>
-                <HeaderComponent title="Expense" />
+                <Appbar.Header>
+                    <Appbar.Action icon="chevron-left" size={rfs(3.5)} iconColor={theme.colors.primary} onPress={() => {
+                        if (navigation.canGoBack()) {
+                            navigation.goBack();
+                        } else {
+                            navigation.replace('MainStack', { screen: 'GroupDetails', params: { groupId: groupDetails?.groupId } });
+                        }
+                    }
+                    } />
+                    <Appbar.Content title="Expense Details" titleStyle={{ fontSize: rfs(3), fontWeight: 'bold', color: theme.colors.primary }} />
+                </Appbar.Header>
                 <Surface style={[styles.headerCard,]}>
                     <View style={[styles.headerContent,]}>
                         <View style={[styles.expenseHeader]}>

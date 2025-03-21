@@ -21,14 +21,14 @@ const MainNavigator = () => {
         <MainStack.Navigator screenOptions={{
             headerShown: false,
         }}>
-            <MainStack.Screen name="TabNavigator" component={TabNavigator} />
-            <MainStack.Screen name="GroupSettings" component={GroupSettingScreen} />
+            <MainStack.Screen name="BottomTab" component={TabNavigator} />
             <MainStack.Screen name="Account" component={AccountScreen} />
             <MainStack.Screen name="EditAccount" component={EditAccountScreen} />
-            <MainStack.Screen name="GroupTopTabNavigator" component={GroupTopTabNavigator} />
+            <MainStack.Screen name="TopTab" component={GroupTopTabNavigator} />
             <MainStack.Screen name="GroupDetails" component={GroupDetailScreen} />
-            <MainStack.Screen name="ExpenseDetails" component={ExpenseDetailScreen} />
+            <MainStack.Screen name="GroupSettings" component={GroupSettingScreen} />
             <MainStack.Screen name="AddExpense" component={AddExpenseScreen} />
+            <MainStack.Screen name="ExpenseDetails" component={ExpenseDetailScreen} />
             <MainStack.Screen name="UpdateExpense" component={UpdateExpenseScreen} />
             <MainStack.Screen name="AddFriends" component={AddFriendsScreen} />
 

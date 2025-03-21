@@ -33,40 +33,33 @@ const GroupDetailScreen = () => {
         if (groupId) {
             dispatch(fetchGroupDetails(groupId));
         }
-    }, [dispatch]);
+    }, [groupId, dispatch]);
+
 
     useEffect(() => {
-        const fetchOwner = async () => {
+        const updateGroupDetails = async () => {
+            if (!groupDetails) return;
+
+            // 🔹 Set group details only when new data is available
+            setGroup(prevGroup => ({
+                category: groupDetails.category || prevGroup.category,
+                createdBy: groupDetails.createdBy || prevGroup.createdBy,
+                groupId: groupDetails.groupId || prevGroup.groupId,
+                groupName: groupDetails.groupName || prevGroup.groupName,
+            }));
+
+            // 🔹 Fetch and set owner name
             if (groupDetails?.createdBy) {
-                let name = ''
-                if (groupDetails.createdBy === user?.uid) {
-                    name = 'You'
-                }
-                else {
-                    name = getUserByUserId(groupDetails.createdBy);
-                }
-                setOwner(name)
+                let name = groupDetails.createdBy === user?.uid ? "You" : await getUserByUserId(groupDetails.createdBy);
+                setOwner(name);
             }
+
+            // 🔹 Set admin status
+            setIsAdmin(groupDetails?.admins?.includes(user?.uid));
         };
 
-        fetchOwner()
-
-        if (groupDetails) {
-            setIsAdmin(groupDetails?.admins.includes(user?.uid))
-        }
-    }, [groupDetails])
-
-
-    useEffect(() => {
-        if (groupDetails && groupDetails.groupId !== group.groupId) {
-            setGroup({
-                category: groupDetails.category || {},
-                createdBy: groupDetails.createdBy || "",
-                groupId: groupDetails.groupId || "",
-                groupName: groupDetails.groupName || "",
-            });
-        }
-    }, [groupDetails]);
+        updateGroupDetails();
+    }, [groupDetails, user]);
 
     const handleDelete = async () => {
         Alert.alert(
@@ -109,7 +102,14 @@ const GroupDetailScreen = () => {
     return (
         <Surface style={{ flex: 1 }}>
             <Appbar.Header style={{ backgroundColor: theme.colors.secondaryContainer, elevation: 0, }}>
-                <Appbar.Action icon="chevron-left" size={rfs(3.5)} iconColor={theme.colors.primary} onPress={() => navigation.goBack()} />
+                <Appbar.Action icon="chevron-left" size={rfs(3.5)} iconColor={theme.colors.primary}
+                    onPress={() => {
+                        if (navigation.canGoBack()) {
+                            navigation.goBack();
+                        } else {
+                            navigation.navigate('BottomTab', { screen: 'Groups' }); // Fallback to Groups screen
+                        }
+                    }} />
             </Appbar.Header>
 
             <View style={[styles.header, { backgroundColor: theme.colors.secondaryContainer }]}>
@@ -133,7 +133,7 @@ const GroupDetailScreen = () => {
             </View>
 
             {/* Tab Navigator */}
-            <GroupTopTabNavigator />
+            <GroupTopTabNavigator groupId={groupId} />
         </Surface>
     );
 };

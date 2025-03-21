@@ -4,8 +4,6 @@ import AppNavigator from './navigation/AppNavigator';
 import React, { useEffect } from 'react';
 import { useTheme, Card, Title, Button } from "react-native-paper"
 import LinearGradient from 'react-native-linear-gradient';
-import { Linking } from 'react-native';
-
 
 const App = () => {
   return (

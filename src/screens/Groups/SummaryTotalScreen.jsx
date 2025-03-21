@@ -8,14 +8,17 @@ import {
 } from 'react-native-responsive-dimensions';
 import { useSelector } from 'react-redux';
 import { BarChart } from 'react-native-chart-kit';
+import { useRoute } from '@react-navigation/native';
 
 
 const MyChart = () => {
+    const route = useRoute();
+    const { groupId } = route.params;
     const theme = useTheme()
     const { user } = useSelector((state) => state.userAuth)
     const uid = user.uid
     const { groupDetails } = useSelector((state) => state.group)
-    const groupId = groupDetails?.groupId
+    // const groupId = groupDetails?.groupId
     const { groupExpenses } = useSelector((state) => state.expense)
 
     // Get expenses for the selected group
@@ -206,11 +209,13 @@ const MyChart = () => {
 }
 
 const SummaryTotalScreen = () => {
+    const route = useRoute();
+    const { groupId } = route.params;
 
     const theme = useTheme()
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <MyChart />
+            <MyChart groupId={groupId} />
         </View>
     )
 }

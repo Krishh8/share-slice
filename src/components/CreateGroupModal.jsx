@@ -8,6 +8,7 @@ import {
     TextInput,
     useTheme,
     Icon,
+    PaperProvider,
 } from 'react-native-paper';
 import {
     responsiveFontSize as rfs,
@@ -22,6 +23,7 @@ import { useNavigation } from '@react-navigation/native';
 const CreateGroupModal = ({ visible, onDismiss }) => {
     const theme = useTheme();
     const [groupName, setGroupName] = useState('');
+    const { loadingGroups } = useSelector(state => state.group)
     const [selectedCategory, setSelectedCategory] = useState(categories[0]);
     const [error, setError] = useState('');
     const { user } = useSelector(state => state.userAuth);
@@ -42,7 +44,6 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
         setError('');
         onDismiss(); // Close the modal
     };
-
 
     const handleSubmit = async () => {
         if (!uid) {
@@ -65,7 +66,7 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                 console.log('Group created successfully:', result.payload);
                 onDismiss();
                 setGroupName('');
-                setSelectedCategory(null);
+                setSelectedCategory(categories[0]);
                 setError('');
                 // Navigate to the GroupDetails screen with the newly created groupId
                 navigation.navigate('MainStack', { screen: 'GroupDetails', params: { groupId: result.payload.groupId } });
@@ -81,6 +82,7 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
 
 
     return (
+        // <PaperProvider>
         <Portal>
             <Modal
                 visible={visible}
@@ -96,8 +98,7 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                 }}
             >
                 <View
-                    style={styles.scrollContainer}
-                    showsVerticalScrollIndicator={false}>
+                    style={styles.scrollContainer}>
                     <Text
                         style={[
                             styles.modalTitle,
@@ -127,28 +128,6 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                         horizontal
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={styles.categoriesContainer}>
-
-                        {/* {categories.map((category) => (
-                            <View key={category.label}>
-                                <Button
-                                    icon={() => (
-                                        <Icon source={category.icon} size={rfs(3)} color={theme.colors.primary} />
-                                    )}
-
-                                    mode="outlined"
-                                    style={[
-                                        {
-                                            borderWidth: selectedCategory?.label === category.label ? rw(0.6) : rw(0.3),
-                                            borderColor: selectedCategory?.label === category.label ? theme.colors.primary : theme.colors.secondary,
-                                            borderRadius: rw(5), // ✅ Now it will work correctly
-                                        },
-                                    ]}
-                                    labelStyle={styles.btnText}
-                                    onPress={() => handleCategoryPress(category)}>
-                                    {category.label}
-                                </Button>
-                            </View>
-                        ))} */}
 
                         {categories.map((category) => (
                             <Button
@@ -180,6 +159,9 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                         </Button>
                         <Button
                             mode="contained"
+                            loading={loadingGroups}
+                            disabled={loadingGroups}
+                            icon={loadingGroups ? 'loading' : ""}
                             labelStyle={styles.buttonText}
                             onPress={handleSubmit}
                             style={styles.actionButton}>
@@ -189,6 +171,7 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                 </View>
             </Modal>
         </Portal >
+        // </PaperProvider>
     );
 };
 

@@ -21,7 +21,7 @@ const VerifyEmailScreen = () => {
 
     useEffect(() => {
         if (isEmailVerified) {
-            navigation.replace('MainStack', { screen: 'TabNavigator' });
+            navigation.replace('MainStack', { screen: 'BottomTab' });
         }
         else {
             console.log('not verified')

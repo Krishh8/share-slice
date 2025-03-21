@@ -8,6 +8,7 @@ import {
     responsiveHeight as rh,
     responsiveWidth as rw,
 } from 'react-native-responsive-dimensions';
+import { useRoute } from '@react-navigation/native';
 
 const SummaryTopTab = createMaterialTopTabNavigator();
 
@@ -59,6 +60,8 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
 };
 
 const GroupSummaryScreen = () => {
+    const route = useRoute();
+    const { groupId } = route.params;
     const theme = useTheme();
 
     return (
@@ -70,11 +73,13 @@ const GroupSummaryScreen = () => {
                 name="SummaryCategoryWise"
                 component={SummaryCategoryWiseScreen}
                 options={{ title: "Category Wise" }}
+                initialParams={{ groupId }}
             />
             <SummaryTopTab.Screen
                 name="SummaryTotal"
                 component={SummaryTotalScreen}
                 options={{ title: "Total Spending" }}
+                initialParams={{ groupId }}
             />
 
         </SummaryTopTab.Navigator>

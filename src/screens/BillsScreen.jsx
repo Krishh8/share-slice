@@ -43,14 +43,14 @@ const BillsScreen = () => {
     const [displayBills, setDisplayBills] = useState([])
     const [isShrink, setIsShrink] = useState(false)
 
-    useEffect(() => {
-        if (uid) {
-            dispatch(fetchExpenses(uid));
-        }
-    }, [dispatch, uid]);
+    // useEffect(() => {
+    //     if (uid) {
+    //         dispatch(fetchExpenses(uid));
+    //     }
+    // }, [dispatch, uid]);
 
     useEffect(() => {
-        setDisplayBills(expenses)
+        setDisplayBills([...expenses])
     }, [expenses])
 
     const groupExpensesByMonth = (expenses) => {
@@ -77,7 +77,7 @@ const BillsScreen = () => {
     const handleSearch = (query) => {
         setSearchQuery(query)
 
-        let filtered = expenses
+        let filtered = [...expenses];
 
         if (query.trim() !== "") {
             const lowerCaseQuery = query.toLowerCase()
@@ -124,6 +124,7 @@ const BillsScreen = () => {
                 </View>
 
                 <SectionList
+                    showsVerticalScrollIndicator={false}
                     sections={sections} // ✅ Now correctly formatted as an array of { title, data }
                     keyExtractor={(item) => item.expenseId}
                     renderItem={({ item }) => <BillComponent expenseDetails={item} isShrink={isShrink} />}

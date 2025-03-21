@@ -5,33 +5,47 @@ import LoadingScreen from '../LoadingScreen';
 import { useTheme, Text, Icon, Divider } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import BalanceComponent from '../../components/BalanceComponent';
-import { listenToBalances } from '../../redux/listeners/balanceListener';
+import { listenToBalances, stopListeningToBalances } from '../../redux/listeners/balanceListener';
 import { clearBalances } from '../../redux/slices/balancesSlice';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 
 const GroupBalanceScreen = () => {
+    const route = useRoute();
+    const { groupId } = route.params;
     const theme = useTheme();
     const dispatch = useDispatch();
     const { balances, loading, error } = useSelector((state) => state.balance);
     const { user } = useSelector(state => state.userAuth);
-    const { groupDetails } = useSelector(state => state.group)
     const uid = user?.uid;
-    const groupId = groupDetails?.groupId;
 
     if (!user) {
         return null;
     }
 
-    useEffect(() => {
-        dispatch(listenToBalances({ uid, groupId }));
+    useFocusEffect(
+        React.useCallback(() => {
+            console.log('BALANCEID:::::::::; ', groupId)
 
-        return () => {
-            dispatch(clearBalances()); // 🔹 Cleanup listener when unmounting
-        };
-    }, [dispatch, uid, groupId]);
+            dispatch(listenToBalances({ uid, groupId }));
 
-    if (loading) {
-        return <LoadingScreen />
-    }
+            return () => {
+                dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
+            };
+        }, [dispatch, uid, groupId])
+    );
+
+    // useEffect(() => {
+    //     console.log('BALANCEID:::::::::; ', groupId)
+    //     dispatch(listenToBalances({ uid, groupId }));
+
+    //     return () => {
+    //         dispatch(stopListeningToBalances()); // ✅ Stop Firestore listener when leaving screen
+    //     };
+    // }, [dispatch, uid, groupId])
+
+    // if (loading) {
+    //     return <LoadingScreen />
+    // }
 
     const renderEmptyComponent = () => (
         <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>

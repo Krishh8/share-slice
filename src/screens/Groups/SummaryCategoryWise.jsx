@@ -24,13 +24,14 @@ import {
 import { PieChart } from "react-native-chart-kit";
 import { useSelector } from "react-redux";
 import { Picker } from '@react-native-picker/picker';
+import { useRoute } from '@react-navigation/native';
 
 const MyChart = () => {
+    const route = useRoute();
+    const { groupId } = route.params;
     const theme = useTheme()
     const { user } = useSelector((state) => state.userAuth)
     const uid = user.uid
-    const { groupDetails } = useSelector((state) => state.group)
-    const groupId = groupDetails?.groupId
 
     const { groupExpenses } = useSelector((state) => state.expense)
     let expensesList = [...(groupExpenses[groupId] || [])]
@@ -364,9 +365,11 @@ const MyChart = () => {
 }
 const SummaryCategoryWiseScreen = () => {
     const theme = useTheme()
+    const route = useRoute();
+    const { groupId } = route.params;
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <MyChart />
+            <MyChart groupId={groupId} />
         </View>
     )
 }

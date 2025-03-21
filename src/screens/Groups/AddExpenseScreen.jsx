@@ -43,8 +43,9 @@ const AddExpenseScreen = () => {
         return null; // Don't render anything if user is null
     }
     const { groupDetails } = useSelector(state => state.group);
+    const { expensesLoading } = useSelector(state => state.expense)
     const groupId = groupDetails?.groupId;
-    const [groupMembers, setGroupMembers] = useState(groupDetails.members);
+    const [groupMembers, setGroupMembers] = useState(groupDetails.members)
 
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
     const [paidModalVisible, setPaidModalVisible] = useState(false);
@@ -116,20 +117,46 @@ const AddExpenseScreen = () => {
             createdBy: uid
         };
 
-        try {
-            await dispatch(createExpense({ groupId, expenseData })).unwrap();
-            setDescription('');
-            setAmount('');
-            setCategory(null);
-            setPaidBy(null);
-            setSplitType('equal');
-            setSplitDetails([]);
-            setSelectedMembers(groupMembers.map(member => member.uid));
-            setErrors({});
+        // try {
+        //     const result = await dispatch(createExpense({ groupId, expenseData })).unwrap();
+        //     const expenseId = result?.expenseId; // Extract the expense ID
+        //     console.log("Created Expense ID:", expenseId);
+        //     setDescription('');
+        //     setAmount('');
+        //     setCategory(null);
+        //     setPaidBy(null);
+        //     setSplitType('equal');
+        //     setSplitDetails([]);
+        //     setSelectedMembers(groupMembers.map(member => member.uid));
+        //     setErrors({});
 
-            navigation.navigate('GroupDetails', { groupId: groupId });
+        //     navigation.replace('GroupDetails', { groupId: groupId });
+        // } catch (error) {
+        //     console.error("Failed to create expense:", error);
+        // }
+
+        try {
+            const result = await dispatch(createExpense({ groupId, expenseData }));
+
+            if (createExpense.fulfilled.match(result)) {
+                console.log('expense created successfully:', result.payload);
+                setDescription('');
+                setAmount('');
+                setCategory(null);
+                setPaidBy(null);
+                setSplitType('equal');
+                setSplitDetails([]);
+                setSelectedMembers(groupMembers.map(member => member.uid));
+                setErrors({});
+
+                // Navigate to the GroupDetails screen with the newly created groupId
+                navigation.replace('MainStack', { screen: 'ExpenseDetails', params: { expenseId: result.payload?.expenseId } });
+            } else {
+                console.error('Error creating expense:', result.error?.message);
+                Alert.alert('Error', result.error?.message);
+            }
         } catch (error) {
-            console.error("Failed to create expense:", error);
+            console.error('Unexpected error:', error);
         }
     };
 
@@ -155,6 +182,7 @@ const AddExpenseScreen = () => {
                     contentContainerStyle={[styles.expenseContainer, { backgroundColor: theme.colors.background }]}
                 >
                     <HeaderComponent title="Add Expense" />
+
                     <View style={[styles.expenseCard, { backgroundColor: theme.colors.background }]}>
                         <Card.Content style={styles.expenseCardContent}>
                             <TextInput
@@ -312,8 +340,10 @@ const AddExpenseScreen = () => {
 
                             <Button
                                 mode="contained"
-                                icon="plus"
+                                icon={expensesLoading ? "loading" : "plus"}
                                 onPress={handleSubmit}
+                                loading={expensesLoading}
+                                disabled={expensesLoading}
                                 style={styles.addExpenseButton}
                                 labelStyle={{ fontSize: rfs(2) }}
                             >

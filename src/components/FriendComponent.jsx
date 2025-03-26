@@ -13,7 +13,7 @@ const FriendComponent = ({ friend }) => {
 
 
     const { otherUser, totalAmount } = friend;
-    const amountOwed = Math.abs(totalAmount).toFixed(2)
+    const amountOwed = parseFloat(Math.abs(totalAmount).toFixed(2));
     const isOwed = totalAmount > 0;
     const theme = useTheme();
     const { user } = useSelector(state => state.userAuth)

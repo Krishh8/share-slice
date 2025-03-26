@@ -8,6 +8,7 @@ import BillComponent from '../../components/BillComponent';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import LoadingScreen from '../LoadingScreen';
 import { Surface, useTheme, Button, Card, Divider, Icon, IconButton, Avatar } from 'react-native-paper';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 
 const GroupExpensesScreen = () => {
     const route = useRoute();
@@ -93,7 +94,10 @@ const GroupExpensesScreen = () => {
             <SectionList
                 sections={groupedExpenses} // ✅ Pass grouped data
                 keyExtractor={(item) => item.expenseId}
-                renderItem={({ item }) => <BillComponent expenseDetails={item} isShrink={isShrink} />}
+                renderItem={({ item, index }) => <Animated.View entering={FadeInRight.delay(index * 50)}>
+                    <BillComponent expenseDetails={item} isShrink={isShrink} />
+                </Animated.View>
+                }
 
                 // ✅ Render Month Headers
                 renderSectionHeader={({ section: { title, data } }) => (

@@ -121,12 +121,19 @@ const MyChart = () => {
         name: label,
         value,
         color: [
-            theme.colors.primary,
-            theme.colors.secondary,
-            theme.colors.error,
-            theme.colors.tertiary,
-            theme.colors.surfaceVariant,
-        ][index % 5],
+            "#FF5733", // Vibrant Red-Orange
+            "#33B5E5", // Cool Blue
+            "#FFEB3B", // Bright Yellow
+            "#8E44AD", // Rich Purple
+            "#2ECC71", // Fresh Green
+            "#FF9800", // Warm Orange
+            "#E91E63", // Deep Pink
+            "#00BCD4", // Cyan Blue
+            "#9C27B0", // Dark Purple
+            "#4CAF50", // Soft Green
+            "#F44336", // Bold Red
+            "#607D8B"  // Neutral Blue-Grey
+        ][index % 12],
         legendFontColor: theme.colors.onSurface,
         legendFontSize: rfs(1.4),
     }))

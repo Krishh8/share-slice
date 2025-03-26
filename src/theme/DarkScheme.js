@@ -87,7 +87,7 @@ export const DarkScheme = {
     "surfaceDisabled": "rgba(234, 225, 217, 0.12)",
     "onSurfaceDisabled": "rgba(234, 225, 217, 0.38)",
     "backdrop": "rgba(56, 47, 36, 0.4)",
-    "red": "rgb(255, 180, 168)",
+    "red": "rgb(220, 144, 133)",
     "green": "rgb(114, 222, 94)",
 
 }

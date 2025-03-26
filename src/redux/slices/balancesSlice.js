@@ -165,7 +165,7 @@ export const revertOldBalances = createAsyncThunk(
 
 export const updateBalanceAfterPayment = createAsyncThunk(
     'balances/updateBalanceAfterPayment',
-    async ({ creditorId, debtorId, groupId, paidAmount, paymentMethod }, { rejectWithValue }) => {
+    async ({ creditorId, debtorId, groupId, paidAmount, paymentMethod, tid }, { rejectWithValue }) => {
         try {
             const balanceDocId = `${creditorId}_${debtorId}_${groupId}`;
             const balanceRef = firestore().collection('balances').doc(balanceDocId);
@@ -187,6 +187,7 @@ export const updateBalanceAfterPayment = createAsyncThunk(
                 groupId,
                 paidAmount,
                 paymentMethod,
+                tid,
                 timestamp: firestore.Timestamp.now()
             });
             console.log("Balances updated after upi payment successfully.");
@@ -234,7 +235,7 @@ export const updateBalanceAfterCashPayment = createAsyncThunk(
 
 export const settleFullBalanceOutsideGroup = createAsyncThunk(
     'balances/settleFullBalanceOutsideGroup',
-    async ({ creditorId, debtorId, paidAmount, paymentMethod }, { rejectWithValue }) => {
+    async ({ creditorId, debtorId, paidAmount, paymentMethod, tid }, { rejectWithValue }) => {
         try {
             console.log(creditorId, debtorId, paidAmount, paymentMethod)
             const balancesRef = firestore().collection('balances');
@@ -270,15 +271,21 @@ export const settleFullBalanceOutsideGroup = createAsyncThunk(
             // Commit all deletions at once
             await batch.commit();
 
-            // Store the transaction record
-            await firestore().collection('transactions').add({
+            const transactionData = {
                 creditorId,
                 debtorId,
                 paidAmount: totalAmountOwed,
                 paymentMethod,
                 groupIds, // Store all affected group IDs
                 timestamp: firestore.Timestamp.now()
-            });
+            };
+
+            if (tid) {
+                transactionData.tid = tif; // ✅ Add txnId only for UPI payments
+            }
+
+            // Store the transaction record
+            await firestore().collection('transactions').add(transactionData);
             console.log("Balances updated after FULL payment successfully.");
 
         } catch (error) {

@@ -81,14 +81,15 @@ import { useNavigation } from "@react-navigation/native";
 import { View, FlatList, StyleSheet } from "react-native";
 import { Avatar, Text, IconButton, useTheme, Surface, Card } from "react-native-paper";
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
+import avatars from "../data/Avatar";
 
-const FriendContainer = ({ members, disableAddButton = false }) => {
+const FriendContainer = ({ members, navigation: propNavigation }) => {
     const theme = useTheme();
-    const navigation = useNavigation();
+    const navigation = propNavigation || useNavigation();
 
     const renderItem = ({ item }) => (
         <View style={styles.memberContainer}>
-            <Avatar.Image size={rh(7)} source={{ uri: item.avatar }} />
+            <Avatar.Image size={rh(7)} source={avatars.find(a => a.id === (item?.avatar || 0))?.uri} />
             <Text style={[styles.memberName, { color: theme.colors.onSurface }]}>{item.name}</Text>
         </View>
     );
@@ -98,15 +99,6 @@ const FriendContainer = ({ members, disableAddButton = false }) => {
             <Card.Content>
                 <View style={styles.headerContainer}>
                     <Text variant="titleMedium" style={{ color: theme.colors.primary }}>Friends</Text>
-                    {!disableAddButton && (
-                        <IconButton
-                            icon="account-plus"
-                            mode="contained"
-                            onPress={() => navigation.navigate('AddFriends')}
-                            size={rfs(3)}
-                            style={[styles.addButton, { backgroundColor: theme.colors.primary, }]}
-                        />
-                    )}
                 </View>
                 <FlatList
                     data={members}

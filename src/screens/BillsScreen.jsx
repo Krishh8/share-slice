@@ -27,6 +27,7 @@ import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as r
 import BillComponent from '../components/BillComponent';
 import LoadingScreen from './LoadingScreen';
 import { QueryEndAtConstraint } from '@react-native-firebase/firestore';
+import Animated, { FadeIn, FadeInRight } from 'react-native-reanimated';
 
 
 const BillsScreen = () => {
@@ -127,7 +128,11 @@ const BillsScreen = () => {
                     showsVerticalScrollIndicator={false}
                     sections={sections} // ✅ Now correctly formatted as an array of { title, data }
                     keyExtractor={(item) => item.expenseId}
-                    renderItem={({ item }) => <BillComponent expenseDetails={item} isShrink={isShrink} />}
+                    renderItem={({ item, index }) =>
+                        <Animated.View entering={FadeInRight.delay(index * 50)}>
+                            <BillComponent expenseDetails={item} isShrink={isShrink} />
+                        </Animated.View>
+                    }
 
                     // Render Month Headers
                     renderSectionHeader={({ section: { title, data } }) => (

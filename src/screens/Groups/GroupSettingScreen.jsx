@@ -171,9 +171,10 @@ const GroupSettingScreen = () => {
 
             <View style={[styles.membersCard, { borderColor: theme.colors.primary }]}>
                 <Card.Title
-                    title="Group Members"
+                    style={{ alignItems: 'center', flexDirection: 'row' }}
+                    title={`Members (${members.length})`}
                     titleStyle={{ fontSize: rfs(3), fontWeight: 'bold', color: theme.colors.primary }}
-                    left={(props) => <Avatar.Icon {...props} icon="account-group" size={rfs(4.5)} />}
+                    left={(props) => <Avatar.Icon {...props} icon="account-group" size={rfs(5)} />}
                     right={(props) => (
                         <IconButton
                             {...props}

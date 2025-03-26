@@ -12,6 +12,7 @@ import CreateGroupModal from "../components/CreateGroupModal"
 import GroupComponent from "../components/GroupComponent"
 import { listenToBalances, stopListeningToBalances } from "../redux/listeners/balanceListener"
 import { clearBalances } from "../redux/slices/balancesSlice"
+import Animated, { FadeInDown } from "react-native-reanimated"
 
 const GroupsScreen = () => {
     const theme = useTheme()
@@ -162,10 +163,12 @@ const GroupsScreen = () => {
                     <FlatList
                         data={displayGroups}
                         keyExtractor={(item) => item.groupId}
-                        renderItem={({ item }) => (
-                            <GroupComponent group={item}
-                                totalAmount={groupedBalances[item.groupId]?.totalAmount || 0}
-                            />
+                        renderItem={({ item, index }) => (
+                            <Animated.View entering={FadeInDown.delay(index * 50)}>
+                                <GroupComponent group={item}
+                                    totalAmount={groupedBalances[item.groupId]?.totalAmount || 0}
+                                />
+                            </Animated.View>
                         )}
                         // contentContainerStyle={styles.flatListContent}
                         showsVerticalScrollIndicator={false}

@@ -38,48 +38,7 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
         setSelectedCategory(category);
     };
 
-    // Animation values
-    // const scaleAnim = useRef(new Animated.Value(0)).current
-    // const opacityAnim = useRef(new Animated.Value(0)).current
-
-    // // Handle animation when visibility changes
-    // useEffect(() => {
-    //     if (visible) {
-    //         // Start opening animations
-    //         Animated.parallel([
-    //             Animated.timing(scaleAnim, {
-    //                 toValue: 1,
-    //                 duration: 500,
-    //                 useNativeDriver: true,
-    //             }),
-    //             Animated.timing(opacityAnim, {
-    //                 toValue: 1,
-    //                 duration: 500,
-    //                 useNativeDriver: true,
-    //             }),
-    //         ]).start()
-    //     } else {
-    //         // Reset animation values when modal is hidden
-    //         scaleAnim.setValue(0)
-    //         opacityAnim.setValue(0)
-    //     }
-    // }, [visible, scaleAnim, opacityAnim])
-
     const handleClose = () => {
-        // Run closing animation
-        // Animated.parallel([
-        //     Animated.timing(scaleAnim, {
-        //         toValue: 0,
-        //         duration: 250,
-        //         useNativeDriver: true,
-        //     }),
-        //     Animated.timing(opacityAnim, {
-        //         toValue: 0,
-        //         duration: 250,
-        //         useNativeDriver: true,
-        //     }),
-        // ]).start(() => {
-        // After animation completes, reset form and dismiss modal
         setGroupName("")
         setSelectedCategory(categories[0])
         setError("")
@@ -106,18 +65,6 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
 
             if (createGroup.fulfilled.match(result)) {
                 console.log('Group created successfully:', result.payload);
-                // Animated.parallel([
-                //     Animated.timing(scaleAnim, {
-                //         toValue: 0,
-                //         duration: 250,
-                //         useNativeDriver: true,
-                //     }),
-                //     Animated.timing(opacityAnim, {
-                //         toValue: 0,
-                //         duration: 250,
-                //         useNativeDriver: true,
-                //     }),
-                // ]).start(() => {
                 onDismiss()
                 setGroupName("")
                 setSelectedCategory(categories[0])
@@ -135,12 +82,6 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
 
     };
 
-    // const animatedContainerStyle = {
-    //     transform: [{ scale: scaleAnim }],
-    //     opacity: opacityAnim,
-    // }
-
-
     return (
         // <PaperProvider>
         <Portal>
@@ -157,7 +98,7 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                     },
                 }}
             >
-                {/* <Animated.View style={[styles.scrollContainer, animatedContainerStyle]}> */}
+
                 <View style={[styles.scrollContainer,]}>
                     <Text
                         style={[
@@ -229,7 +170,6 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                         </Button>
                     </View>
                 </View>
-                {/* </Animated.View> */}
             </Modal>
         </Portal >
         // </PaperProvider>

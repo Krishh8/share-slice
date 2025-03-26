@@ -6,6 +6,7 @@ import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as r
 import CreateGroupModal from "./CreateGroupModal";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGroups } from "../redux/slices/groupSlice";
+import Animated, { FadeInLeft, FadeInRight } from "react-native-reanimated";
 
 const RecentGroupsComponent = () => {
     const theme = useTheme();
@@ -31,8 +32,8 @@ const RecentGroupsComponent = () => {
     }, [groups]);
 
 
-    const renderItem = ({ item }) => (
-        <View style={styles.groupContainer}>
+    const renderItem = ({ item, index }) => (
+        <Animated.View entering={FadeInRight.delay(index * 50)} style={styles.groupContainer}>
             <View style={styles.avatarContainer}>
                 <Avatar.Icon size={rfs(7)} icon={item.category.icon} />
                 <IconButton
@@ -43,7 +44,7 @@ const RecentGroupsComponent = () => {
                 />
             </View>
             <Text style={[styles.groupName, { color: theme.colors.primary }]}>{item.groupName}</Text>
-        </View >
+        </Animated.View >
     );
 
     return (

@@ -17,24 +17,9 @@ const BalanceComponent = ({ balance }) => {
         return null;
     }
 
-    // const openUPIApp = (creditor, amount) => {
-    //     console.log("Opening UPI for:", creditor);
-
-    //     if (!creditor.upiId) {
-    //         Alert.alert("Error", "No UPI ID available");
-    //         return;
-    //     }
-
-    //     const upiUri = `upi://pay?pa=${creditor.upiId}&pn=${encodeURIComponent(creditor.name)}&am=${amount}&cu=INR`;
-
-    //     Linking.openURL(upiUri).catch((err) => {
-    //         console.error("Error opening UPI app:", err);
-    //         Alert.alert("No UPI app found!");
-    //     });
-    // };
-
     const payViaUPI = () => {
-        openUPIAppForGroupSettlement(balance.creditor, (balance.amountOwed).toFixed(2), balance.debtorId, balance.groupId)
+        const amount = parseFloat((balance.amountOwed).toFixed(2));
+        openUPIAppForGroupSettlement(balance.creditor, amount, balance.debtorId, balance.groupId)
     }
 
     return (

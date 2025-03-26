@@ -14,6 +14,7 @@ import { getUserByUserId } from '../services/userService';
 import { fetchExpenseDetails } from '../redux/slices/expensesSlice';
 import LoadingScreen from '../screens/LoadingScreen';
 import { fetchGroupDetails } from '../redux/slices/groupSlice';
+import Animated, { FadeIn, FadeInLeft, FadeInRight, SlideInUp } from 'react-native-reanimated';
 
 const BillComponent = ({ expenseDetails, isShrink }) => {
     const dispatch = useDispatch();
@@ -57,7 +58,7 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
     // 3️⃣ Calculate Net Amount (Get or Pay)
     let netAmount = userPaid - userOwes;
     let userAction = netAmount > 0 ? "You get" : "You pay";
-    let displayAmount = Math.abs(netAmount);
+    let displayAmount = Math.abs(netAmount).toFixed(2);
 
     useEffect(() => {
         const fetchPayerName = async () => {
@@ -92,9 +93,7 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
         fetchGroupName();
     }, [expenseDetails.groupId]);
 
-
     return (
-
         <View style={{ backgroundColor: theme.colors.background }}>
             {/* <Divider bold /> */}
             {!isShrink ?
@@ -142,12 +141,19 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
                                 </Text>
                             </View>
                             <View style={styles.splits}>
-                                <Text variant="titleMedium" style={{ color: netAmount > 0 ? theme.colors.green : theme.colors.red }}>
-                                    {userAction}
-                                </Text>
-                                <Text variant="titleMedium" style={{ color: netAmount > 0 ? theme.colors.green : theme.colors.red }}>
-                                    ₹{displayAmount}
-                                </Text>
+                                {displayAmount != 0 ?
+                                    <>
+                                        <Text variant="titleMedium" style={{ color: netAmount > 0 ? theme.colors.green : theme.colors.red }}>
+                                            {userAction}
+                                        </Text>
+                                        <Text variant="titleMedium" style={{ color: netAmount > 0 ? theme.colors.green : theme.colors.red }}>
+                                            ₹{displayAmount}
+                                        </Text>
+                                    </>
+                                    :
+                                    <Text variant="titleSmall">
+                                        Not Involved
+                                    </Text>}
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -209,7 +215,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     splits: {
-        width: "20%",
+        width: "30%",
         alignItems: "flex-end",
     },
     shrink: {

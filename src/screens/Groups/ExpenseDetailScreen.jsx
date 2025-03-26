@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react"
-import { ScrollView, View, StyleSheet, Animated } from "react-native"
+import { ScrollView, View, StyleSheet, } from "react-native"
 import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/native"
 import { useDispatch, useSelector } from "react-redux"
 import { Text, Card, Avatar, Chip, IconButton, useTheme, Surface, TouchableRipple, Appbar } from "react-native-paper"
@@ -13,6 +13,8 @@ import LoadingScreen from "../LoadingScreen"
 import avatars from "../../data/Avatar"
 import HeaderComponent from "../../components/HeaderComponent"
 import { fetchGroupDetails } from "../../redux/slices/groupSlice"
+import { AnimatedView } from "react-native-reanimated/lib/typescript/component/View"
+import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated"
 
 const ExpenseDetailScreen = () => {
     const route = useRoute()
@@ -24,8 +26,6 @@ const ExpenseDetailScreen = () => {
     const { expenseDetails, expenseDetailsLoading } = useSelector((state) => state.expense)
     const { groupDetails } = useSelector((state) => state.group)
     const [isAdmin, setIsAdmin] = useState(false)
-
-    const fadeAnim = React.useRef(new Animated.Value(0)).current
 
     if (!user) {
         return null;
@@ -47,17 +47,10 @@ const ExpenseDetailScreen = () => {
     }, [dispatch, expenseId])
 
     useEffect(() => {
-        if (expenseDetails && !expenseDetailsLoading) {
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }).start()
-        }
         if (groupDetails) {
             setIsAdmin(groupDetails?.admins.includes(user?.uid) || expenseDetails?.createdBy === user?.uid)
         }
-    }, [expenseDetails, expenseDetailsLoading, groupDetails, fadeAnim])
+    }, [expenseDetails, expenseDetailsLoading, groupDetails])
 
     const formatDate = (isoString) => {
         return new Date(isoString).toLocaleDateString("en-US", {
@@ -72,7 +65,7 @@ const ExpenseDetailScreen = () => {
 
     return (
         <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <Animated.View style={{ opacity: fadeAnim }}>
+            <Animated.View>
                 <Appbar.Header>
                     <Appbar.Action icon="chevron-left" size={rfs(3.5)} iconColor={theme.colors.primary} onPress={() => {
                         if (navigation.canGoBack()) {

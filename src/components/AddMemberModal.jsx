@@ -1,4 +1,4 @@
-import { FlatList, StyleSheet, View } from 'react-native'
+import { FlatList, Linking, StyleSheet, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Button, Modal, Portal, Searchbar, Text, TouchableRipple, useTheme } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
@@ -7,10 +7,13 @@ import Contacts from 'react-native-contacts';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import { useSelector } from 'react-redux';
 import { checkUserExists } from '../services/userService';
+import FriendContainer from './FriendContainer';
+import { useNavigation } from '@react-navigation/native';
 // import Share from 'react-native-share';
 
 const AddMemberModal = ({ visible, onDismiss }) => {
     const theme = useTheme();
+    const navigation = useNavigation()
     const [searchQuery, setSearchQuery] = useState('');
     const [contacts, setContacts] = useState([]);
     const [filteredContacts, setFilteredContacts] = useState([]);
@@ -19,61 +22,67 @@ const AddMemberModal = ({ visible, onDismiss }) => {
     const groupId = groupDetails?.groupId
     console.log('Group id in add member modal ', groupId)
 
-    // useEffect(() => {
-    //     console.log('check contact permission')
-    //     checkContactsPermission(); // Check permission status on mount
-    // }, []);
+    useEffect(() => {
+        console.log('check contact permission')
+        checkContactsPermission(); // Check permission status on mount
+    }, []);
 
-    // useEffect(() => {
-    //     // Listen for Dynamic Links when app is opened from a link
-    //     const unsubscribe = dynamicLinks().onLink(handleDeepLink);
+    useEffect(() => {
+        // Listen for Dynamic Links when app is opened from a link
+        const unsubscribe = dynamicLinks().onLink(handleDeepLink);
 
-    //     // Check if app was opened from a dynamic link
-    //     dynamicLinks().getInitialLink().then(handleDeepLink);
+        // Check if app was opened from a dynamic link
+        dynamicLinks().getInitialLink().then(handleDeepLink);
 
-    //     return () => unsubscribe();
-    // }, []);
+        return () => unsubscribe();
+    }, []);
 
-    // const checkUserStatus = async (contactList) => {
-    //     const updatedContacts = await Promise.all(contactList.map(async (contact) => {
-    //         const isUser = await checkUserExists(contact.phoneNumber); // Call API to check
-    //         return { ...contact, isUser };
-    //     }));
-    //     setContacts(updatedContacts);
-    //     setFilteredContacts(filteredContacts);
-    // };
+    const checkUserStatus = async (contactList) => {
+        const updatedContacts = await Promise.all(contactList.map(async (contact) => {
+            const isUser = await checkUserExists(contact.phoneNumber); // Call API to check
+            return { ...contact, isUser };
+        }));
+        setContacts(updatedContacts);
+        setFilteredContacts(filteredContacts);
+    };
 
-    // const handleDeepLink = (link) => {
-    //     if (link) {
-    //         const groupId = new URL(link.url).searchParams.get('groupId');
-    //         if (groupId) {
-    //             console.log('User invited to group:', groupId);
-    //             // Navigate to Group Screen (Example using React Navigation)
-    //             // navigation.navigate('GroupDetails', { groupId });
-    //         }
-    //     }
-    // };
+    const handleDeepLink = (link) => {
+        if (link) {
+            console.log('Received deep link:', link.url);
 
-    // const generateInviteLink = async (groupId) => {
-    //     try {
-    //         const link = await dynamicLinks().buildShortLink({
-    //             link: `https://shareslice.com/groupInvite?groupId=${groupId}`,
-    //             domainUriPrefix: 'https://sharesliceapp.page.link',
-    //             android: {
-    //                 packageName: 'com.shareslice',
-    //             },
-    //             // ios: {
-    //             //     bundleId: 'com.yourapp.ios',
-    //             //     appStoreId: 'YOUR_APP_STORE_ID', // Optional
-    //             // },
-    //         });
+            const parsed = queryString.parseUrl(link.url);
+            const groupId = parsed.query.groupId;
 
-    //         return link;
-    //     } catch (error) {
-    //         console.error('Error creating invite link:', error);
-    //         return null;
-    //     }
-    // };
+            if (groupId) {
+                console.log('User invited to group:', groupId);
+                navigation.navigate('GroupDetails', { groupId });
+            }
+        }
+    };
+
+    const generateInviteLink = async (groupId) => {
+        try {
+            const link = await dynamicLinks().buildShortLink({
+                link: `https://shareslice.com/groupInvite?groupId=${groupId}`,
+                domainUriPrefix: 'https://sharesliceapp.page.link',
+                android: {
+                    packageName: 'com.shareslice',
+                    fallbackUrl: 'https://play.google.com/store/apps/details?id=com.shareslice'
+                },
+                // ios: {
+                //     bundleId: 'com.yourapp.ios',
+                //     appStoreId: 'YOUR_APP_STORE_ID', // Optional
+                // fallbackUrl: 'https://apps.apple.com/app/idYOUR_APP_STORE_ID'
+                // },
+            });
+            console.log('link: ', link)
+
+            return link;
+        } catch (error) {
+            console.error('Error creating invite link:', error);
+            return null;
+        }
+    };
 
     // const sendInvite = async (phoneNumber) => {
     //     const inviteLink = await generateInviteLink(groupId);
@@ -84,89 +93,96 @@ const AddMemberModal = ({ visible, onDismiss }) => {
     //         message: `Hey! Join my group using this link: ${inviteLink}`,
     //         url: inviteLink,
     //     };
-
-    //     // await Share.open(options);
-    // };
-
-    // const fetchContacts = async () => {
     //     try {
-    //         console.log('Contacts Module:', Contacts);
-
-    //         if (!Contacts || typeof Contacts.getAll !== 'function') {
-    //             console.error('react-native-contacts is not properly linked or is null.');
-    //             return;
-    //         }
-
-    //         const contacts = await Contacts.getAll();
-    //         if (!contacts) {
-    //             return <ActivityIndicator size="large" color="blue" />;
-    //         }
-
-    //         console.log("Contacts fetched:", contacts);
-
-    //         const filteredContacts = contacts
-    //             .filter(contact => contact.phoneNumbers.length > 0)
-    //             .map(contact => ({
-    //                 id: contact.recordID,
-    //                 name: contact.displayName,
-    //                 phoneNumber: contact.phoneNumbers[0].number,
-    //                 isUser: false, // Default false, check from backend
-    //             }));
-
-    //         await checkUserStatus(filteredContacts);
+    //         await Share.open(options);
     //     } catch (error) {
-    //         console.error('Error fetching contacts:', error);
+    //         console.error('Error sharing invite:', error);
     //     }
     // };
 
-    // const askContactsPermission = () => {
-    //     request(PERMISSIONS.ANDROID.READ_CONTACTS).then((status) => {
-    //         switch (status) {
-    //             case RESULTS.UNAVAILABLE:
-    //                 return console.log('This feature is not available (on this device / in this context)');
-    //             case RESULTS.DENIED:
-    //                 return console.log('The permission has not been requested / is denied but requestable');
-    //             case RESULTS.BLOCKED:
-    //                 return console.log('The permission is denied and not requestable');
-    //             case RESULTS.GRANTED:
-    //                 checkContactsPermission()
-    //                 return console.log('The permission is granted');
-    //             case RESULTS.LIMITED:
-    //                 return console.log('The permission is granted but with limitations');
-    //         }
-    //     });
-    // }
+    const sendInviteViaSMS = async (phoneNumber) => {
+        const inviteLink = await generateInviteLink(groupId);
+        if (!inviteLink) return;
 
-    // const checkContactsPermission = async () => {
-    //     const status = await check(PERMISSIONS.ANDROID.READ_CONTACTS);
-    //     console.log('Permission status:', status);
+        const message = `Hey! Join my group on SliceShare using this link: ${inviteLink}`;
+        const smsUrl = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
 
-    //     if (status === RESULTS.GRANTED) {
-    //         setPermissionGranted(true);
-    //         console.log('Permission granted. Fetching contacts...');
-    //         setTimeout(fetchContacts, 500);
-    //     } else {
-    //         console.log('Permission NOT granted:', status);
-    //     }
-    // };
+        try {
+            await Linking.openURL(smsUrl);
+            console.log('Invitation sent')
+        } catch (error) {
+            console.error('Error sending SMS invite:', error);
+        }
+    };
 
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            if (searchQuery.trim() === '') {
-                setFilteredContacts(contacts);
-                return;
+    const fetchContacts = async () => {
+        try {
+            const contacts = await Contacts.getAll();
+            if (!contacts) {
+                return <ActivityIndicator size="large" color="blue" />;
             }
 
-            const filtered = contacts.filter(contact =>
-                contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                contact.phoneNumber.replace(/\s+/g, '').includes(searchQuery.replace(/\s+/g, ''))
-            );
+            console.log("Contacts fetched:", contacts);
 
-            setFilteredContacts(filtered);
-        }, 200); // Debounce delay (adjust if necessary)
+            const filteredContacts = contacts
+                .filter(contact => contact.phoneNumbers.length > 0)
+                .map(contact => ({
+                    id: contact.recordID,
+                    name: contact.displayName,
+                    phoneNumber: contact.phoneNumbers[0].number,
+                    isUser: false, // Default false, check from backend
+                }));
 
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchQuery, contacts]);
+            await checkUserStatus(filteredContacts);
+        } catch (error) {
+            console.error('Error fetching contacts:', error);
+        }
+    };
+
+    const askContactsPermission = () => {
+        request(PERMISSIONS.ANDROID.READ_CONTACTS).then((status) => {
+            switch (status) {
+                case RESULTS.UNAVAILABLE:
+                    return console.log('This feature is not available (on this device / in this context)');
+                case RESULTS.DENIED:
+                    return console.log('The permission has not been requested / is denied but requestable');
+                case RESULTS.BLOCKED:
+                    return console.log('The permission is denied and not requestable');
+                case RESULTS.GRANTED:
+                    checkContactsPermission()
+                    return console.log('The permission is granted');
+                case RESULTS.LIMITED:
+                    return console.log('The permission is granted but with limitations');
+            }
+        });
+    }
+
+    const checkContactsPermission = async () => {
+        const status = await check(PERMISSIONS.ANDROID.READ_CONTACTS);
+        console.log('Permission status:', status);
+
+        if (status === RESULTS.GRANTED) {
+            setPermissionGranted(true);
+            console.log('Permission granted. Fetching contacts...');
+            fetchContacts();
+        } else {
+            console.log('Permission NOT granted:', status);
+        }
+    };
+
+    useEffect(() => {
+        if (!searchQuery || searchQuery.trim() === '') {  // Ensure searchQuery is defined
+            setFilteredContacts();
+            return;
+        }
+
+        const filtered = contacts.filter(contact =>
+            contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            contact.phoneNumber.replace(/\s+/g, '').includes(searchQuery.replace(/\s+/g, ''))
+        );
+
+        setFilteredContacts(filtered);
+    }, [searchQuery, contacts]); // Add dependencies to avoid stale state issues
 
     const handleSearch = (query) => {
         setSearchQuery(String(query)); // Ensure it's a string
@@ -190,33 +206,36 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                     <Button labelStyle={[{ fontSize: rfs(2.5) }]} onPress={() => (onDismiss())}>Done</Button>
                 </View>
 
+                {/* <FriendContainer navigation={navigation} members={groupDetails.members} /> */}
+
                 <Searchbar
                     style={[styles.searchbar,]}
                     placeholder="Search friends"
                     onChangeText={handleSearch}
-                    value={searchQuery}
+                    value={(searchQuery) => setSearchQuery(searchQuery)}
                     loading={false}
-                    keyboardType='numeric'
                 />
 
-                <View>
-                    <Text style={[{ fontSize: rfs(2) }]}>Friends</Text>
-                </View>
-                {/* {!permissionGranted && (
+                {!permissionGranted && (
                     <Button mode='contained' style={[styles.allowBtn]} onPress={askContactsPermission} >Allow contacts</Button>
-                )} */}
+                )}
+                {searchQuery && <Text variant='titleMedium' style={[{ color: theme.colors.primary }]}>Friends</Text>}
                 <FlatList
                     data={filteredContacts}
+                    showsVerticalScrollIndicator={false}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
                         <View style={styles.contactRow}>
-                            <Text style={{ fontSize: rfs(2) }}>{item.name}</Text>
+                            <View>
+                                <Text style={{ fontSize: rfs(2) }}>{item.name}</Text>
+                                <Text style={{ fontSize: rfs(2) }}>{item.phoneNumber}</Text>
+                            </View>
                             {item.isUser ? (
                                 <Button mode="contained" onPress={() => addUserToGroup(item.phoneNumber)}>
                                     Add
                                 </Button>
                             ) : (
-                                <Button mode="outlined" onPress={() => sendInvite(item.phoneNumber)}>
+                                <Button mode="outlined" onPress={() => sendInviteViaSMS(item.phoneNumber)}>
                                     Invite
                                 </Button>
                             )}
@@ -247,7 +266,6 @@ const styles = StyleSheet.create({
     },
     searchbar: {
         marginVertical: rw(2),
-        marginBottom: rh(2),
         borderRadius: rh(1),
         elevation: 0,
     },

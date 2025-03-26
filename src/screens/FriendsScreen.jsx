@@ -9,6 +9,7 @@ import { clearBalances } from "../redux/slices/balancesSlice";
 import avatars from "../data/Avatar";
 import FriendComponent from "../components/FriendComponent";
 import { useFocusEffect } from "@react-navigation/native";
+import Animated, { BounceInRight, BounceOutLeft, FadeInRight, FlipInEasyX, SlideInRight } from "react-native-reanimated";
 
 const FriendsScreen = () => {
     const theme = useTheme();
@@ -90,7 +91,11 @@ const FriendsScreen = () => {
                     <FlatList
                         showsVerticalScrollIndicator={false}
                         data={filteredFriends} // 🔹 Use filtered list
-                        renderItem={({ item }) => <FriendComponent friend={item} />}
+                        renderItem={({ item, index }) =>
+                            <Animated.View>
+                                <FriendComponent friend={item} />
+                            </Animated.View>
+                        }
                         keyExtractor={(item) => item.user?.uid || Math.random().toString()} // 🔹 Handle missing UIDs
                         style={styles.list}
                         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

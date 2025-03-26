@@ -131,9 +131,6 @@ const MyChart = () => {
                                 height={rh(30)}
                                 yAxisLabel="₹"
                                 chartConfig={{
-                                    backgroundColor: theme.colors.surface,
-                                    backgroundGradientFrom: theme.colors.surface,
-                                    backgroundGradientTo: theme.colors.surface,
                                     decimalPlaces: 0,
                                     color: (opacity = 1) => theme.colors.primary,
                                     labelColor: (opacity = 1) => theme.colors.onSurface,

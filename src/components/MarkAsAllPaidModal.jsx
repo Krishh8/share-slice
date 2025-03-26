@@ -31,7 +31,8 @@ const MarkAsAllPaidModal = ({ visible, onDismiss, amountOwed, debtor }) => {
                 creditorId: uid,
                 debtorId: debtor.uid,
                 paidAmount: Number(amount),
-                paymentMethod: "Cash"
+                paymentMethod: "Cash",
+                tid: null
             }))
             Alert.alert("Success", `Updated balance after receiving ₹${amount} in cash.`);
             onDismiss()

@@ -73,66 +73,174 @@
 // };
 
 
-import { Alert, Linking } from "react-native";
-import { store } from "../redux/store";
-import { settleFullBalanceOutsideGroup, updateBalanceAfterCashPayment } from "../redux/slices/balancesSlice";
+// import { Alert, Linking } from "react-native";
+// import { store } from "../redux/store";
+// import RNUpiPayment from "react-native-upi-payment";
+// import { settleFullBalanceOutsideGroup, updateBalanceAfterPayment } from "../redux/slices/balancesSlice";
 
 // 🔥 Common function to open UPI payment URL
-const openUPI = (creditor, amount, onSuccess) => {
-    if (!creditor.upiId) {
-        Alert.alert("Error", "No UPI ID available");
-        return;
-    }
+// const openUPI = (creditor, amount, onSuccess) => {
+//     if (!creditor.upiId) {
+//         Alert.alert("Error", "No UPI ID available");
+//         return;
+//     }
 
-    const upiUri = `upi://pay?pa=${creditor.upiId}&pn=${encodeURIComponent(creditor.fullName)}&am=${amount}&cu=INR`;
+//     const upiUri = `upi://pay?pa=${creditor.upiId}&pn=${encodeURIComponent(creditor.fullName)}&am=${amount}&cu=INR`;
 
-    Linking.openURL(upiUri)
-        .then(() => {
-            Linking.addEventListener("url", (event) => handleUPIResponse(event, onSuccess));
-        })
-        .catch(() => {
-            Alert.alert("No UPI app found!");
-        });
-};
+//     Linking.openURL(upiUri)
+//         .then(() => {
+//             Linking.addEventListener("url", (event) => handleUPIResponse(event, onSuccess));
+//         })
+//         .catch(() => {
+//             Alert.alert("No UPI app found!");
+//         });
+// };
 
 // 🔥 Common function to handle UPI response
-const handleUPIResponse = (event, onSuccess) => {
-    const url = event.url;
-    const params = new URLSearchParams(url.split('?')[1]);
+// const handleUPIResponse = (event, onSuccess) => {
+//     const url = event.url;
+//     const params = new URLSearchParams(url.split('?')[1]);
 
-    const txnStatus = params.get("Status");
-    const txnId = params.get("txnId");
+//     const txnStatus = params.get("Status");
+//     const txnId = params.get("txnId");
 
-    if (txnStatus === "SUCCESS") {
-        onSuccess();
-    } else {
-        Alert.alert("Payment Failed", "The UPI payment was not completed.");
-    }
+//     if (txnStatus === "SUCCESS") {
+//         onSuccess();
+//     } else {
+//         Alert.alert("Payment Failed", "The UPI payment was not completed.");
+//     }
 
-    Linking.removeAllListeners("url");
-};
+//     Linking.removeAllListeners("url");
+// };
 
-// ✅ Inside Group Settlement
-export const openUPIAppForGroupSettlement = (creditor, amount, debtorId, groupId) => {
-    openUPI(creditor, amount, () => {
-        store.dispatch(updateBalanceAfterCashPayment({
-            creditorId: creditor.id,
-            debtorId,
-            groupId,
-            paidAmount: amount,
-            paymentMethod: "UPI"
-        }));
-    });
-};
 
-// ✅ Outside Group Full Settlement
-export const openUPIAppForFullSettlement = (creditor, amount, debtorId) => {
-    openUPI(creditor, amount, () => {
-        store.dispatch(settleFullBalanceOutsideGroup({
-            creditorId: creditor.id,
-            debtorId,
-            paidAmount: amount,
-            paymentMethod: "UPI"
-        }));
-    });
-};
+// const openUPI = (creditor, amount, onSuccess) => {
+//     if (!creditor.upiId) {
+//         Alert.alert("Error", "No UPI ID available");
+//         return;
+//     }
+
+//     RNUpiPayment.initializePayment(
+//         {
+//             vpa: creditor.upiId, // Example: 'john@ybl' or 'mobileNo@upi'
+//             payeeName: creditor.fullName,
+//             amount: amount,
+//             transactionRef: `${creditor.uid}${Date.now()}`, // Corrected
+//             transactionNote: 'Payment via SliceShare'
+//         },
+//         successCallback,
+//         failureCallback
+//     );
+
+
+//     // const upiUri = `upi://pay?pa=${encodeURIComponent(creditor.upiId)}&pn=${encodeURIComponent(creditor.fullName)}&am=${amount}&cu=INR`;
+//     // const upiUri = `upi://pay?pa=khenikrish08@okaxis&pn=KrishKheni&cu=INR`;
+
+//     // console.log(upiUri)
+
+//     // ✅ Ensure the listener is set before opening UPI
+//     const handleUPIResponse = (event) => {
+//         const url = event.url;
+//         const params = new URLSearchParams(url.split('?')[1]);
+
+//         const txnStatus = params.get("Status"); // ✅ Case-sensitive key
+//         const tid = params.get("txnId") || params.get("tid") || 'TIID';
+
+//         if (txnStatus === "SUCCESS") {
+//             onSuccess(tid);
+//             console.log(onSuccess)
+//         } else {
+//             Alert.alert("Payment Failed", "The UPI payment was not completed.");
+//         }
+
+//         // ✅ Remove only the specific listener instead of all
+//         Linking.removeEventListener("url", handleUPIResponse);
+//     };
+
+//     Linking.addEventListener("url", handleUPIResponse);
+
+//     // ✅ Open UPI App
+//     Linking.openURL(upiUri).catch(() => {
+//         Alert.alert("Error", "No UPI app found!");
+//     });
+// };
+
+// const openUPI = (creditor, amount, onSuccess, onFailure) => {
+//     if (!creditor?.upiId) {
+//         Alert.alert("Error", "No UPI ID available");
+//         return;
+//     }
+
+//     const transactionRef = `${creditor.id}${Date.now()}`;
+
+//     RNUpiPayment.initializePayment(
+//         {
+//             vpa: creditor.upiId, // Example: 'john@ybl' or 'mobileNo@upi'
+//             payeeName: creditor.fullName,
+//             amount: amount, // Ensure proper decimal formatting
+//             transactionRef: transactionRef,
+//             transactionNote: "Payment via SliceShare",
+//         },
+//         (data) => successCallback(data, onSuccess),
+//         (data) => failureCallback(data, onFailure)
+//     );
+// };
+
+// // ✅ Success Callback
+// const successCallback = (data, onSuccess) => {
+//     if (data.Status === "SUCCESS") {
+//         onSuccess(data.txnId);
+//     } else {
+//         Alert.alert("Payment Failed", "Transaction was not successful.");
+//     }
+// };
+
+// // ✅ Failure Callback
+// const failureCallback = (data, onFailure) => {
+//     const errorMessage = data.message || "UPI Payment Failed";
+//     Alert.alert("Payment Failed", errorMessage);
+//     onFailure && onFailure(errorMessage);
+// };
+
+// // ✅ Group-Based UPI Payment Settlement
+// export const openUPIAppForGroupSettlement = (creditor, amount, debtorId, groupId) => {
+//     openUPI(
+//         creditor,
+//         amount,
+//         (tid) => {
+//             store.dispatch(
+//                 updateBalanceAfterPayment({
+//                     creditorId: creditor.id,
+//                     debtorId,
+//                     groupId,
+//                     paidAmount: amount,
+//                     paymentMethod: "UPI",
+//                     tid: tid,
+//                 })
+//             );
+//             Alert.alert("Payment Successful", `Transaction ID: ${tid}`);
+//         },
+//         (error) => console.log("Group UPI Payment Failed:", error)
+//     );
+// };
+
+// // ✅ Full Settlement (Outside Any Group)
+// export const openUPIAppForFullSettlement = (creditor, amount, debtorId) => {
+//     openUPI(
+//         creditor,
+//         amount,
+//         (tid) => {
+//             store.dispatch(
+//                 settleFullBalanceOutsideGroup({
+//                     creditorId: creditor.id,
+//                     debtorId,
+//                     paidAmount: amount,
+//                     paymentMethod: "UPI",
+//                     tid: tid,
+//                 })
+//             );
+//             Alert.alert("Payment Successful", `Transaction ID: ${tid}`);
+//         },
+//         (error) => console.log("Full UPI Payment Failed:", error)
+//     );
+// };

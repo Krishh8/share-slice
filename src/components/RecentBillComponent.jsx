@@ -6,6 +6,7 @@ import { Surface, useTheme, Button, Card, Divider, Icon } from 'react-native-pap
 import BillComponent from './BillComponent';
 import { fetchExpenses } from '../redux/slices/expensesSlice';
 import LoadingScreen from '../screens/LoadingScreen';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 
 const RecentBillComponent = () => {
     const dispatch = useDispatch();
@@ -38,8 +39,10 @@ const RecentBillComponent = () => {
             <FlatList
                 data={expenses.slice(0, 10)}
                 keyExtractor={(item) => item.expenseId}
-                renderItem={({ item }) => (
-                    <BillComponent expenseDetails={item} isShrink={false} />
+                renderItem={({ item, index }) => (
+                    <Animated.View entering={FadeInRight.delay(index * 50)}>
+                        <BillComponent expenseDetails={item} isShrink={false} />
+                    </Animated.View>
                 )}
                 ListEmptyComponent={
                     <Card style={styles.comingSoonCard}>

@@ -460,20 +460,7 @@ const AddMemberModal = ({ visible, onDismiss }) => {
     }, [fetchContacts])
 
     // Check manual phone number
-    const handleManualCheck = useCallback(async () => {
-        if (!manualPhoneNumber || manualPhoneNumber.trim() === '') return
 
-        setIsLoading(true)
-        try {
-            const formattedNumber = normalizePhoneNumber(manualPhoneNumber)
-            const userState = await checkUserExists(formattedNumber)
-            setManualUserState({ phoneNumber: formattedNumber, ...userState })
-        } catch (error) {
-            console.error('Error checking manual number:', error)
-        } finally {
-            setIsLoading(false)
-        }
-    }, [manualPhoneNumber, normalizePhoneNumber])
 
     // Add member to group
     const handleAddMember = useCallback((uid) => {
@@ -484,6 +471,7 @@ const AddMemberModal = ({ visible, onDismiss }) => {
     useEffect(() => {
         if (!searchQuery || searchQuery.trim() === '') {
             setFilteredContacts(contacts)
+            setManualUserState(null) // Reset manual search state
             return
         }
 
@@ -491,8 +479,36 @@ const AddMemberModal = ({ visible, onDismiss }) => {
             contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             contact.phoneNumber.replace(/\s+/g, '').includes(searchQuery.replace(/\s+/g, ''))
         )
-        setFilteredContacts(filtered)
+
+        if (filtered.length > 0) {
+            setFilteredContacts(filtered)
+            setManualUserState(null) // Reset manual search state if found in contacts
+        } else if (/^\d{10}$/.test(searchQuery)) {
+            // If a valid 10-digit number is entered, check manually
+            const formattedNumber = normalizePhoneNumber(searchQuery)
+            setManualPhoneNumber(formattedNumber)
+            handleManualCheck(formattedNumber) // Automatically check user status
+        } else {
+            setFilteredContacts([])
+            setManualUserState(null)
+        }
     }, [searchQuery, contacts])
+
+    // Modified handleManualCheck to accept input number
+    const handleManualCheck = useCallback(async (number) => {
+        if (!number) return
+
+        setIsLoading(true)
+        try {
+            const userState = await checkUserExists(number)
+            setManualUserState({ phoneNumber: number, ...userState })
+        } catch (error) {
+            console.error('Error checking number:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }, [])
+
 
     // Check permission on mount
     useEffect(() => {
@@ -540,6 +556,48 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         )
     }
 
+    const renderResults = () => {
+        if (filteredContacts.length > 0) {
+            return (
+                <>
+                    <Text variant='titleMedium' style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+                        Friends
+                    </Text>
+                    <FlatList
+                        data={filteredContacts}
+                        showsVerticalScrollIndicator={false}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderContactItem}
+                        contentContainerStyle={styles.contactsList}
+                        ListEmptyComponent={
+                            permissionGranted && !isLoading ? (
+                                <Text style={styles.emptyListText}>No contacts found</Text>
+                            ) : null
+                        }
+                    />
+                </>
+            )
+        } else if (manualUserState) {
+            return (
+                <View style={styles.manualUserRow}>
+                    <Text style={styles.manualUserPhone}>{manualUserState.phoneNumber}</Text>
+                    {manualUserState.exists ? (
+                        <Button mode="contained" onPress={() => handleAddMember(manualUserState.uid)}>
+                            Add
+                        </Button>
+                    ) : (
+                        <Button mode="outlined" onPress={() => sendInviteViaSMS(manualUserState.phoneNumber)}>
+                            Invite
+                        </Button>
+                    )}
+                </View>
+            )
+        } else if (!isLoading && searchQuery.length >= 10) {
+            return <Text style={styles.emptyListText}>User not found</Text>
+        }
+        return null
+    }
+
     return (
         <Portal>
             <Modal
@@ -577,7 +635,9 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                     </Button>
                 )}
 
-                <View style={styles.manualEntrySection}>
+                {renderResults()}
+
+                {/* <View style={styles.manualEntrySection}>
                     <Text variant='titleMedium' style={styles.sectionTitle}>
                         Enter Phone Number
                     </Text>
@@ -598,9 +658,9 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                             Check
                         </Button>
                     </View>
-                </View>
+                </View> */}
 
-                {manualUserState && (
+                {/* {manualUserState && (
                     <View style={styles.manualUserRow}>
                         <Text style={styles.manualUserPhone}>
                             {manualUserState.phoneNumber}
@@ -623,8 +683,8 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                             </Button>
                         )}
                     </View>
-                )}
-
+                )} */}
+                {/* 
                 {filteredContacts.length > 0 && (
                     <Text variant='titleMedium' style={[styles.sectionTitle, { color: theme.colors.primary }]}>
                         Friends
@@ -646,7 +706,7 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                             ) : null
                         }
                     />
-                )}
+                )} */}
             </Modal>
         </Portal>
     )

@@ -166,7 +166,7 @@ const VerifyOtpScreen = () => {
                         <OtpInput
                             numberOfDigits={6}
                             focusColor={theme.colors.primary}
-                            autoFocus={false}
+                            autoFocus={true}
                             hideStick={true}
                             placeholder="******"
                             blurOnFilled={true}
@@ -188,9 +188,9 @@ const VerifyOtpScreen = () => {
                             }}
                             theme={{
                                 // containerStyle: styles.container,
-                                pinCodeContainerStyle: styles.pinCodeContainer,
-                                pinCodeTextStyle: styles.pinCodeText,
-                                focusStickStyle: styles.focusStick,
+                                pinCodeContainerStyle: { backgroundColor: theme.colors.background, borderColor: theme.colors.outline },
+                                pinCodeTextStyle: { color: theme.colors.primary },
+                                focusStickStyle: { color: theme.colors.primary },
                                 focusedPinCodeContainerStyle: styles.activePinCodeContainer,
                                 placeholderTextStyle: styles.placeholderText,
                                 filledPinCodeContainerStyle: styles.filledPinCodeContainer,
@@ -209,9 +209,9 @@ const VerifyOtpScreen = () => {
                         style={styles.submitBtn}
                         labelStyle={styles.buttonText}
                         mode="contained"
-                        onPress={() => handleSubmit(otp.join(''))}
+                        onPress={() => handleSubmit(otp)}
                         loading={loading}
-                        disabled={loading || otp.join('').length !== 6}
+                        disabled={loading || otp.length !== 6}
                         icon="check-circle"
                     >
                         Verify OTP

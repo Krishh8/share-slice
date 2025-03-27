@@ -1,5 +1,6 @@
 import firestore from '@react-native-firebase/firestore';
 
+
 export const checkUserExists = async (phoneNumber) => {
     try {
         const querySnapshot = await firestore()
@@ -7,12 +8,20 @@ export const checkUserExists = async (phoneNumber) => {
             .where('phoneNumber', '==', phoneNumber)
             .get();
 
-        return !querySnapshot.empty; // Returns true if user exists, false otherwise
+        if (!querySnapshot.empty) {
+            // ✅ User exists, return the UID
+            const userDoc = querySnapshot.docs[0]; // Get the first matched document
+            return { exists: true, uid: userDoc.id };
+        } else {
+            // ❌ User does not exist
+            return { exists: false, uid: null };
+        }
     } catch (error) {
         console.error('Error checking user existence:', error);
-        return false;
+        return { exists: false, uid: null, error: error.message };
     }
 };
+
 
 export const getUserByUserId = async (uid) => {
     try {

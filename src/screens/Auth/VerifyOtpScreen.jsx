@@ -7,6 +7,7 @@ import auth from '@react-native-firebase/auth';
 import firestore, { Timestamp } from '@react-native-firebase/firestore';
 import { useDispatch, useSelector } from 'react-redux';
 import { sendOTP, verifyOTP } from '../../redux/slices/userAuthSlice';
+import { OtpInput } from "react-native-otp-entry";
 
 const VerifyOtpScreen = () => {
     const theme = useTheme();
@@ -17,11 +18,13 @@ const VerifyOtpScreen = () => {
 
     const { user, otpSent, loading, error } = useSelector(state => state.userAuth)
 
-    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    // const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [otp, setOtp] = useState("");
     const inputRefs = useRef([]);
     const [resendDisabled, setResendDisabled] = useState(false);
     const [countdown, setCountdown] = useState(0);
     const [confirmation, setConfirmation] = useState(null)
+    const countdownRef = useRef(null);
 
 
     const handleSendOTP = async () => {
@@ -41,14 +44,13 @@ const VerifyOtpScreen = () => {
     }, [phoneNumber]);
 
     useEffect(() => {
-        let timer;
         if (countdown > 0) {
-            timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+            countdownRef.current = setTimeout(() => setCountdown(countdown - 1), 1000);
             setResendDisabled(true);
         } else {
             setResendDisabled(false);
         }
-        return () => clearTimeout(timer);
+        return () => clearTimeout(countdownRef.current);
     }, [countdown]);
 
     const handleOtpChange = (value, index) => {
@@ -116,9 +118,9 @@ const VerifyOtpScreen = () => {
     };
 
     const handleResend = async () => {
-        setOtp(['', '', '', '', '', '']);
-        dispatch(handleSendOTP(phoneNumber));
-        setCountdown(30);
+        setOtp(""); // Clear previous OTP input
+        await handleSendOTP(); // Resend OTP
+        setCountdown(30); // Reset countdown timer
     };
 
     return (
@@ -140,7 +142,7 @@ const VerifyOtpScreen = () => {
                     </Text>
 
                     <View style={styles.otpContainer}>
-                        {otp.map((digit, index) => (
+                        {/* {otp.map((digit, index) => (
                             <TextInput
                                 key={index}
                                 style={[
@@ -160,7 +162,41 @@ const VerifyOtpScreen = () => {
                                 textColor={theme.colors.onSurface}
                                 mode="outlined"
                             />
-                        ))}
+                        ))} */}
+                        <OtpInput
+                            numberOfDigits={6}
+                            focusColor={theme.colors.primary}
+                            autoFocus={false}
+                            hideStick={true}
+                            placeholder="******"
+                            blurOnFilled={true}
+                            disabled={false}
+                            type="numeric"
+                            secureTextEntry={false}
+                            focusStickBlinkingDuration={500}
+                            onFocus={() => console.log("Focused")}
+                            onBlur={() => console.log("Blurred")}
+                            onTextChange={(text) => console.log(text)}
+                            onFilled={handleSubmit}
+                            textInputProps={{
+                                accessibilityLabel: "One-Time Password",
+                            }}
+                            textProps={{
+                                accessibilityRole: "text",
+                                accessibilityLabel: "OTP digit",
+                                allowFontScaling: false,
+                            }}
+                            theme={{
+                                // containerStyle: styles.container,
+                                pinCodeContainerStyle: styles.pinCodeContainer,
+                                pinCodeTextStyle: styles.pinCodeText,
+                                focusStickStyle: styles.focusStick,
+                                focusedPinCodeContainerStyle: styles.activePinCodeContainer,
+                                placeholderTextStyle: styles.placeholderText,
+                                filledPinCodeContainerStyle: styles.filledPinCodeContainer,
+                                disabledPinCodeContainerStyle: styles.disabledPinCodeContainer,
+                            }}
+                        />
                     </View>
 
                     {error && (
@@ -214,8 +250,8 @@ const styles = StyleSheet.create({
         marginBottom: rh(2),
     },
     otpContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        // flexDirection: 'row',
+        // justifyContent: 'space-between',
         marginVertical: rh(1),
     },
     otpInput: {

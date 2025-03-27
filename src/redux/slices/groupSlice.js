@@ -184,7 +184,6 @@ export const fetchGroupDetails = createAsyncThunk(
 
                     return userDoc.exists
                         ? {
-                            phoneNumber: userDoc.data().phoneNumber,
                             avatar: userDoc.data().avatar,
                             email: userDoc.data().email,
                             fullName: userDoc.data().fullName,
@@ -209,18 +208,71 @@ export const fetchGroupDetails = createAsyncThunk(
     },
 );
 
+// Add Member
+export const addMember = createAsyncThunk(
+    "group/addMember",
+    async ({ groupId, uid }, { rejectWithValue }) => {
+        try {
+            const groupRef = firestore().collection("groups").doc(groupId);
+            const userRef = firestore().collection("users").doc(uid);
+
+            // 🔹 Step 1: Check if the group exists
+            const groupDoc = await groupRef.get();
+            if (!groupDoc.exists) {
+                return rejectWithValue("Group does not exist.");
+            }
+
+            // 🔹 Step 2: Fetch new member details
+            const userDoc = await userRef.get();
+            if (!userDoc.exists) {
+                return rejectWithValue("User does not exist.");
+            }
+
+            const newMember = {
+                uid: userDoc.id,
+                fullName: userDoc.data().fullName,
+                phoneNumber: userDoc.data().phoneNumber,
+                email: userDoc.data().email,
+                avatar: userDoc.data().avatar,
+            };
+
+            const batch = firestore().batch();
+
+            // 🔹 Step 3: Add member to the group's `members` array
+            batch.update(groupRef, {
+                members: firestore.FieldValue.arrayUnion(uid),
+            });
+
+            // 🔹 Step 4: Add group to user's `groups` array
+            batch.update(userRef, {
+                groups: firestore.FieldValue.arrayUnion(groupId),
+            });
+
+            // 🔹 Step 5: Commit batch update
+            await batch.commit();
+
+            console.log("Member added successfully.");
+            return { groupId, newMember }; // ✅ Returning full member data
+        } catch (error) {
+            console.error("Error adding member:", error.message);
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+
 export const makeAdmin = createAsyncThunk(
     'group/makeAdmin',
-    async ({ groupId, userId }, { rejectWithValue }) => {
+    async ({ groupId, uid }, { rejectWithValue }) => {
         try {
             await firestore()
                 .collection('groups')
                 .doc(groupId)
                 .update({
-                    admins: firestore.FieldValue.arrayUnion(userId)
+                    admins: firestore.FieldValue.arrayUnion(uid)
                 });
 
-            return { userId };
+            return { uid, groupId };
         } catch (error) {
             return rejectWithValue(error.message);
         }
@@ -229,16 +281,16 @@ export const makeAdmin = createAsyncThunk(
 
 export const removeAdmin = createAsyncThunk(
     'group/removeAdmin',
-    async ({ groupId, userId }, { rejectWithValue }) => {
+    async ({ groupId, uid }, { rejectWithValue }) => {
         try {
             await firestore()
                 .collection('groups')
                 .doc(groupId)
                 .update({
-                    admins: firestore.FieldValue.arrayRemove(userId)
+                    admins: firestore.FieldValue.arrayRemove(uid)
                 });
 
-            return { userId };
+            return { uid, groupId };
         } catch (error) {
             return rejectWithValue(error.message);
         }
@@ -247,37 +299,51 @@ export const removeAdmin = createAsyncThunk(
 
 export const removeMember = createAsyncThunk(
     'group/removeMember',
-    async ({ groupId, userId }, { rejectWithValue }) => {
+    async ({ groupId, uid }, { rejectWithValue }) => {
         const batch = firestore().batch();
 
         try {
+            const groupRef = firestore().collection("groups").doc(groupId);
+
+            // 🔹 Step 1: Fetch the group document
+            const groupDoc = await groupRef.get();
+            if (!groupDoc.exists) {
+                return rejectWithValue("Group does not exist.");
+            }
             // 🔹 Step 1: Check if user has any outstanding balances
             const balancesSnapshot = await firestore()
                 .collection("balances")
                 .where("groupId", "==", groupId)
                 .where("amountOwed", ">", 0)
-                .where("debtorId", "==", userId)
+                .where("debtorId", "==", uid)
                 .get();
 
             const balancesSnapshot2 = await firestore()
                 .collection("balances")
                 .where("groupId", "==", groupId)
                 .where("amountOwed", ">", 0)
-                .where("creditorId", "==", userId)
+                .where("creditorId", "==", uid)
                 .get();
 
             if (!balancesSnapshot.empty || !balancesSnapshot2.empty) {
                 throw new Error("Cannot remove member: They have outstanding balances.");
             }
 
-            // 🔹 Step 2: Remove member from the group's `members` array
-            const groupRef = firestore().collection("groups").doc(groupId);
+            const groupData = groupDoc.data();
+            const isAdmin = groupData.admins.includes(uid);
+
             batch.update(groupRef, {
-                members: firestore.FieldValue.arrayRemove(userId),
+                members: firestore.FieldValue.arrayRemove(uid),
             });
 
+            if (isAdmin) {
+                batch.update(groupRef, {
+                    admins: firestore.FieldValue.arrayRemove(uid),
+                });
+            }
+
             // 🔹 Step 3: Remove group from user's `groups` array
-            const userRef = firestore().collection("users").doc(userId);
+            const userRef = firestore().collection("users").doc(uid);
             batch.update(userRef, {
                 groups: firestore.FieldValue.arrayRemove(groupId),
             });
@@ -285,6 +351,7 @@ export const removeMember = createAsyncThunk(
             // 🔹 Step 4: Commit batch update
             await batch.commit();
             console.log("Member removed successfully.");
+            return { uid, groupId };
         } catch (error) {
             console.error("Error removing member:", error.message);
         }
@@ -396,22 +463,39 @@ const groupSlice = createSlice({
                 state.errorGroupDetails = action.payload;
             })
 
+            .addCase(addMember.fulfilled, (state, action) => {
+                const { groupId, newMember } = action.payload
+                if (state.groupDetails.groupId === groupId) {
+                    const isAlreadyMember = state.groupDetails.members.some(member => member.uid === newMember.uid);
+                    if (!isAlreadyMember) {
+                        state.groupDetails.members.push(newMember);
+                    }
+                }
+            })
             .addCase(makeAdmin.fulfilled, (state, action) => {
-                if (state.groupDetails) {
-                    state.groupDetails.admins.push(action.payload.userId);
+                const { groupId, uid } = action.payload
+                if (state.groupDetails.groupId === groupId) {
+                    state.groupDetails.admins.push(uid);
                 }
             })
             .addCase(removeAdmin.fulfilled, (state, action) => {
-                if (state.groupDetails) {
-                    state.groupDetails.admins = state.groupDetails.admins.filter(id => id !== action.payload.userId);
+                const { groupId, uid } = action.payload
+                if (state.groupDetails.groupId === groupId) {
+                    state.groupDetails.admins = state.groupDetails.admins.filter(id => id !== uid);
                 }
             })
             .addCase(removeMember.fulfilled, (state, action) => {
-                if (state.groupDetails) {
-                    state.groupDetails.members = state.groupDetails.members.filter(id => id !== action.payload.userId);
-                    state.groupDetails.admins = state.groupDetails.admins.filter(id => id !== action.payload.userId);
+                const { groupId, uid } = action.payload;
+                if (state.groupDetails.groupId === groupId) {
+                    // ✅ Remove the member by filtering `uid` inside objects
+                    state.groupDetails.members = state.groupDetails.members.filter(member => member.uid !== uid);
+
+                    // ✅ Remove from admins list if they were an admin
+                    state.groupDetails.admins = state.groupDetails.admins.filter(adminUid => adminUid !== uid);
                 }
             });
+
+
 
     },
 });

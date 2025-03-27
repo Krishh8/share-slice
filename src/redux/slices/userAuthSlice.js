@@ -108,7 +108,7 @@ export const updateProfile = createAsyncThunk(
     'user/updateProfile',
     async ({ uid, fullName, email, avatar, upiId }, thunkAPI) => {
         try {
-            console.log("Updating profile:", fullName, email, avatar, upiId);
+            // console.log("Updating profile:", fullName, email, avatar, upiId);
 
             const userRef = firestore().collection("users").doc(uid);
             const userDoc = await userRef.get();
@@ -147,6 +147,72 @@ export const updateProfile = createAsyncThunk(
         }
     }
 );
+
+export const updateProfileAndJoinGroup = createAsyncThunk(
+    'user/updateProfileAndJoinGroup',
+    async ({ uid, fullName, email, avatar, upiId, groupId }, { rejectWithValue }) => {
+        try {
+            const userRef = firestore().collection('users').doc(uid);
+            const groupRef = groupId ? firestore().collection('groups').doc(groupId) : null;
+
+            // Fetch user data in a single call
+            const userDoc = await userRef.get();
+
+            if (!userDoc.exists) {
+                return rejectWithValue("User document not found in Firestore.");
+            }
+
+            const userData = userDoc.data();
+            const isEmailVerified = userData?.email === email;
+
+            // ✅ Batch Write for Performance Optimization
+            const batch = firestore().batch();
+
+            // Update user profile
+            batch.update(userRef, {
+                fullName,
+                email,
+                avatar,
+                upiId,
+                updatedAt: firestore.Timestamp.now(),
+                isProfileComplete: true,
+                isEmailVerified,
+            });
+
+            // Add user to the group (if applicable)
+            if (groupId) {
+                batch.update(groupRef, {
+                    members: firestore.FieldValue.arrayUnion(uid),
+                });
+                batch.update(userRef, {
+                    groups: firestore.FieldValue.arrayUnion(groupId),
+                });
+            }
+
+            await batch.commit(); // Execute batch update
+
+            // Reload Firebase Auth user (only if email changed)
+            if (auth().currentUser.email !== email) {
+                await auth().currentUser.reload();
+            }
+
+            console.log(`User ${uid} profile updated. Added to Group ${groupId || 'N/A'}`);
+
+            return {
+                uid,
+                fullName,
+                email,
+                avatar,
+                upiId,
+                isProfileComplete: true,
+                isEmailVerified,
+            };
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
 
 //Resend email
 export const resendVerificationEmail = createAsyncThunk(
@@ -274,6 +340,23 @@ const userAuthSlice = createSlice({
             .addCase(updateProfile.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload; // Store error message
+            })
+
+
+            .addCase(updateProfileAndJoinGroup.pending, (state) => {
+                state.loading = 'loading';
+                state.error = null;
+            })
+            .addCase(updateProfileAndJoinGroup.fulfilled, (state, action) => {
+                state.loading = false;
+                state.user = {
+                    ...state.user,  // Keep existing user data
+                    ...action.payload // Update only the changed fields
+                };
+            })
+            .addCase(updateProfileAndJoinGroup.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             })
 
             // **Resend Verification Email**

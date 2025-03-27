@@ -201,7 +201,7 @@ const GroupSettingScreen = () => {
                                             style={[styles.sectionIcon, { backgroundColor: theme.colors.primary }]}
                                             color={theme.colors.onPrimary}
                                         />
-                                        <Text style={styles.memberName}>{member.fullName}</Text>
+                                        <Text style={styles.memberName}>{member.uid === user?.uid ? <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>You</Text> : member.fullName}</Text>
                                     </View>
 
                                     {/* Show 'Owner' or 'Admin' chip */}
@@ -245,7 +245,7 @@ const GroupSettingScreen = () => {
                                                     <IconButton
                                                         icon="account-remove"
                                                         iconColor={theme.colors.primary}
-                                                        onPress={() => dispatch(removeMember({ groupId, userId: member.uid }))}
+                                                        onPress={() => dispatch(removeMember({ groupId, uid: member.uid }))}
                                                     />
                                                 </Tooltip>
                                             )}
@@ -268,7 +268,7 @@ const GroupSettingScreen = () => {
                                                     <IconButton
                                                         icon="shield-account"
                                                         iconColor={theme.colors.primary}
-                                                        onPress={() => dispatch(makeAdmin({ groupId, userId: member.uid }))}
+                                                        onPress={() => dispatch(makeAdmin({ groupId, uid: member.uid }))}
                                                     />
                                                 </Tooltip>
                                             )}
@@ -289,7 +289,7 @@ const GroupSettingScreen = () => {
                                                     <IconButton
                                                         icon="shield-off"
                                                         iconColor={theme.colors.primary}
-                                                        onPress={() => dispatch(removeAdmin({ groupId, userId: member.uid }))}
+                                                        onPress={() => dispatch(removeAdmin({ groupId, uid: member.uid }))}
                                                     />
                                                 </Tooltip>
                                             )}
@@ -302,6 +302,8 @@ const GroupSettingScreen = () => {
                 </Card.Content>
 
             </View>
+
+
 
             <AddMemberModal visible={visible} onDismiss={() => setVisible(false)} />
         </View >
@@ -377,7 +379,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: rh(1.5),
+        paddingVertical: rh(1.5),
         marginBottom: rh(1),
         borderRadius: rh(1),
         borderBottomWidth: rh(0.1),
@@ -385,6 +387,7 @@ const styles = StyleSheet.create({
     memberInfo: {
         flexDirection: 'row',
         alignItems: 'center',
+        flexShrink: 1
     },
     memberName: {
         marginLeft: rw(3),
@@ -393,7 +396,8 @@ const styles = StyleSheet.create({
     actions: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'flex-end'
+        justifyContent: 'flex-end',
+        // flexGrow: 1
     }
 })
 

@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateProfile } from '../../redux/slices/userAuthSlice';
 import LoadingScreen from '../LoadingScreen';
 import avatars from '../../data/Avatar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const validationSchema = Yup.object().shape({
     fullName: Yup.string()
@@ -110,7 +111,35 @@ const ProfileScreen = () => {
                 console.log("Email already linked.");
             }
 
-            await dispatch(updateProfile({ uid, fullName: values.fullName, email: values.email, avatar: values.avatar, upiId: values.upiId }))
+            const storedGroupId = await AsyncStorage.getItem('pendingGroupId');
+
+            if (storedGroupId) {
+                console.log("User was invited to group:", storedGroupId);
+
+                // ✅ Dispatch action to update profile & add user to group
+                await dispatch(updateProfileAndJoinGroup({
+                    uid: currentUser.uid,
+                    fullName: values.fullName,
+                    email: values.email,
+                    avatar: values.avatar,
+                    upiId: values.upiId,
+                    groupId: storedGroupId
+                }));
+
+                // ✅ Remove stored groupId after adding user to group
+                await AsyncStorage.removeItem('pendingGroupId');
+            } else {
+                // ✅ Normal profile update if no group invite exists
+                await dispatch(updateProfile({
+                    uid: currentUser.uid,
+                    fullName: values.fullName,
+                    email: values.email,
+                    avatar: values.avatar,
+                    upiId: values.upiId
+                }));
+            }
+
+            // await dispatch(updateProfile({ uid, fullName: values.fullName, email: values.email, avatar: values.avatar, upiId: values.upiId }))
 
             await currentUser.reload();
             if (!currentUser.emailVerified) {

@@ -347,8 +347,10 @@ const AddMemberModal = ({ visible, onDismiss }) => {
             const parsed = queryString.parseUrl(link.url)
             const groupId = parsed.query.groupId
             if (groupId) {
-                console.log(groupId)
-                await AsyncStorage.setItem('pendingGroupId', groupId)
+                console.log('Extracted Group ID from URL:', groupId); // Log the groupId
+                await AsyncStorage.setItem('pendingGroupId', groupId);
+            } else {
+                console.log('No groupId found in deep link.');
             }
         }
     }, [])
@@ -518,11 +520,11 @@ const AddMemberModal = ({ visible, onDismiss }) => {
     }, [checkContactsPermission])
 
     // Setup deep link handling
-    useEffect(() => {
-        const unsubscribe = dynamicLinks().onLink(handleDeepLink)
-        dynamicLinks().getInitialLink().then(handleDeepLink)
-        return () => unsubscribe()
-    }, [handleDeepLink])
+    // useEffect(() => {
+    //     const unsubscribe = dynamicLinks().onLink(handleDeepLink)
+    //     dynamicLinks().getInitialLink().then(handleDeepLink)
+    //     return () => unsubscribe()
+    // }, [handleDeepLink])
 
     // Render contact item
     const renderContactItem = ({ item }) => {

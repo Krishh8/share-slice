@@ -152,6 +152,8 @@ export const updateProfileAndJoinGroup = createAsyncThunk(
     'user/updateProfileAndJoinGroup',
     async ({ uid, fullName, email, avatar, upiId, groupId }, { rejectWithValue }) => {
         try {
+            console.log("called updateProfileAndJoinGroup")
+
             const userRef = firestore().collection('users').doc(uid);
             const groupRef = groupId ? firestore().collection('groups').doc(groupId) : null;
 
@@ -190,13 +192,14 @@ export const updateProfileAndJoinGroup = createAsyncThunk(
             }
 
             await batch.commit(); // Execute batch update
-
+            console.log("ADDed in database")
             // Reload Firebase Auth user (only if email changed)
             if (auth().currentUser.email !== email) {
                 await auth().currentUser.reload();
             }
 
             console.log(`User ${uid} profile updated. Added to Group ${groupId || 'N/A'}`);
+            console.log("called  complete from thunk updateProfileAndJoinGroup")
 
             return {
                 uid,

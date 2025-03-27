@@ -34,7 +34,6 @@ const ProfileScreen = () => {
     const navigation = useNavigation()
     const dispatch = useDispatch();
 
-    const storedGroupId = AsyncStorage.getItem('pendingGroupId');
     const { loading, user, error } = useSelector(state => state.userAuth)
     const { fullName, email, phoneNumber, avatar, uid, isEmailVerified, upiId } = user
 
@@ -45,6 +44,26 @@ const ProfileScreen = () => {
         phoneNumber: phoneNumber || '',
         upiId: upiId || ''
     };
+
+    const [groupId, setGroupId] = useState(null);
+
+    useEffect(() => {
+        const fetchGroupId = async () => {
+            try {
+                const storedGroupId = await AsyncStorage.getItem('pendingGroupId');
+                if (storedGroupId) {
+                    console.log('Fetched Group ID:', storedGroupId);
+                    setGroupId(storedGroupId);
+                } else {
+                    console.log('No pending Group ID found');
+                }
+            } catch (error) {
+                console.error('Error fetching Group ID:', error);
+            }
+        };
+
+        fetchGroupId();
+    }, []);
 
     const linkPhoneWithEmail = async (email) => {
         const user = auth().currentUser;
@@ -112,11 +131,9 @@ const ProfileScreen = () => {
                 console.log("Email already linked.");
             }
 
-            const storedGroupId = await AsyncStorage.getItem('pendingGroupId');
-
-            if (storedGroupId) {
-                console.log("User was invited to group:", storedGroupId);
-
+            if (groupId) {
+                console.log("User was invited to group:", groupId);
+                console.log("calling updateProfileAndJoinGroup")
                 // ✅ Dispatch action to update profile & add user to group
                 await dispatch(updateProfileAndJoinGroup({
                     uid: currentUser.uid,
@@ -129,6 +146,8 @@ const ProfileScreen = () => {
 
                 // ✅ Remove stored groupId after adding user to group
                 await AsyncStorage.removeItem('pendingGroupId');
+                console.log("called  complete from frontend updateProfileAndJoinGroup")
+
             } else {
                 // ✅ Normal profile update if no group invite exists
                 await dispatch(updateProfile({
@@ -272,7 +291,7 @@ const ProfileScreen = () => {
                                         style={styles.submitBtn}
                                         labelStyle={styles.buttonText}
                                     >
-                                        {storedGroupId ? "Submit & Join" : "Submit"}
+                                        {groupId ? "Submit & Join" : "Submit"}
                                     </Button>
                                 </View>
                             )}

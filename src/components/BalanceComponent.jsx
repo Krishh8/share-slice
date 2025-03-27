@@ -5,7 +5,7 @@ import { Avatar, useTheme, Text, Icon, Card, Surface, Button, Chip, Divider } fr
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import avatars from '../data/Avatar';
 import MarkAsPaidModal from './MarkAsPaidModal';
-import { openUPIAppForGroupSettlement } from '../services/upiHandler';
+import { openUPIAppForGroupSettlement, payGroupViaRazorpay } from '../services/razorpayService';
 
 const BalanceComponent = ({ balance }) => {
     const theme = useTheme()
@@ -17,9 +17,8 @@ const BalanceComponent = ({ balance }) => {
         return null;
     }
 
-    const payViaUPI = () => {
-        const amount = parseFloat((balance.amountOwed).toFixed(2));
-        openUPIAppForGroupSettlement(balance.creditor, amount, balance.debtorId, balance.groupId)
+    const pay = () => {
+        payGroupViaRazorpay(balance.creditor, balance.amountOwed, balance.debtor, balance.groupId)
     }
 
     return (
@@ -43,7 +42,7 @@ const BalanceComponent = ({ balance }) => {
             </View>
 
             <View style={[styles.btns]}>
-                {uid == balance.debtor.uid && <Chip mode='flat' onPress={payViaUPI} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
+                {uid == balance.debtor.uid && <Chip mode='flat' onPress={pay} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
                 {uid == balance.creditor.uid && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }}>Remind</Chip>}
                 {uid == balance.creditor.uid && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }} onPress={() => setVisible(true)}>Settle Up</Chip>}
             </View>

@@ -191,6 +191,7 @@ const GroupSettingScreen = () => {
                             const isOwner = member.uid === groupDetails?.createdBy;
                             // const isAdmin = groupDetails?.admins?.includes(member.uid);
                             const isMemberAdmin = groupDetails?.admins?.includes(member.uid);
+                            const currentUser = member.uid === user.uid
 
                             return (
                                 <View key={member.uid} style={[styles.memberItem, { borderBottomColor: theme.colors.primary }]}>
@@ -201,7 +202,7 @@ const GroupSettingScreen = () => {
                                             style={[styles.sectionIcon, { backgroundColor: theme.colors.primary }]}
                                             color={theme.colors.onPrimary}
                                         />
-                                        <Text style={styles.memberName}>{member.uid === user?.uid ? <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>You</Text> : member.fullName}</Text>
+                                        <Text style={styles.memberName}>{currentUser ? <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>You</Text> : member.fullName}</Text>
                                     </View>
 
                                     {/* Show 'Owner' or 'Admin' chip */}
@@ -240,10 +241,10 @@ const GroupSettingScreen = () => {
                                                 </Tooltip>
                                             } */}
 
-                                            {isAdmin && (
-                                                <Tooltip title="Remove Member">
+                                            {(isAdmin || currentUser) && (
+                                                <Tooltip title={currentUser ? "Leave Group" : "Remove Member"}>
                                                     <IconButton
-                                                        icon="account-remove"
+                                                        icon={currentUser ? "logout" : "account-remove"}
                                                         iconColor={theme.colors.primary}
                                                         onPress={() => dispatch(removeMember({ groupId, uid: member.uid }))}
                                                     />
@@ -381,7 +382,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: rh(1.5),
         marginBottom: rh(1),
-        borderRadius: rh(1),
         borderBottomWidth: rh(0.1),
     },
     memberInfo: {

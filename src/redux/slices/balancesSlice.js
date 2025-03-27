@@ -167,6 +167,7 @@ export const updateBalanceAfterPayment = createAsyncThunk(
     'balances/updateBalanceAfterPayment',
     async ({ creditorId, debtorId, groupId, paidAmount, paymentMethod, tid }, { rejectWithValue }) => {
         try {
+            console.log('In update')
             const balanceDocId = `${creditorId}_${debtorId}_${groupId}`;
             const balanceRef = firestore().collection('balances').doc(balanceDocId);
             const balanceDoc = await balanceRef.get();
@@ -263,8 +264,7 @@ export const settleFullBalanceOutsideGroup = createAsyncThunk(
             });
             console.log(totalAmountOwed)
             // 🔴 Verify that the paidAmount matches totalAmountOwed
-            if (paidAmount !== totalAmountOwed) {
-                console.log('Not equal')
+            if (Math.abs(paidAmount - totalAmountOwed) > 0.01) {
                 return rejectWithValue("Paid amount does not match the total amount owed!");
             }
 
@@ -281,7 +281,7 @@ export const settleFullBalanceOutsideGroup = createAsyncThunk(
             };
 
             if (tid) {
-                transactionData.tid = tif; // ✅ Add txnId only for UPI payments
+                transactionData.tid = tid; // ✅ Add txnId only for UPI payments
             }
 
             // Store the transaction record

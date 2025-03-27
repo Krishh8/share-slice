@@ -383,7 +383,7 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                 return
             }
 
-            const message = `Hey! Join my group on SliceShare using this link: ${inviteLink}`
+            const message = `Hey! Join my group on ShareSlice using this link: ${inviteLink}`
             const smsUrl = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`
             await Linking.openURL(smsUrl)
         } catch (error) {
@@ -519,13 +519,6 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         checkContactsPermission()
     }, [checkContactsPermission])
 
-    // Setup deep link handling
-    // useEffect(() => {
-    //     const unsubscribe = dynamicLinks().onLink(handleDeepLink)
-    //     dynamicLinks().getInitialLink().then(handleDeepLink)
-    //     return () => unsubscribe()
-    // }, [handleDeepLink])
-
     // Render contact item
     const renderContactItem = ({ item }) => {
         const isMemberAlready = groupDetails.members.some(
@@ -582,15 +575,29 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                 </>
             )
         } else if (manualUserState) {
+            const isMemberAlready = groupDetails.members.some(
+                member => member.phoneNumber === manualUserState.phoneNumber
+            )
             return (
-                <View style={styles.manualUserRow}>
-                    <Text style={styles.manualUserPhone}>{manualUserState.phoneNumber}</Text>
-                    {manualUserState.exists ? (
-                        <Button mode="contained" onPress={() => handleAddMember(manualUserState.uid)}>
-                            Add
+                <View style={styles.contactRow}>
+                    <View style={styles.contactInfo}>
+                        <Text style={styles.contactPhone}>{manualUserState.phoneNumber}</Text>
+                    </View>
+                    {manualUserState?.exists ? (
+                        <Button
+                            mode="contained"
+                            disabled={isMemberAlready}
+                            onPress={() => handleAddMember(manualUserState.uid)}
+                            style={styles.actionButton}
+                        >
+                            {isMemberAlready ? 'Added' : 'Add'}
                         </Button>
                     ) : (
-                        <Button mode="outlined" onPress={() => sendInviteViaSMS(manualUserState.phoneNumber)}>
+                        <Button
+                            mode="outlined"
+                            onPress={() => sendInviteViaSMS(manualUserState.phoneNumber)}
+                            style={styles.actionButton}
+                        >
                             Invite
                         </Button>
                     )}
@@ -609,16 +616,9 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                 onDismiss={onDismiss}
                 contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.secondaryContainer }]}
             >
-                <View style={styles.header}>
-                    <Text style={[styles.headerTitle, { color: theme.colors.onSecondaryContainer }]}>
-                        Add a member
-                    </Text>
-                    <Button
-                        labelStyle={styles.doneButtonLabel}
-                        onPress={onDismiss}
-                    >
-                        Done
-                    </Button>
+                <View style={[styles.header]}>
+                    <Text style={[{ fontSize: rfs(2.5) }, { fontWeight: '700' }, { color: theme.colors.onSecondaryContainer }]} >Add a member</Text>
+                    <Button labelStyle={[{ fontSize: rfs(2.5) }]} onPress={() => (onDismiss())}>Done</Button>
                 </View>
 
                 <Searchbar

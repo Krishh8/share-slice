@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import { Avatar, Button, Card, Chip, Divider, List, Text, useTheme } from 'react-native-paper';
 import avatars from '../data/Avatar';
-import { openUPIAppForFullSettlement } from '../services/upiHandler';
+import { openUPIAppForFullSettlement, payGroupViaRazorpay } from '../services/razorpayService';
 import MarkAsAllPaidModal from './MarkAsAllPaidModal';
 import { useSelector } from 'react-redux';
 
@@ -11,15 +11,14 @@ const FriendComponent = ({ friend }) => {
     if (!friend || !friend.otherUser) return null; // Ensure otherUser data exists
     const [visible, setVisible] = useState(false)
 
-
     const { otherUser, totalAmount } = friend;
     const amountOwed = parseFloat(Math.abs(totalAmount).toFixed(2));
     const isOwed = totalAmount > 0;
     const theme = useTheme();
     const { user } = useSelector(state => state.userAuth)
-    const uid = user.uid
-    const payViaUPI = () => {
-        openUPIAppForFullSettlement(otherUser, amountOwed, uid)
+
+    const pay = () => {
+        payViaRazorpay(otherUser, amountOwed, user)
     }
 
 
@@ -41,7 +40,7 @@ const FriendComponent = ({ friend }) => {
                 </View>
             </View>
             <View style={[styles.btns]}>
-                {!isOwed && <Chip mode='flat' onPress={payViaUPI} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
+                {!isOwed && <Chip mode='flat' onPress={pay} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
                 {isOwed && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }}>Remind</Chip>}
                 {isOwed && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }} onPress={() => setVisible(true)}>Settle Up</Chip>}
             </View>

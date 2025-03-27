@@ -141,7 +141,7 @@ const ProfileScreen = () => {
                     email: values.email,
                     avatar: values.avatar,
                     upiId: values.upiId,
-                    groupId: storedGroupId
+                    groupId: groupId
                 }));
 
                 // ✅ Remove stored groupId after adding user to group

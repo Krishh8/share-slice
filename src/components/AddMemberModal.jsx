@@ -347,6 +347,7 @@ const AddMemberModal = ({ visible, onDismiss }) => {
             const parsed = queryString.parseUrl(link.url)
             const groupId = parsed.query.groupId
             if (groupId) {
+                console.log(groupId)
                 await AsyncStorage.setItem('pendingGroupId', groupId)
             }
         }
@@ -374,6 +375,7 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         setIsLoading(true)
         try {
             const inviteLink = await generateInviteLink(groupId)
+            console.log(`link: `, inviteLink)
             if (!inviteLink) {
                 setIsLoading(false)
                 return

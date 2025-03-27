@@ -9,7 +9,7 @@ import auth from '@react-native-firebase/auth';
 import firestore, { Timestamp } from '@react-native-firebase/firestore';
 import LogOutBtn from '../../components/LogOutBtn';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateProfile } from '../../redux/slices/userAuthSlice';
+import { updateProfile, updateProfileAndJoinGroup } from '../../redux/slices/userAuthSlice';
 import LoadingScreen from '../LoadingScreen';
 import avatars from '../../data/Avatar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -34,6 +34,7 @@ const ProfileScreen = () => {
     const navigation = useNavigation()
     const dispatch = useDispatch();
 
+    const storedGroupId = AsyncStorage.getItem('pendingGroupId');
     const { loading, user, error } = useSelector(state => state.userAuth)
     const { fullName, email, phoneNumber, avatar, uid, isEmailVerified, upiId } = user
 
@@ -271,7 +272,7 @@ const ProfileScreen = () => {
                                         style={styles.submitBtn}
                                         labelStyle={styles.buttonText}
                                     >
-                                        Submit
+                                        {storedGroupId ? "Submit & Join" : "Submit"}
                                     </Button>
                                 </View>
                             )}

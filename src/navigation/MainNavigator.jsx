@@ -23,6 +23,7 @@ const MainNavigator = () => {
         }}>
             <MainStack.Screen name="BottomTab" component={TabNavigator} />
             <MainStack.Screen name="Account" component={AccountScreen} />
+            <MainStack.Screen name="Notification" component={NotificationScreen} />
             <MainStack.Screen name="EditAccount" component={EditAccountScreen} />
             <MainStack.Screen name="TopTab" component={GroupTopTabNavigator} />
             <MainStack.Screen name="GroupDetails" component={GroupDetailScreen} />

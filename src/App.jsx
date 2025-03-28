@@ -4,7 +4,9 @@ import React, { useEffect } from 'react';
 import { Linking } from 'react-native';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import queryString from 'query-string';
+import notifee from '@notifee/react-native';
+import { checkReminders } from './services/reminderService';
+
 
 const App = () => {
     useEffect(() => {
@@ -29,6 +31,10 @@ const App = () => {
         const unsubscribe = dynamicLinks().onLink(handleDeepLink);
 
         return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        checkReminders();
     }, []);
 
     return (

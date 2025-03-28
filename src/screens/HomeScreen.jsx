@@ -35,7 +35,7 @@ const HomeScreen = () => {
                     title={`Hi, ${user?.fullName?.split(' ')[0] || 'User'}`}
                     titleStyle={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}
                 />
-                <Appbar.Action icon="bell" color={theme.colors.onPrimary} onPress={() => console.log('Pressed')} />
+                <Appbar.Action icon="bell" color={theme.colors.onPrimary} onPress={() => navigation.navigate('Notification')} />
             </Appbar.Header>
 
             <View style={[styles.headerContainer, { backgroundColor: theme.colors.primary }]}>

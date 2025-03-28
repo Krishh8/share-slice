@@ -1,11 +1,17 @@
 import { Linking, StyleSheet, View } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 import { Avatar, useTheme, Text, Icon, Card, Surface, Button, Chip, Divider } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import avatars from '../data/Avatar';
 import MarkAsPaidModal from './MarkAsPaidModal';
 import { openUPIAppForGroupSettlement, payGroupViaRazorpay } from '../services/razorpayService';
+import { getFCMToken, requestPermission, sendDebtReminder, setupNotificationListeners } from '../services/notificationService';
+import messaging from '@react-native-firebase/messaging';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native'
+import { sendDebtorReminder } from '../redux/slices/reminderSlice';
+import firestore from '@react-native-firebase/firestore';
+
 
 const BalanceComponent = ({ balance }) => {
     const theme = useTheme()
@@ -20,6 +26,39 @@ const BalanceComponent = ({ balance }) => {
     const pay = () => {
         payGroupViaRazorpay(balance.creditor, balance.amountOwed, balance.debtor, balance.groupId)
     }
+
+    // useEffect(() => {
+    //     // Request permissions on component mount
+    //     requestPermission();
+
+    //     // Setup listeners
+    //     const unsubscribe = setupNotificationListeners();
+
+    //     return () => {
+    //         // Cleanup listeners
+    //         unsubscribe();
+    //     };
+    // }, []);
+
+    // const triggerReminder = async () => {
+    //     await sendDebtReminder({
+    //         amount: balance.amountOwed,
+    //         creditorName: balance.creditor.fullName,
+    //         dueDate: new Date('2025-04-15')
+    //     });
+    // };
+
+    const handleSendReminder = async () => {
+        await firestore().collection('reminders').add({
+            receiverId: balance.debtor.uid,
+            senderId: balance.creditor.uid,
+            amount: balance.amountOwed,
+            createdAt: firestore.FieldValue.serverTimestamp(),
+            seen: false,
+        });
+
+        alert("Reminder sent successfully!");
+    };
 
     return (
         <View style={[styles.balanceItem, { backgroundColor: theme.colors.background }]}>
@@ -43,7 +82,7 @@ const BalanceComponent = ({ balance }) => {
 
             <View style={[styles.btns]}>
                 {uid == balance.debtor.uid && <Chip mode='flat' onPress={pay} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
-                {uid == balance.creditor.uid && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }}>Remind</Chip>}
+                {uid == balance.creditor.uid && <Chip mode='outlined' onPress={handleSendReminder} style={{ backgroundColor: theme.colors.secondaryContainer }}>Remind</Chip>}
                 {uid == balance.creditor.uid && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }} onPress={() => setVisible(true)}>Settle Up</Chip>}
             </View>
 

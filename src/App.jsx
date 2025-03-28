@@ -4,8 +4,8 @@ import React, { useEffect } from 'react';
 import { Linking } from 'react-native';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import notifee from '@notifee/react-native';
-import { checkReminders } from './services/reminderService';
+import { useDispatch } from 'react-redux';
+import { checkReminders } from './redux/slices/reminderSlice';
 
 
 const App = () => {
@@ -33,8 +33,10 @@ const App = () => {
         return () => unsubscribe();
     }, []);
 
+    const dispatch = useDispatch();
+
     useEffect(() => {
-        checkReminders();
+        dispatch(checkReminders());
     }, []);
 
     return (

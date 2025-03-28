@@ -40,6 +40,3 @@ export const checkReminders = async () => {
         await firestore().collection('reminders').doc(doc.id).update({ seen: true });
     }
 };
-
-// Call this function when the app opens
-checkReminders();

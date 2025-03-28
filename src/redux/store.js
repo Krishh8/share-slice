@@ -3,6 +3,7 @@ import userAuthReducer from './slices/userAuthSlice'
 import groupReducer from './slices/groupSlice';
 import expenseReducer from './slices/expensesSlice';
 import balanceReducer from './slices/balancesSlice'
+import reminderReducer from './slices/reminderSlice'
 
 export const store = configureStore({
     reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
         group: groupReducer,
         expense: expenseReducer,
         balance: balanceReducer,
+        reminder: reminderReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

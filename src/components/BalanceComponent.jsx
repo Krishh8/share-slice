@@ -1,6 +1,6 @@
 import { Linking, StyleSheet, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Avatar, useTheme, Text, Icon, Card, Surface, Button, Chip, Divider } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import avatars from '../data/Avatar';
@@ -9,13 +9,14 @@ import { openUPIAppForGroupSettlement, payGroupViaRazorpay } from '../services/r
 import { getFCMToken, requestPermission, sendDebtReminder, setupNotificationListeners } from '../services/notificationService';
 import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance, EventType } from '@notifee/react-native'
-import { sendDebtorReminder } from '../redux/slices/reminderSlice';
 import firestore from '@react-native-firebase/firestore';
+import { sendReminder } from '../redux/slices/reminderSlice';
 
 
 const BalanceComponent = ({ balance }) => {
     const theme = useTheme()
     const { user } = useSelector(state => state.userAuth);
+    const dispatch = useDispatch()
     const uid = user?.uid
     const [visible, setVisible] = useState(false)
 
@@ -49,14 +50,11 @@ const BalanceComponent = ({ balance }) => {
     // };
 
     const handleSendReminder = async () => {
-        await firestore().collection('reminders').add({
-            receiverId: balance.debtor.uid,
-            senderId: balance.creditor.uid,
-            amount: balance.amountOwed,
-            createdAt: firestore.FieldValue.serverTimestamp(),
-            seen: false,
-        });
-
+        dispatch(sendReminder({
+            creditorId: balance.creditor.uid,
+            amountOwed: balance.amountOwed,
+            debtorId: balance.debtor.uid
+        }));
         alert("Reminder sent successfully!");
     };
 

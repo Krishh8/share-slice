@@ -20,11 +20,15 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
     const dispatch = useDispatch();
     const navigation = useNavigation();
     const { user } = useSelector(state => state.userAuth);
+    const { groups } = useSelector(state => state.group)
     if (!user) {
         return null; // Don't render anything if user is null
     }
     const uid = user?.uid
-    const groupId = expenseDetails.groupId
+    console.log(expenseDetails)
+    const groupId = expenseDetails?.groupId
+    console.log('groupId in bill', groups[groupId]?.groupName)
+
     const theme = useTheme();
 
     const formatDate = isoString => {
@@ -36,7 +40,7 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
     };
 
     const [payerName, setPayerName] = useState('' || "User");
-    const [groupName, setGroupName] = useState('' || "Group")
+    // const [groupName, setGroupName] = useState('' || "Group")
 
     let userOwes = 0;
 
@@ -80,18 +84,18 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
     }, [expenseDetails.paidBy, uid]);
 
 
-    useEffect(() => {
-        const fetchGroupName = async () => {
-            try {
-                const name = await getGroupByGroupId(expenseDetails.groupId); // Ensure this function is async
-                setGroupName(name || "Group");
-            } catch (error) {
-                console.error("Error fetching group name:", error);
-            }
-        };
+    // useEffect(() => {
+    //     const fetchGroupName = async () => {
+    //         try {
+    //             const name = await getGroupByGroupId(expenseDetails.groupId); // Ensure this function is async
+    //             setGroupName(name || "Group");
+    //         } catch (error) {
+    //             console.error("Error fetching group name:", error);
+    //         }
+    //     };
 
-        fetchGroupName();
-    }, [expenseDetails.groupId]);
+    //     fetchGroupName();
+    // }, [expenseDetails.groupId]);
 
     return (
         <View style={{ backgroundColor: theme.colors.background }}>
@@ -115,7 +119,7 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
                             </View>
                             <View style={styles.details}>
                                 <Chip mode="outlined" style={{ alignSelf: "flex-start" }} textStyle={{ color: theme.colors.primary }}>
-                                    {groupName}
+                                    {groups[groupId]?.groupName || ""}
                                 </Chip>
                             </View>
                         </View>

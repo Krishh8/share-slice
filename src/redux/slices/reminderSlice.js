@@ -5,17 +5,20 @@ import auth from '@react-native-firebase/auth';
 
 export const sendReminder = createAsyncThunk(
     'reminders/sendReminder',
-    async ({ creditor, amountOwed, debtor }, { rejectWithValue }) => {
+    async ({ creditor, amountOwed, debtor }, thunkAPI) => {
         try {
+            console.log(creditor, amountOwed, debtor)
             const reminderRef = await firestore().collection('reminders').add({
                 debtorId: debtor.uid,
                 creditorId: creditor.uid,
                 debtorName: debtor.fullName,
                 creditorName: creditor.fullName,
                 amountOwed,
-                createdAt: firestore.FieldValue.serverTimestamp(),
+                createdAt: firestore.Timestamp.now(),
                 seen: false,
             });
+
+            console.log(reminderRef)
 
             return {
                 id: reminderRef.id, // Include ID for Redux
@@ -27,7 +30,8 @@ export const sendReminder = createAsyncThunk(
                 seen: false,
             };
         } catch (error) {
-            return rejectWithValue(error.message);
+            console.log(error.message)
+            return thunkAPI.rejectWithValue(error.message);
         }
     }
 );
@@ -137,7 +141,7 @@ const reminderSlice = createSlice({
             .addCase(sendReminder.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(sendReminder.fulfilled, (state) => {
+            .addCase(sendReminder.fulfilled, (state, action) => {
                 state.loading = false;
                 state.reminders = [action.payload, ...state.reminders];
             })

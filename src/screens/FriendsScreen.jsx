@@ -10,6 +10,7 @@ import avatars from "../data/Avatar";
 import FriendComponent from "../components/FriendComponent";
 import { useFocusEffect } from "@react-navigation/native";
 import Animated, { BounceInRight, BounceOutLeft, FadeInRight, FlipInEasyX, SlideInRight } from "react-native-reanimated";
+import Toast from "react-native-toast-message";
 
 const FriendsScreen = () => {
     const theme = useTheme();
@@ -79,6 +80,7 @@ const FriendsScreen = () => {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false} >
             <View style={[{ backgroundColor: theme.colors.background }, styles.container]}>
+                {/* <Toast /> */}
                 <TotalBalanceComponent />
                 <View style={styles.surface}>
                     <Searchbar

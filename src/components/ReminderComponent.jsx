@@ -35,16 +35,15 @@ const ReminderComponent = ({ reminder }) => {
                 }
             />
             <Text style={[styles.remindText, { color: theme.colors.onTertiaryContainer }]}>
-                <Text style={styles.boldText}>{isYouSent ? `"${reminder.creditorName}"` : "You"}</Text>
+                <Text style={styles.boldText}>{isYouSent ? "You" : `"${reminder.creditorName}"`}</Text>
                 {" "}kindly reminded{" "}
-                <Text style={styles.boldText}>{isYouSent ? "You" : `"${reminder.debtorName}"`}</Text>
+                <Text style={styles.boldText}>{isYouSent ? `"${reminder.debtorName}"` : "You"}</Text>
                 {" "}to settle an outstanding amount of{" "}
                 <Text style={styles.boldText}>{reminder.amountOwed}</Text>.
             </Text>
         </View>
     );
 };
-
 export default ReminderComponent;
 
 const styles = StyleSheet.create({

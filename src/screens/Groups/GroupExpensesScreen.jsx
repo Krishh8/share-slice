@@ -17,25 +17,11 @@ const GroupExpensesScreen = () => {
     const dispatch = useDispatch();
     const navigation = useNavigation();
     const theme = useTheme();
-    const { groupExpenses, groupExpensesLoading, groupExpensesError } = useSelector(state => state.expense);
+    const { groupExpenses } = useSelector(state => state.expense);
     const onStateChange = ({ open }) => setState({ open });
     const [isShrink, setIsShrink] = useState(false);
 
-    useEffect(() => {
-        if (groupId) {
-            dispatch(fetchGroupExpenses(groupId));
-        }
-    }, [dispatch, groupId]);
-
-    if (groupExpensesLoading) return <LoadingScreen />;
-    if (groupExpensesError) return (
-        <View style={styles.errorContainer}>
-            <Text style={{ color: theme.colors.error }}>Error: {groupExpensesError}</Text>
-        </View>
-    );
-
     const groupExpensesByMonth = (expenses) => {
-        console.log('reach 2')
         const grouped = expenses
             .slice() // ✅ Clone the array to avoid modifying Redux state
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by date (newest first)
@@ -56,9 +42,7 @@ const GroupExpensesScreen = () => {
 
     // const expensesList = [...(groupExpenses[groupId] || [])]; // ✅ Clone to prevent mutation
     const expensesList = Array.isArray(groupExpenses[groupId]) ? [...groupExpenses[groupId]] : [];
-    console.log('reach')
-
-
+    console.log('groexpene:', groupExpenses[groupId])
     const groupedExpenses = groupExpensesByMonth(expensesList); // ✅ Grouped expenses
 
     const renderEmptyComponent = () => (
@@ -103,7 +87,7 @@ const GroupExpensesScreen = () => {
                 renderSectionHeader={({ section: { title, data } }) => (
                     <View style={[{ backgroundColor: theme.colors.secondaryContainer }, styles.sectionHeader]}>
                         <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>{title}</Text>
-                        <Avatar.Text style={{ fontWeight: 'bold' }} size={rfs(2.5)} label={data.length} />
+                        <Avatar.Text labelStyle={{ fontWeight: 'bold', fontSize: rfs(1.8) }} size={rfs(2.5)} label={data.length} />
                     </View>
                 )}
 

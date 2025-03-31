@@ -18,13 +18,15 @@ const GroupDetailScreen = () => {
     const dispatch = useDispatch();
     const [owner, setOwner] = useState(null);
     const { user } = useSelector(state => state.userAuth)
+    const { groups } = useSelector(state => state.group)
     const [isAdmin, setIsAdmin] = useState(false)
+    console.log('GID in fgdetail', groupId)
 
     const [group, setGroup] = useState({
-        category: {},
-        createdBy: "",
-        groupId: "",
-        groupName: "",
+        category: groups[groupId]?.category,
+        createdBy: groups[groupId]?.createdBy,
+        groupId: groups[groupId]?.groupId,
+        groupName: groups[groupId]?.groupName,
     });
 
     const { groupDetails, loadingGroupDetails, errorGroups, error } = useSelector(state => state.group);
@@ -45,28 +47,28 @@ const GroupDetailScreen = () => {
 
     useEffect(() => {
         const updateGroupDetails = async () => {
-            if (!groupDetails) return;
+            // if (!groupDetails) return;
 
-            // 🔹 Set group details only when new data is available
-            setGroup(prevGroup => ({
-                category: groupDetails.category || prevGroup.category,
-                createdBy: groupDetails.createdBy || prevGroup.createdBy,
-                groupId: groupDetails.groupId || prevGroup.groupId,
-                groupName: groupDetails.groupName || prevGroup.groupName,
-            }));
+            // // 🔹 Set group details only when new data is available
+            // setGroup(prevGroup => ({
+            //     category: groupDetails.category || prevGroup.category,
+            //     createdBy: groupDetails.createdBy || prevGroup.createdBy,
+            //     groupId: groupDetails.groupId || prevGroup.groupId,
+            //     groupName: groupDetails.groupName || prevGroup.groupName,
+            // }));
 
             // 🔹 Fetch and set owner name
-            if (groupDetails?.createdBy) {
-                let name = groupDetails.createdBy === user?.uid ? "You" : await getUserByUserId(groupDetails.createdBy);
+            if (group?.createdBy) {
+                let name = group.createdBy === user?.uid ? "You" : await getUserByUserId(group.createdBy);
                 setOwner(name);
             }
 
             // 🔹 Set admin status
-            setIsAdmin(groupDetails?.admins?.includes(user?.uid));
+            setIsAdmin(groups[groupId]?.admins?.includes(user?.uid));
         };
 
         updateGroupDetails();
-    }, [groupDetails, user]);
+    }, [groups, user]);
 
     const handleDelete = async () => {
         Alert.alert(

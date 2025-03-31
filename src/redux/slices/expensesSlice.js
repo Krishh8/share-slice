@@ -12,12 +12,14 @@ export const fetchExpenses = createAsyncThunk(
             if (!userDoc.exists) throw new Error("User not found");
 
             const userGroups = userDoc.data()?.groups || [];
+            if (userGroups.length === 0) return { expenses: [], groupExpenses: {} };
 
             if (userGroups.length === 0) {
                 return []; // No groups, so no expenses
             }
 
             let allExpenses = [];
+            let groupedExpenses = {}; // 🔹 Organize expenses by groupId
 
             // 🔹 Step 2: Fetch expenses in batches (Firestore allows max 10 `in` queries)
             const batchSize = 10;
@@ -29,79 +31,28 @@ export const fetchExpenses = createAsyncThunk(
                     .orderBy("createdAt", "desc")
                     .get();
 
-                const expenses = snapshot.docs.map((doc) => ({
-                    expenseId: doc.id,
-                    ...doc.data(),
-                    createdAt: doc.data().createdAt.toDate().toISOString(),
-                    updatedAt: doc.data().updatedAt.toDate().toISOString(),
-                }));
-
-                allExpenses = [...allExpenses, ...expenses];
-            }
-
-            return allExpenses;
-        } catch (error) {
-            console.log("Error fetching user expenses:", error.message);
-            return thunkAPI.rejectWithValue(error.message);
-        }
-    }
-);
-
-// 🔹 Fetch expenses for a specific group
-export const fetchGroupExpenses = createAsyncThunk(
-    "expense/fetchGroupExpenses",
-    async (groupId, thunkAPI) => {
-        try {
-            const groupDoc = await firestore().collection("groups").doc(groupId).get();
-
-            if (!groupDoc.exists) {
-                throw new Error("Group not found");
-            }
-
-            const expenseIds = groupDoc.data()?.expenses || [];
-
-            if (expenseIds.length === 0) {
-                return { groupId, expenses: [] };
-            }
-
-            let groupExpenses = [];
-
-            // If the number of stored expenses is reasonable, use batch fetching
-            if (expenseIds.length <= 80) {
-                const expenseDocs = await Promise.all(
-                    expenseIds.map((expenseId) =>
-                        firestore().collection("expenses").doc(expenseId).get()
-                    )
-                );
-
-                groupExpenses = expenseDocs
-                    .filter((doc) => doc.exists)
-                    .map((doc) => ({
+                const expenses = snapshot.docs.map((doc) => {
+                    const expenseData = {
                         expenseId: doc.id,
                         ...doc.data(),
                         createdAt: doc.data().createdAt.toDate().toISOString(),
                         updatedAt: doc.data().updatedAt.toDate().toISOString(),
-                    }));
-            } else {
-                // If too many expenses, fall back to direct Firestore query
-                const snapshot = await firestore()
-                    .collection("expenses")
-                    .where("groupId", "==", groupId)
-                    // .orderBy("createdAt", "desc")
-                    .limit(80) // Fetch the most recent 80 expenses
-                    .get();
+                    };
 
-                groupExpenses = snapshot.docs.map((doc) => ({
-                    expenseId: doc.id,
-                    ...doc.data(),
-                    createdAt: doc.data().createdAt.toDate().toISOString(),
-                    updatedAt: doc.data().updatedAt.toDate().toISOString(),
-                }));
+                    // 🔹 Organize expenses under their respective groupId
+                    const groupId = expenseData.groupId;
+                    if (!groupedExpenses[groupId]) groupedExpenses[groupId] = [];
+                    groupedExpenses[groupId].push(expenseData);
+
+                    return expenseData;
+                });
+
+                allExpenses = [...allExpenses, ...expenses];
             }
 
-            return { groupId, expenses: groupExpenses };
+            return { expenses: allExpenses, groupExpenses: groupedExpenses };
         } catch (error) {
-            console.log("Error fetching group expenses:", error.message);
+            console.log("Error fetching user expenses:", error.message);
             return thunkAPI.rejectWithValue(error.message);
         }
     }
@@ -264,7 +215,6 @@ export const fetchExpenseDetails = createAsyncThunk(
 const expensesSlice = createSlice({
     name: "expense",
     initialState: {
-        balances: {},
 
         // 🔹 All expenses for the user
         expenses: [],
@@ -272,9 +222,6 @@ const expensesSlice = createSlice({
         expensesError: null,
         // 🔹 Group-specific expenses
         groupExpenses: {},
-        groupExpensesLoading: false,
-        groupExpensesError: null,
-
         // 🔹 Expense details (for viewing a single expense)
         expenseDetails: null,
         expenseDetailsLoading: false,
@@ -289,27 +236,12 @@ const expensesSlice = createSlice({
             })
             .addCase(fetchExpenses.fulfilled, (state, action) => {
                 state.expensesLoading = false;
-                state.expenses = action.payload;
+                state.expenses = action.payload.expenses;
+                state.groupExpenses = action.payload.groupExpenses;
             })
             .addCase(fetchExpenses.rejected, (state, action) => {
                 state.expensesLoading = false;
                 state.expensesError = action.payload;
-            })
-
-            // 🔹 Fetch expenses for a specific group
-            .addCase(fetchGroupExpenses.pending, (state) => {
-                state.groupExpensesLoading = true;
-                state.groupExpensesError = null;
-            })
-            .addCase(fetchGroupExpenses.fulfilled, (state, action) => {
-                state.groupExpensesLoading = false;
-                const { groupId, expenses } = action.payload;
-                // state.groupExpenses[groupId] = expenses;
-                state.groupExpenses = { ...state.groupExpenses, [groupId]: expenses };
-            })
-            .addCase(fetchGroupExpenses.rejected, (state, action) => {
-                state.groupExpensesLoading = false;
-                state.groupExpensesError = action.payload;
             })
 
             // 🔹 Create a new expense
@@ -321,14 +253,14 @@ const expensesSlice = createSlice({
                 state.expensesLoading = false;
                 const { groupId, expenseId, createdAt, updatedAt, ...expenseData } = action.payload;
 
-                // Add to general expenses
-                state.expenses = [...state.expenses, { expenseId, ...expenseData, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) }];
+                const newExpense = { expenseId, groupId, ...expenseData, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) };
 
-                // state.groupExpenses[groupId] = [...(state.groupExpenses[groupId] || []), { expenseId, ...expenseData, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) }];
+                // Add to general expenses
+                state.expenses = [newExpense, ...state.expenses];
 
                 state.groupExpenses = {
                     ...state.groupExpenses,
-                    [groupId]: [...(state.groupExpenses[groupId] || []), { expenseId, ...expenseData, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) }],
+                    [groupId]: [newExpense, ...(state.groupExpenses[groupId] || [])],
                 };
             })
             .addCase(createExpense.rejected, (state, action) => {

@@ -67,18 +67,27 @@ export const fetchGroups = createAsyncThunk(
                 .where(firestore.FieldPath.documentId(), 'in', userGroups)
                 .get();
 
-            let groups = snapshot.docs.map(doc => {
-                const data = doc.data();
 
-                return {
+            let groupObject = snapshot.docs.reduce((acc, doc) => {
+                const data = doc.data();
+                acc[doc.id] = {
                     ...data,
                     groupId: doc.id,
-                    createdAt: data.createdAt?.toDate() || null, // ✅ Convert Firestore Timestamp to string
+                    createdAt: data.createdAt?.toDate() || null, // ✅ Convert Firestore Timestamp
                 };
-            });
+                return acc;
+            }, {});
 
-            groups.sort((a, b) => b.createdAt - a.createdAt)
-            return groups;
+            // Uncomment if sorting is required
+            const sortedGroups = Object.values(groupObject).sort((a, b) => b.createdAt - a.createdAt);
+
+            groupObject = sortedGroups.reduce((acc, group) => {
+                acc[group.groupId] = group;
+                return acc;
+            }, {});
+
+
+            return groupObject;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.message);
         }
@@ -362,7 +371,7 @@ export const removeMember = createAsyncThunk(
 const groupSlice = createSlice({
     name: 'group',
     initialState: {
-        groups: [], // List of all groups
+        groups: {}, // List of all groups
         loadingGroups: false, // Loading for fetching all groups
         errorGroups: null, // Error for fetching all groups
         groupDetails: null, // Selected group details
@@ -384,7 +393,13 @@ const groupSlice = createSlice({
             })
             .addCase(createGroup.fulfilled, (state, action) => {
                 state.loadingGroups = false;
-                state.groups = [action.payload, ...state.groups];
+                const newGroup = action.payload;
+
+                // ✅ Reconstruct the object with the new group first
+                state.groups = {
+                    [newGroup.groupId]: newGroup, // New group added first
+                    ...state.groups // Spread existing groups after it
+                };
             })
             .addCase(createGroup.rejected, (state, action) => {
                 state.loadingGroups = false;
@@ -410,15 +425,10 @@ const groupSlice = createSlice({
             .addCase(updateGroup.fulfilled, (state, action) => {
                 state.loadingGroups = false;
                 const { groupId, groupName, category } = action.payload;
-                if (state.groups) {
-                    const groupIndex = state.groups.findIndex(
-                        group => group.groupId === groupId,
-                    );
-                    if (groupIndex !== -1) {
-                        state.groups[groupIndex].groupName = groupName;
-                        state.groups[groupIndex].category = category;
-                    }
-                }
+                state.groups[action.payload.groupId] = {
+                    ...state.groups[action.payload.groupId],
+                    ...action.payload
+                };
                 state.groupDetails = {
                     ...state.groupDetails,
                     groupName,
@@ -435,16 +445,11 @@ const groupSlice = createSlice({
             })
             .addCase(deleteGroup.fulfilled, (state, action) => {
                 state.loadingGroups = false;
-
-                console.log("Delete action payload:", action.payload); // Debugging
-
                 const groupId = action.payload; // Since payload is just a string
-
-                if (state.groups && Array.isArray(state.groups)) {
-                    state.groups = state.groups.filter(group => group.groupId !== groupId);
+                if (groupId in state.groups) {
+                    delete state.groups[groupId];
                 }
             })
-
             .addCase(deleteGroup.rejected, (state, action) => {
                 state.loadingGroups = false;
                 state.errorGroups = action.payload;

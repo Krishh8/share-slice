@@ -28,7 +28,11 @@ const RecentGroupsComponent = () => {
     }, [dispatch, uid]); // ✅ Run only when uid changes
 
     useEffect(() => {
-        setDisplayGroups(groups.slice(0, 5)); // ✅ Show only last 5 created groups
+        const groupArray = Object.values(groups)
+            // .sort((a, b) => b.createdAt - a.createdAt) // Sort from newest to oldest
+            .slice(0, 5); // Take only the last 5 groups
+
+        setDisplayGroups(groupArray); // ✅ Show only last 5 created groups
     }, [groups]);
 
 

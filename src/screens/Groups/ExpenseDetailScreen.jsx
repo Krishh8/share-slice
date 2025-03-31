@@ -17,48 +17,44 @@ import { AnimatedView } from "react-native-reanimated/lib/typescript/component/V
 import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated"
 
 const ExpenseDetailScreen = () => {
-    const route = useRoute()
-    const { expenseId } = route.params
-    const dispatch = useDispatch()
-    const theme = useTheme()
-    const navigation = useNavigation()
-    const { user } = useSelector(state => state.userAuth)
-    const { expenseDetails, expenseDetailsLoading } = useSelector((state) => state.expense)
-    const { groupDetails } = useSelector((state) => state.group)
-    const [isAdmin, setIsAdmin] = useState(false)
+    const route = useRoute();
+    const { expenseId } = route.params;
+    const dispatch = useDispatch();
+    const theme = useTheme();
+    const navigation = useNavigation();
+    const { user } = useSelector(state => state.userAuth);
+    const { expenseDetails, expenseDetailsLoading } = useSelector(state => state.expense);
+    const { groups } = useSelector(state => state.group); // Access groups from Redux
 
     if (!user) {
         return null;
     }
 
-    useFocusEffect(
-        useCallback(() => {
-            if (expenseDetails?.groupId) {
-                dispatch(fetchGroupDetails(expenseDetails.groupId))
-            }
-        }, [dispatch, expenseDetails?.groupId])
-    );
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         if (expenseDetails?.groupId) {
+    //             dispatch(fetchGroupDetails(expenseDetails.groupId))
+    //         }
+    //     }, [dispatch, expenseDetails?.groupId])
+    // );
 
     useEffect(() => {
         if (expenseId) {
-            dispatch(fetchExpenseDetails(expenseId)); // Refetch data
+            dispatch(fetchExpenseDetails(expenseId));
         }
+    }, [dispatch, expenseId]);
 
-    }, [dispatch, expenseId])
 
-    useEffect(() => {
-        if (groupDetails) {
-            setIsAdmin(groupDetails?.admins.includes(user?.uid) || expenseDetails?.createdBy === user?.uid)
-        }
-    }, [expenseDetails, expenseDetailsLoading, groupDetails])
+    const groupDetails = groups[expenseDetails?.groupId] || {};
+    const isAdmin = groupDetails?.admins?.includes(user?.uid) || expenseDetails?.createdBy === user?.uid;
 
     const formatDate = (isoString) => {
         return new Date(isoString).toLocaleDateString("en-US", {
             month: "long",
             day: "numeric",
             year: "numeric",
-        })
-    }
+        });
+    };
 
     if (expenseDetailsLoading) return <LoadingScreen />
     console.table(expenseDetails)
@@ -71,7 +67,7 @@ const ExpenseDetailScreen = () => {
                         if (navigation.canGoBack()) {
                             navigation.goBack();
                         } else {
-                            navigation.replace('MainStack', { screen: 'GroupDetails', params: { groupId: groupDetails?.groupId } });
+                            navigation.replace('MainStack', { screen: 'GroupDetails', params: { groupId: expenseDetails?.groupId } });
                         }
                     }
                     } />
@@ -95,7 +91,7 @@ const ExpenseDetailScreen = () => {
                                     style={[styles.groupChip, { borderColor: theme.colors.primary }]}
                                     textStyle={{ color: theme.colors.primary }}
                                 >
-                                    {groupDetails?.groupName}
+                                    {groupDetails?.groupName || "Unknown Group"}
                                 </Chip>
                             </View>
                         </View>

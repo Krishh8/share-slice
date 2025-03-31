@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { View, StyleSheet, FlatList, ScrollView, TouchableWithoutFeedback, Keyboard } from "react-native"
-import { Text, Button, Searchbar, Surface, useTheme, Avatar, Card, IconButton, Icon } from "react-native-paper"
+import { Text, Button, Searchbar, Surface, useTheme, Avatar, Card, IconButton, Icon, ActivityIndicator } from "react-native-paper"
 import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import { useDispatch, useSelector } from "react-redux"
 import {
@@ -28,9 +28,13 @@ const GroupsScreen = () => {
     const { balances, loading, error } = useSelector((state) => state.balance);
 
 
+
     useFocusEffect(
         React.useCallback(() => {
+
+            // if (!loading) {
             dispatch(listenToBalances({ uid }));
+            // }
 
             return () => {
                 dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
@@ -61,10 +65,12 @@ const GroupsScreen = () => {
     }, {});
 
 
+    const groupArray = useMemo(() => Object.values(groups), [groups]);
+
     useEffect(() => {
-        console.log("Updated groups:", groups);
-        setDisplayGroups(groups)
-    }, [groups])
+        setDisplayGroups(groupArray);
+    }, [groupArray]);
+
 
     const handleSearch = (query) => {
         setSearchQuery(query)
@@ -77,19 +83,20 @@ const GroupsScreen = () => {
     }
 
     const filterGroups = (query, category) => {
-        let filtered = groups
+        let filtered = Object.values(groups); // ✅ Convert object to array
 
         if (category !== "All") {
-            filtered = filtered.filter((group) => group.category.label === category)
+            filtered = filtered.filter((group) => group.category.label === category);
         }
 
         if (query.trim() !== "") {
-            const lowerCaseQuery = query.toLowerCase()
-            filtered = filtered.filter((group) => group.groupName.toLowerCase().includes(lowerCaseQuery))
+            const lowerCaseQuery = query.toLowerCase();
+            filtered = filtered.filter((group) => group.groupName.toLowerCase().includes(lowerCaseQuery));
         }
 
-        setDisplayGroups(filtered)
-    }
+        setDisplayGroups(filtered);
+    };
+
 
     const categories = ["All", "Home", "Trip", "Friends", "Office", "Sports", "Others"]
 
@@ -103,6 +110,11 @@ const GroupsScreen = () => {
         Sports: "basketball",
         Others: "dots-horizontal",
     }
+
+
+    // if (loading) {
+    //     return <ActivityIndicator size="large" color={theme.colors.primary} />;
+    // }
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false} >

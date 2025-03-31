@@ -5,11 +5,14 @@ import { Avatar, Button, Card, Chip, Divider, List, Text, useTheme } from 'react
 import avatars from '../data/Avatar';
 import { openUPIAppForFullSettlement, payGroupViaRazorpay } from '../services/razorpayService';
 import MarkAsAllPaidModal from './MarkAsAllPaidModal';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { sendReminder } from '../redux/slices/reminderSlice';
+import Toast from 'react-native-toast-message';
 
 const FriendComponent = ({ friend }) => {
     if (!friend || !friend.otherUser) return null; // Ensure otherUser data exists
     const [visible, setVisible] = useState(false)
+    const dispatch = useDispatch()
 
     const { otherUser, totalAmount } = friend;
     const amountOwed = parseFloat(Math.abs(totalAmount).toFixed(2));
@@ -20,6 +23,32 @@ const FriendComponent = ({ friend }) => {
     const pay = () => {
         payViaRazorpay(otherUser, amountOwed, user)
     }
+
+    const showToast = (type, message) => {
+        Toast.show({
+            type,
+            text1: message,
+        });
+    };
+
+    const handleSendReminder = async () => {
+        try {
+            const result = await dispatch(sendReminder({
+                creditor: user,
+                amountOwed,
+                debtor: otherUser
+            })).unwrap(); // Unwrap returns only the payload
+
+            console.log("Reminder sent successfully:", result);
+            showToast('success', 'Reminder sent successfully! 🎉');
+        }
+        catch (error) {
+            console.error("Reminder failed:", error);
+            showToast('error', `Failed to send reminder. ${error.message || 'Please try again.'} ❌`);
+        }
+    };
+
+
 
 
     return (
@@ -40,9 +69,9 @@ const FriendComponent = ({ friend }) => {
                 </View>
             </View>
             <View style={[styles.btns]}>
-                {!isOwed && <Chip mode='flat' onPress={pay} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
-                {isOwed && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }}>Remind</Chip>}
-                {isOwed && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }} onPress={() => setVisible(true)}>Settle Up</Chip>}
+                {!isOwed && <Chip onPress={pay} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
+                {isOwed && <Chip onPress={handleSendReminder} style={{ backgroundColor: theme.colors.secondaryContainer }}>Remind</Chip>}
+                {isOwed && <Chip onPress={() => setVisible(true)} style={{ backgroundColor: theme.colors.secondaryContainer }} >Settle Up</Chip>}
             </View>
 
             <MarkAsAllPaidModal visible={visible} onDismiss={() => setVisible(false)} amountOwed={amountOwed} debtor={otherUser} />

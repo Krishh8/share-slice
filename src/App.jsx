@@ -6,6 +6,7 @@ import dynamicLinks from '@react-native-firebase/dynamic-links';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch } from 'react-redux';
 import { checkReminders } from './redux/slices/reminderSlice';
+import Toast from 'react-native-toast-message';
 
 
 const App = () => {
@@ -43,6 +44,7 @@ const App = () => {
         <>
             <StatusBar />
             <AppNavigator />
+            <Toast />
         </>
     );
 };

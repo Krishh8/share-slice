@@ -51,9 +51,9 @@ const BalanceComponent = ({ balance }) => {
 
     const handleSendReminder = async () => {
         dispatch(sendReminder({
-            creditorId: balance.creditor,
+            creditor: balance.creditor,
             amountOwed: balance.amountOwed,
-            debtorId: balance.debtor
+            debtor: balance.debtor
         }));
         alert("Reminder sent successfully!");
     };

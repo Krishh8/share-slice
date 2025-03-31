@@ -31,6 +31,7 @@ import PaidByModal from '../../components/PaidByModal';
 import SplitModel from '../../components/SplitModel';
 import { createExpense } from '../../redux/slices/expensesSlice';
 import HeaderComponent from '../../components/HeaderComponent';
+import { fetchGroupDetails } from '../../redux/slices/groupSlice';
 
 const AddExpenseScreen = () => {
     const theme = useTheme();
@@ -45,7 +46,7 @@ const AddExpenseScreen = () => {
     const { groupDetails } = useSelector(state => state.group);
     const { expensesLoading } = useSelector(state => state.expense)
     const groupId = groupDetails?.groupId;
-    const [groupMembers, setGroupMembers] = useState(groupDetails.members)
+    const [groupMembers, setGroupMembers] = useState(groupDetails?.members)
 
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
     const [paidModalVisible, setPaidModalVisible] = useState(false);
@@ -67,6 +68,19 @@ const AddExpenseScreen = () => {
         paidBy: '',
         selectedMembers: ''
     });
+
+    useEffect(() => {
+        if (groupDetails) {
+            if (groupDetails?.groupId !== groupId) {
+                dispatch(fetchGroupDetails(groupId))
+            }
+        }
+        else {
+            dispatch(fetchGroupDetails(groupId))
+        }
+
+    }, [groupDetails, groupId]);
+
 
     const toggleMemberSelection = (uid) => {
         if (splitType === "unequal") return;

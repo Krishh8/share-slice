@@ -51,7 +51,7 @@ const GroupSettingScreen = () => {
     }
 
     useEffect(() => {
-        if (groupDetails) {
+        if (groupDetails?.groupId === groupId) {
             setGroupName(groupDetails.groupName);
             setEditGroupName(groupDetails.groupName)
             setMembers(groupDetails.members || []);

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Alert, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Alert, Animated, Keyboard } from 'react-native';
 import {
     Modal,
     Portal,
@@ -19,6 +19,7 @@ import categories from '../data/GroupCategory';
 import { useDispatch, useSelector } from 'react-redux';
 import { createGroup } from '../redux/slices/groupSlice';
 import { useNavigation } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 
 const CreateGroupModal = ({ visible, onDismiss }) => {
     const theme = useTheme();
@@ -34,15 +35,32 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
     const dispatch = useDispatch();
     const navigation = useNavigation()
 
+    // const showSuccessToasts = () => {
+    //     Toast.show({
+    //         type: 'success',
+    //         text1: 'Group Created Successfully 🎉',
+    //         text2: 'You can now add members and start splitting expenses!',
+    //     });
+    // };
+
+    // const showFailureToast = () => {
+    //     Toast.show({
+    //         type: 'error',
+    //         text1: 'Group Creation Failed ❌',
+    //         text2: 'Something went wrong. Please try again.',
+    //     });
+    // };
+
+
     const handleCategoryChange = (category) => {
         setSelectedCategory(category);
     };
 
     const handleClose = () => {
+        onDismiss() // Close the modal
         setGroupName("")
         setSelectedCategory(categories[0])
         setError("")
-        onDismiss() // Close the modal
         // })
     }
 
@@ -60,24 +78,23 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
             return;
         }
 
-        try {
-            const result = await dispatch(createGroup({ groupName, selectedCategory, uid }));
+        const result = await dispatch(createGroup({ groupName, selectedCategory, uid }));
 
-            if (createGroup.fulfilled.match(result)) {
-                console.log('Group created successfully:', result.payload);
-                onDismiss()
-                setGroupName("")
-                setSelectedCategory(categories[0])
-                setError("")
-                // Navigate to the GroupDetails screen with the newly created groupId
-                navigation.navigate("MainStack", { screen: "GroupDetails", params: { groupId: result.payload.groupId } })
-                // })
-            } else {
-                console.error('Error creating group:', result.error.message);
-                Alert.alert('Error', result.error.message);
-            }
-        } catch (error) {
-            console.error('Unexpected error:', error);
+        if (createGroup.fulfilled.match(result)) {
+            onDismiss()
+            setGroupName("")
+            setSelectedCategory(categories[0])
+            setError("")
+            navigation.navigate("MainStack", { screen: "GroupDetails", params: { groupId: result.payload.groupId } })
+            // showSuccessToasts()
+            // })
+        } else {
+            onDismiss()
+            setGroupName("")
+            setSelectedCategory(categories[0])
+            setError("")
+            // showFailureToast()
+            console.error('Error creating group:', result.error.message);
         }
 
     };
@@ -85,6 +102,7 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
     return (
         // <PaperProvider>
         <Portal>
+            {/* <Toast position='bottom' /> */}
             <Modal
                 visible={visible}
                 onDismiss={onDismiss}
@@ -98,78 +116,81 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                     },
                 }}
             >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false} >
 
-                <View style={[styles.scrollContainer,]}>
-                    <Text
-                        style={[
-                            styles.modalTitle,
-                            { color: theme.colors.onSecondaryContainer },
-                        ]}>
-                        Create a Group
-                    </Text>
-                    {error && <Text style={[{ color: theme.colors.error }, styles.errorText]}>{error}</Text>}
-                    <TextInput
-                        style={[styles.input, { backgroundColor: theme.colors.secondaryContainer }]}
-                        value={groupName}
-                        mode="outlined"
-                        label="Group Name"
-                        textColor={theme.colors.onSecondaryContainer}
-                        onChangeText={(text) => setGroupName(text)}
-                    />
+                    <View style={[styles.scrollContainer,]}>
+                        <Text
+                            style={[
+                                styles.modalTitle,
+                                { color: theme.colors.onSecondaryContainer },
+                            ]}>
+                            Create a Group
+                        </Text>
+                        {error && <Text style={[{ color: theme.colors.error }, styles.errorText]}>{error}</Text>}
+                        <TextInput
+                            style={[styles.input, { backgroundColor: theme.colors.secondaryContainer }]}
+                            value={groupName}
+                            mode="outlined"
+                            label="Group Name"
+                            textColor={theme.colors.onSecondaryContainer}
+                            onChangeText={(text) => setGroupName(text)}
+                        />
 
-                    <Text
-                        style={[
-                            styles.categoryLabel,
-                            { color: theme.colors.onSecondaryContainer },
-                        ]}>
-                        Choose Category
-                    </Text>
+                        <Text
+                            style={[
+                                styles.categoryLabel,
+                                { color: theme.colors.onSecondaryContainer },
+                            ]}>
+                            Choose Category
+                        </Text>
 
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.categoriesContainer}>
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.categoriesContainer}>
 
-                        {categories.map((category) => (
+                            {categories.map((category) => (
+                                <Button
+                                    key={category.label}
+                                    mode={selectedCategory === category ? "contained" : "outlined"}
+                                    onPress={() => handleCategoryChange(category)}
+                                    style={[
+                                        styles.categoryButton,
+                                        selectedCategory === category && { backgroundColor: theme.colors.primary },
+                                    ]}
+                                    labelStyle={[
+                                        styles.categoryButtonLabel,
+                                        selectedCategory === category && { color: theme.colors.onPrimary },
+                                    ]}
+                                    icon={category.icon}
+                                >
+                                    {category.label}
+                                </Button>
+                            ))}
+                        </ScrollView>
+
+                        <View style={styles.buttonContainer}>
                             <Button
-                                key={category.label}
-                                mode={selectedCategory === category ? "contained" : "outlined"}
-                                onPress={() => handleCategoryChange(category)}
-                                style={[
-                                    styles.categoryButton,
-                                    selectedCategory === category && { backgroundColor: theme.colors.primary },
-                                ]}
-                                labelStyle={[
-                                    styles.categoryButtonLabel,
-                                    selectedCategory === category && { color: theme.colors.onPrimary },
-                                ]}
-                                icon={category.icon}
-                            >
-                                {category.label}
+                                // onPressOut={showSuccessToasts}
+                                mode="outlined"
+                                labelStyle={styles.buttonText}
+                                onPress={handleClose}
+                                style={styles.actionButton}>
+                                Cancel
                             </Button>
-                        ))}
-                    </ScrollView>
-
-                    <View style={styles.buttonContainer}>
-                        <Button
-                            mode="contained"
-                            labelStyle={styles.buttonText}
-                            onPress={handleClose}
-                            style={styles.actionButton}>
-                            Cancel
-                        </Button>
-                        <Button
-                            mode="contained"
-                            loading={loadingGroups}
-                            disabled={loadingGroups}
-                            icon={loadingGroups ? 'loading' : ""}
-                            labelStyle={styles.buttonText}
-                            onPress={handleSubmit}
-                            style={styles.actionButton}>
-                            Create
-                        </Button>
+                            <Button
+                                mode="contained"
+                                loading={loadingGroups}
+                                disabled={loadingGroups}
+                                icon={loadingGroups ? 'loading' : ""}
+                                labelStyle={styles.buttonText}
+                                onPress={handleSubmit}
+                                style={styles.actionButton}>
+                                Create
+                            </Button>
+                        </View>
                     </View>
-                </View>
+                </TouchableWithoutFeedback>
             </Modal>
         </Portal >
         // </PaperProvider>

@@ -89,5 +89,10 @@ export const DarkScheme = {
     "backdrop": "rgba(56, 47, 36, 0.4)",
     "red": "rgb(220, 144, 133)",
     "green": "rgb(114, 222, 94)",
+    "blue": "rgb(75, 156, 255)",
+    "onBlue": "rgb(0, 30, 68)",
+    "blueContainer": "rgb(0, 64, 128)",
+    "onBlueContainer": "rgb(177, 211, 255)"
+
 
 }

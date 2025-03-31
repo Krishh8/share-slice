@@ -85,7 +85,13 @@ export const LightScheme = {
     },
     "surfaceDisabled": "rgba(31, 27, 22, 0.12)",
     "onSurfaceDisabled": "rgba(31, 27, 22, 0.38)",
-    "backdrop": "rgba(56, 47, 36, 0.4)" ,
+    "backdrop": "rgba(56, 47, 36, 0.4)",
     "red": "rgb(255, 0, 0)",
     "green": "rgb(2, 172, 82)",
+    "blue": "rgb(0, 86, 179)",
+    "onBlue": "rgb(255, 255, 255)",
+    "blueContainer": "rgb(177, 211, 255)",
+    "onBlueContainer": "rgb(0, 24, 58)"
+
+
 }

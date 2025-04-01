@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchReminders } from '../redux/slices/reminderSlice';
 import HeaderComponent from '../components/HeaderComponent';
-import { IconButton, Text, useTheme } from 'react-native-paper';
+import { Chip, IconButton, Text, useTheme } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import avatars from '../data/Avatar';
 import ReminderComponent from '../components/ReminderComponent';
@@ -12,12 +12,10 @@ import LottieView from "lottie-react-native";
 const EmptyComponent = () => {
     return (
         <View style={[styles.emptyContainer]}>
-            {/* <View
+            <LottieView
                 style={{ width: 200, height: 200, }} // Fixed size
-                // source={require("../assets/lottieFiles/NoDataFound.json")}
-                source={{ uri: 'https://miro.medium.com/v2/resize:fit:640/format:webp/1*ZFXXmTX3HIZHSlmmU7Ydqg.gif' }}
-
-            /> */}
+                source={require("../assets/lottieFiles/NoDataFound.json")}
+            />
             <Text style={[styles.emptyText]}>No Reminders yet.</Text>
         </View >
     )
@@ -25,16 +23,18 @@ const EmptyComponent = () => {
 
 const ReminderScreen = () => {
     const dispatch = useDispatch();
-    const theme = useTheme()
+    const theme = useTheme();
     const [isSent, setIsSent] = useState(true);
     const [isReceived, setIsReceived] = useState(true);
-    const { sentReminders, receivedReminders, loading, error } = useSelector(state => state.reminder);
+
+    const { sentReminders = [], receivedReminders = [], loading, error } = useSelector(state => state.reminder);
 
     useEffect(() => {
         dispatch(fetchReminders());
     }, [dispatch]);
-    console.log(error)
 
+    console.log("Received Reminders:", receivedReminders);
+    console.log("Sent Reminders:", sentReminders);
 
     if (loading) return <ActivityIndicator size="large" />;
     if (error) return <Text>Error: {error}</Text>;
@@ -43,46 +43,57 @@ const ReminderScreen = () => {
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <HeaderComponent title="Reminders" />
 
-            <View style={[styles.reminders]}>
-                <View style={[styles.section, { backgroundColor: theme.colors.secondaryContainer }]}>
-                    <Text style={[styles.sectionText, { color: theme.colors.primary }]}>Received Reminders</Text>
-                    <IconButton icon={isReceived ? "unfold-more-horizontal" : "unfold-less-horizontal"} onPress={() => setIsReceived((prev) => !prev)} iconColor={theme.colors.primary} />
-                </View>
-                {isReceived &&
-                    <FlatList
-                        contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
-                        data={receivedReminders}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <ReminderComponent reminder={item} />
-                        )}
-                        ListEmptyComponent={
-                            <EmptyComponent />
-                        }
+            <View style={styles.reminders}>
+                {/* Received Reminders Section */}
+                <TouchableOpacity
+                    onPress={() => setIsReceived(prev => !prev)}
+                    style={[styles.section, { backgroundColor: theme.colors.secondaryContainer }]}
+                >
+                    <Text style={[styles.sectionText, { color: theme.colors.primary }]}>
+                        Received Reminders ({receivedReminders.length})
+                    </Text>
+                    <IconButton
+                        icon={isReceived ? "unfold-less-horizontal" : "unfold-more-horizontal"}
+                        iconColor={theme.colors.primary}
                     />
-                }
+                </TouchableOpacity>
 
-                <View style={[styles.section, { backgroundColor: theme.colors.secondaryContainer }]}>
-                    <Text style={[styles.sectionText, { color: theme.colors.primary }]}>Sent Reminders</Text>
-                    <IconButton icon={isSent ? "unfold-more-horizontal" : "unfold-less-horizontal"} onPress={() => setIsSent((prev) => !prev)} iconColor={theme.colors.primary} />
-                </View>
-                {isSent &&
+                {isReceived && (
+                    <FlatList
+                        data={receivedReminders}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => <ReminderComponent reminder={item} />}
+                        ListEmptyComponent={<EmptyComponent />}
+                    />
+                )}
+
+                {/* Sent Reminders Section */}
+                <TouchableOpacity
+                    onPress={() => setIsSent(prev => !prev)}
+                    style={[styles.section, { backgroundColor: theme.colors.secondaryContainer }]}
+                >
+                    <Text style={[styles.sectionText, { color: theme.colors.primary }]}>
+                        Sent Reminders ({sentReminders.length})
+                    </Text>
+                    <IconButton
+                        icon={isSent ? "unfold-less-horizontal" : "unfold-more-horizontal"}
+                        iconColor={theme.colors.primary}
+                    />
+                </TouchableOpacity>
+
+                {isSent && (
                     <FlatList
                         data={sentReminders}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <ReminderComponent reminder={item} />
-                        )}
-                        ListEmptyComponent={
-                            <EmptyComponent />
-                        }
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => <ReminderComponent reminder={item} />}
+                        ListEmptyComponent={<EmptyComponent />}
                     />
-                }
+                )}
             </View>
-
         </View>
     );
 };
+
 
 export default ReminderScreen;
 

@@ -25,9 +25,7 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
         return null; // Don't render anything if user is null
     }
     const uid = user?.uid
-    console.log(expenseDetails)
     const groupId = expenseDetails?.groupId
-    console.log('groupId in bill', groups[groupId]?.groupName)
 
     const theme = useTheme();
 

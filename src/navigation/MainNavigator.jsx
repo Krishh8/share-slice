@@ -13,6 +13,7 @@ import UpdateExpenseScreen from '../screens/Groups/UpdateExpenseScreen';
 import { customScreenInterpolator } from '../animation/customScreenInterpolator';
 import { Easing } from 'react-native';
 import ReminderScreen from '../screens/ReminderScreen';
+import FAQScreen from '../screens/FAQScreen';
 
 
 const MainStack = createStackNavigator();
@@ -33,6 +34,7 @@ const MainNavigator = () => {
             <MainStack.Screen name="ExpenseDetails" component={ExpenseDetailScreen} />
             <MainStack.Screen name="UpdateExpense" component={UpdateExpenseScreen} />
             <MainStack.Screen name="AddFriends" component={AddFriendsScreen} />
+            <MainStack.Screen name="FAQ" component={FAQScreen} />
 
         </MainStack.Navigator>
     );

@@ -3,11 +3,12 @@ import React, { useState } from 'react'
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import { Avatar, Button, Card, Chip, Divider, List, Text, useTheme } from 'react-native-paper';
 import avatars from '../data/Avatar';
-import { openUPIAppForFullSettlement, payGroupViaRazorpay } from '../services/razorpayService';
+import { openUPIAppForFullSettlement, payGroupViaRazorpay, payViaRazorpay } from '../services/razorpayService';
 import MarkAsAllPaidModal from './MarkAsAllPaidModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { sendReminder } from '../redux/slices/reminderSlice';
 import Toast from 'react-native-toast-message';
+import { showToast } from '../services/toastService';
 
 const FriendComponent = ({ friend }) => {
     if (!friend || !friend.otherUser) return null; // Ensure otherUser data exists
@@ -23,13 +24,6 @@ const FriendComponent = ({ friend }) => {
     const pay = () => {
         payViaRazorpay(otherUser, amountOwed, user)
     }
-
-    const showToast = (type, message) => {
-        Toast.show({
-            type,
-            text1: message,
-        });
-    };
 
     const handleSendReminder = async () => {
         try {

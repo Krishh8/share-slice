@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createGroup } from '../redux/slices/groupSlice';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+import { showToast } from '../services/toastService';
 
 const CreateGroupModal = ({ visible, onDismiss }) => {
     const theme = useTheme();
@@ -34,23 +35,6 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
     const uid = user?.uid
     const dispatch = useDispatch();
     const navigation = useNavigation()
-
-    // const showSuccessToasts = () => {
-    //     Toast.show({
-    //         type: 'success',
-    //         text1: 'Group Created Successfully 🎉',
-    //         text2: 'You can now add members and start splitting expenses!',
-    //     });
-    // };
-
-    // const showFailureToast = () => {
-    //     Toast.show({
-    //         type: 'error',
-    //         text1: 'Group Creation Failed ❌',
-    //         text2: 'Something went wrong. Please try again.',
-    //     });
-    // };
-
 
     const handleCategoryChange = (category) => {
         setSelectedCategory(category);
@@ -86,14 +70,15 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
             setSelectedCategory(categories[0])
             setError("")
             navigation.navigate("MainStack", { screen: "GroupDetails", params: { groupId: result.payload.groupId } })
-            // showSuccessToasts()
+            showToast('success', 'Group Created Successfully 🎉', 'You can now add members and start splitting expenses!')
             // })
         } else {
             onDismiss()
             setGroupName("")
             setSelectedCategory(categories[0])
             setError("")
-            // showFailureToast()
+            showToast('error', 'Group Creation Failed ❌', 'Something went wrong. Please try again.')
+
             console.error('Error creating group:', result.error.message);
         }
 
@@ -102,7 +87,6 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
     return (
         // <PaperProvider>
         <Portal>
-            {/* <Toast position='bottom' /> */}
             <Modal
                 visible={visible}
                 onDismiss={onDismiss}

@@ -21,6 +21,7 @@ import LoadingScreen from './LoadingScreen';
 import { useSelector } from 'react-redux';
 import avatars from '../data/Avatar';
 import HeaderComponent from '../components/HeaderComponent';
+import { clearUser } from '../redux/slices/userAuthSlice';
 
 const AccountScreen = () => {
     const theme = useTheme();
@@ -31,106 +32,114 @@ const AccountScreen = () => {
     }
     const { phoneNumber, fullName, email, avatar, upiId } = user;
 
+    const handleLogout = async () => {
+        try {
+            console.log('Logging out...');
+            await auth().signOut();  // Firebase logout
+            dispatch(clearUser());   // Reset Redux state
 
+            // Wait a moment for Firebase state to update
+            // setTimeout(() => {
+            navigation.replace('AuthStack'); // Redirect to Auth screens
+            // }, 500);
+
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    };
 
     if (loading) {
         return <LoadingScreen />;
     }
 
     return (
-        <ScrollView style={[styles.accountContainer, {
-            backgroundColor: theme.colors.background
-        }]}>
-            {error && (
-                <Text style={{ color: theme.colors.error, textAlign: "center", marginVertical: rh(1) }}>
-                    {error}
-                </Text>
-            )}
+        <>
             <HeaderComponent title="Account" />
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={[styles.accountContainer, {
+                    backgroundColor: theme.colors.background
+                }]}>
+                <Card style={styles.profileCard}>
+                    <Card.Content style={styles.profileCardContent}>
+                        <View style={styles.avatarContainer}>
+                            <Avatar.Image
+                                size={rfs(20)}
+                                source={avatars.find(a => a.id === (user?.avatar || 0))?.uri}
+                                style={styles.avatar}
+                            />
+                            <IconButton
+                                icon="pencil"
+                                size={rfs(3)}
+                                style={styles.editIcon}
+                                onPress={() => navigation.navigate("EditAccount")}
+                                mode="contained"
+                                containerColor={theme.colors.primary}
+                                iconColor={theme.colors.onPrimary}
+                            />
+                        </View>
 
-            <Card style={styles.profileCard}>
-                <Card.Content style={styles.profileCardContent}>
-                    <View style={styles.avatarContainer}>
-                        <Avatar.Image
-                            size={rfs(20)}
-                            source={avatars.find(a => a.id === (user?.avatar || 0))?.uri}
-                            style={styles.avatar}
-                        />
-                        <IconButton
-                            icon="pencil"
-                            size={rfs(3)}
-                            style={styles.editIcon}
-                            onPress={() => navigation.navigate("EditAccount")}
-                            mode="contained"
-                            containerColor={theme.colors.primary}
-                            iconColor={theme.colors.onPrimary}
-                        />
-                    </View>
+                        <Text variant="headlineMedium" style={styles.profileName}>{fullName}</Text>
+                        <Divider style={styles.divider} />
 
-                    <Text variant="headlineMedium" style={styles.profileName}>{fullName}</Text>
-                    <Divider style={styles.divider} />
+                        <View style={styles.infoRow}>
+                            <Icon source="phone" size={rfs(3)} color={theme.colors.primary} />
+                            <Text variant="bodyLarge" style={styles.infoText}>{phoneNumber}</Text>
+                        </View>
 
-                    <View style={styles.infoRow}>
-                        <Icon source="phone" size={rfs(3)} color={theme.colors.primary} />
-                        <Text variant="bodyLarge" style={styles.infoText}>{phoneNumber}</Text>
-                    </View>
+                        <View style={styles.infoRow}>
+                            <Icon source="email" size={rfs(3)} color={theme.colors.primary} />
+                            <Text variant="bodyLarge" style={styles.infoText}>{email}</Text>
+                        </View>
 
-                    <View style={styles.infoRow}>
-                        <Icon source="email" size={rfs(3)} color={theme.colors.primary} />
-                        <Text variant="bodyLarge" style={styles.infoText}>{email}</Text>
-                    </View>
+                        <View style={styles.infoRow}>
+                            <Icon source="bank" size={rfs(3)} color={theme.colors.primary} />
+                            <Text variant="bodyLarge" style={styles.infoText}>{upiId}</Text>
+                        </View>
+                    </Card.Content>
+                </Card>
 
-                    <View style={styles.infoRow}>
-                        <Icon source="bank" size={rfs(3)} color={theme.colors.primary} />
-                        <Text variant="bodyLarge" style={styles.infoText}>{upiId}</Text>
-                    </View>
-                </Card.Content>
-            </Card>
+                <Card style={styles.optionsCard}>
+                    <Card.Content>
+                        <TouchableOpacity onPress={() => navigation.navigate("FAQ")} style={styles.optionButton}>
+                            <Icon source="frequently-asked-questions" size={rfs(3)} color={theme.colors.primary} />
+                            <Text variant="titleMedium" style={styles.optionText}>FAQ</Text>
+                            <Icon source="chevron-right" size={rfs(3)} color={theme.colors.outline} style={{ marginLeft: 'auto' }} />
+                        </TouchableOpacity>
 
-            <Card style={styles.optionsCard}>
-                <Card.Content>
-                    <TouchableOpacity style={styles.optionButton}>
-                        <Icon source="frequently-asked-questions" size={rfs(3)} color={theme.colors.primary} />
-                        <Text variant="titleMedium" style={styles.optionText}>FAQ</Text>
-                        <Icon source="chevron-right" size={rfs(3)} color={theme.colors.outline} style={{ marginLeft: 'auto' }} />
-                    </TouchableOpacity>
+                        <Divider style={styles.optionDivider} />
 
-                    <Divider style={styles.optionDivider} />
+                        <TouchableOpacity onPress={() => navigation.navigate("EditAccount")} style={styles.optionButton}>
+                            <Icon source="information" size={rfs(3)} color={theme.colors.primary} />
+                            <Text variant="titleMedium" style={styles.optionText}>About Us</Text>
+                            <Icon source="chevron-right" size={rfs(3)} color={theme.colors.outline} style={{ marginLeft: 'auto' }} />
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.optionButton}>
-                        <Icon source="information" size={rfs(3)} color={theme.colors.primary} />
-                        <Text variant="titleMedium" style={styles.optionText}>About Us</Text>
-                        <Icon source="chevron-right" size={rfs(3)} color={theme.colors.outline} style={{ marginLeft: 'auto' }} />
-                    </TouchableOpacity>
+                        <Divider style={styles.optionDivider} />
 
-                    <Divider style={styles.optionDivider} />
+                        <TouchableOpacity onPress={() => navigation.navigate("EditAccount")} style={styles.optionButton}>
+                            <Icon source="account-settings" size={rfs(3)} color={theme.colors.primary} />
+                            <Text variant="titleMedium" style={styles.optionText}>Account Settings</Text>
+                            <Icon source="chevron-right" size={rfs(3)} color={theme.colors.outline} style={{ marginLeft: 'auto' }} />
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.optionButton}>
-                        <Icon source="account-settings" size={rfs(3)} color={theme.colors.primary} />
-                        <Text variant="titleMedium" style={styles.optionText}>Account Settings</Text>
-                        <Icon source="chevron-right" size={rfs(3)} color={theme.colors.outline} style={{ marginLeft: 'auto' }} />
-                    </TouchableOpacity>
+                        <Divider style={styles.optionDivider} />
 
-                    <Divider style={styles.optionDivider} />
 
-                    <LogOutBtn style={styles.logoutButton} />
-                </Card.Content>
-            </Card>
-            <View style={{ height: rh(4) }}></View>
-        </ScrollView>
+                        <TouchableOpacity onPress={handleLogout} style={styles.optionButton}>
+                            <Icon source="logout" size={rfs(3)} color={theme.colors.primary} />
+                            <Text variant="titleMedium" style={styles.optionText}>Log out</Text>
+                        </TouchableOpacity>
+
+                    </Card.Content>
+                </Card>
+                <View style={{ height: rh(4) }}></View>
+            </ScrollView>
+        </>
     );
 };
 
 const styles = StyleSheet.create({
-    // Common styles
-    container: {
-        flex: 1,
-    },
-    errorText: {
-        color: 'red',
-        fontSize: rfs(1.8),
-        marginBottom: rh(1),
-    },
     divider: {
         marginVertical: rh(2),
     },
@@ -139,7 +148,8 @@ const styles = StyleSheet.create({
     },
     profileCard: {
         borderRadius: rh(2),
-        margin: rw(4),
+        marginHorizontal: rw(4),
+        marginVertical: rh(1)
     },
     profileCardContent: {
         alignItems: 'center',
@@ -173,7 +183,8 @@ const styles = StyleSheet.create({
     optionsCard: {
         borderRadius: rh(2),
         elevation: 4,
-        margin: rw(4)
+        margin: rw(4),
+        marginVertical: rh(1)
     },
     optionButton: {
         flexDirection: 'row',

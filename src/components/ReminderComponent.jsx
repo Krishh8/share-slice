@@ -49,9 +49,9 @@ export default ReminderComponent;
 const styles = StyleSheet.create({
     reminderItem: {
         flexDirection: 'row',
-        padding: rw(2),
-        margin: rh(1),
-        marginTop: 0,
+        padding: rh(1.5),
+        marginHorizontal: rh(1),
+        marginBottom: rh(2),
         alignItems: 'center',
         gap: rh(1.5),
         borderRadius: rh(1), // Optional: Make it look cleaner

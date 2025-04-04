@@ -70,14 +70,14 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
             setSelectedCategory(categories[0])
             setError("")
             navigation.navigate("MainStack", { screen: "GroupDetails", params: { groupId: result.payload.groupId } })
-            showToast('success', 'Group Created Successfully 🎉', 'You can now add members and start splitting expenses!')
+            // showToast('success', 'Group Created Successfully 🎉', 'You can now add members and start splitting expenses!')
             // })
         } else {
             onDismiss()
             setGroupName("")
             setSelectedCategory(categories[0])
             setError("")
-            showToast('error', 'Group Creation Failed ❌', 'Something went wrong. Please try again.')
+            // showToast('error', 'Group Creation Failed ❌', 'Something went wrong. Please try again.')
 
             console.error('Error creating group:', result.error.message);
         }
@@ -116,6 +116,7 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
                             value={groupName}
                             mode="outlined"
                             label="Group Name"
+                            error={error}
                             textColor={theme.colors.onSecondaryContainer}
                             onChangeText={(text) => setGroupName(text)}
                         />

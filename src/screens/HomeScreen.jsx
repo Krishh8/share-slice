@@ -23,11 +23,11 @@ const HomeScreen = () => {
     return (
         <View style={styles.screen}>
             {/* Header Section */}
-            <Appbar.Header style={{ backgroundColor: theme.colors.primary, elevation: 0 }}>
+            <Appbar.Header style={{ backgroundColor: theme.colors.primary, paddingTop: rh(1) }}>
                 <Avatar.Image
                     size={rfs(5)}
                     source={avatars.find(a => a.id === (user?.avatar || 0))?.uri}
-                    style={[styles.avatar, { backgroundColor: theme.colors.primaryContainer, }]}
+                    style={[styles.avatar, { backgroundColor: theme.colors.primaryContainer, marginLeft: rw(5) }]}
                     onTouchEnd={() => navigation.navigate('Account')}
                 />
 
@@ -35,7 +35,7 @@ const HomeScreen = () => {
                     title={`Hi, ${user?.fullName?.split(' ')[0] || 'User'}`}
                     titleStyle={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}
                 />
-                <Appbar.Action icon="bell" color={theme.colors.onPrimary} onPress={() => navigation.navigate('Reminder')} />
+                <Appbar.Action icon="bell" color={theme.colors.primary} backgroundColor={theme.colors.onPrimary} size={rfs(3)} style={{ marginRight: rw(5) }} onPress={() => navigation.navigate('Reminder')} />
             </Appbar.Header>
 
             <View style={[styles.headerContainer, { backgroundColor: theme.colors.primary }]}>

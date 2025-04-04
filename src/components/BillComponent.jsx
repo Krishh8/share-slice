@@ -117,7 +117,7 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
                             </View>
                             <View style={styles.details}>
                                 <Chip mode="outlined" style={{ alignSelf: "flex-start" }} textStyle={{ color: theme.colors.primary }}>
-                                    {groups[groupId]?.groupName || ""}
+                                    {groups[groupId]?.groupName || "Expense"}
                                 </Chip>
                             </View>
                         </View>

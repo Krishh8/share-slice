@@ -18,14 +18,16 @@ import { useNavigation } from '@react-navigation/native';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import LogOutBtn from '../components/LogOutBtn';
 import LoadingScreen from './LoadingScreen';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import avatars from '../data/Avatar';
 import HeaderComponent from '../components/HeaderComponent';
 import { clearUser } from '../redux/slices/userAuthSlice';
+import auth from '@react-native-firebase/auth';
 
 const AccountScreen = () => {
     const theme = useTheme();
     const navigation = useNavigation();
+    const dispatch = useDispatch()
     const { user, loading, error } = useSelector(state => state.userAuth);
     if (!user) {
         return null; // Don't render anything if user is null
@@ -61,6 +63,14 @@ const AccountScreen = () => {
                     backgroundColor: theme.colors.background
                 }]}>
                 <Card style={styles.profileCard}>
+                    <IconButton
+                        icon="pencil"
+                        size={rfs(3)}
+                        style={styles.editIcon}
+                        onPress={() => navigation.navigate("EditAccount")}
+                        mode="contained"
+                    // containerColor={theme.colors.backdrop}
+                    />
                     <Card.Content style={styles.profileCardContent}>
                         <View style={styles.avatarContainer}>
                             <Avatar.Image
@@ -68,19 +78,9 @@ const AccountScreen = () => {
                                 source={avatars.find(a => a.id === (user?.avatar || 0))?.uri}
                                 style={styles.avatar}
                             />
-                            <IconButton
-                                icon="pencil"
-                                size={rfs(3)}
-                                style={styles.editIcon}
-                                onPress={() => navigation.navigate("EditAccount")}
-                                mode="contained"
-                                containerColor={theme.colors.primary}
-                                iconColor={theme.colors.onPrimary}
-                            />
                         </View>
-
                         <Text variant="headlineMedium" style={styles.profileName}>{fullName}</Text>
-                        <Divider style={styles.divider} />
+                        <Divider bold style={styles.divider} />
 
                         <View style={styles.infoRow}>
                             <Icon source="phone" size={rfs(3)} color={theme.colors.primary} />
@@ -109,7 +109,7 @@ const AccountScreen = () => {
 
                         <Divider style={styles.optionDivider} />
 
-                        <TouchableOpacity onPress={() => navigation.navigate("EditAccount")} style={styles.optionButton}>
+                        <TouchableOpacity onPress={() => navigation.navigate("AboutUs")} style={styles.optionButton}>
                             <Icon source="information" size={rfs(3)} color={theme.colors.primary} />
                             <Text variant="titleMedium" style={styles.optionText}>About Us</Text>
                             <Icon source="chevron-right" size={rfs(3)} color={theme.colors.outline} style={{ marginLeft: 'auto' }} />
@@ -133,7 +133,7 @@ const AccountScreen = () => {
 
                     </Card.Content>
                 </Card>
-                <View style={{ height: rh(4) }}></View>
+                {/* <View style={{ height: rh(4) }}></View> */}
             </ScrollView>
         </>
     );
@@ -141,12 +141,13 @@ const AccountScreen = () => {
 
 const styles = StyleSheet.create({
     divider: {
-        marginVertical: rh(2),
+        marginVertical: rh(1),
     },
     accountContainer: {
         flex: 1,
     },
     profileCard: {
+        position: 'relative',
         borderRadius: rh(2),
         marginHorizontal: rw(4),
         marginVertical: rh(1)
@@ -156,15 +157,10 @@ const styles = StyleSheet.create({
         padding: rh(3),
     },
     avatarContainer: {
-        position: 'relative',
-        marginBottom: rh(2),
-    },
-    avatar: {
-        borderWidth: rh(0),
     },
     editIcon: {
         position: 'absolute',
-        bottom: 0,
+        top: 0,
         right: 0,
     },
     profileName: {

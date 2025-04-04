@@ -5,6 +5,8 @@ import { Button, Divider, IconButton, Modal, Portal, Surface, Text, TextInput, u
 import { useNavigation } from '@react-navigation/native';
 import { updateBalanceAfterCashPayment } from '../redux/slices/balancesSlice';
 import { useDispatch } from 'react-redux';
+import { showToast } from '../services/toastService';
+import CustomAlert from './CustomAlert';
 
 const MarkAsPaidModal = ({ visible, onDismiss, balance }) => {
     const theme = useTheme()
@@ -14,6 +16,7 @@ const MarkAsPaidModal = ({ visible, onDismiss, balance }) => {
     const [amount, setAmount] = useState(amountOwed.toString());
     const [error, setError] = useState("");
     const navigation = useNavigation();
+    const [alertVisible, setAlertVisible] = useState(false)
 
     const handleSubmit = () => {
         if (isNaN(amount) || amount <= 0 || !amount) {
@@ -21,16 +24,33 @@ const MarkAsPaidModal = ({ visible, onDismiss, balance }) => {
             return;
         }
         else if (amount > amountOwed) {
-            setError("Error", "Amount received cannot be more than amount owed.");
+            setError("Amount received cannot be more than amount owed.");
             return;
-        } else {
-            setError("");
-            console.log("Submitted Amount:", amount);
-            dispatch(updateBalanceAfterCashPayment({ creditorId, debtorId, groupId, receivedAmount: Number(amount) }));
-            Alert.alert("Success", `Updated balance after receiving ₹${amount} in cash.`);
-            onDismiss()
         }
-    }
+        else {
+            setError(""); // Clear any previous errors
+            setAlertVisible(true); // Show confirmation alert before processing
+        }
+
+    };
+
+    // Function to handle confirmation
+    const confirmSettlement = () => {
+        try {
+            dispatch(updateBalanceAfterCashPayment({
+                creditorId,
+                debtorId,
+                groupId,
+                receivedAmount: Number(amount)
+            }));
+
+            showToast('success', `Successfully settled ₹${amount} in cash.`);
+        } catch (error) {
+            showToast('error', 'Failed to settle balance.');
+        }
+        setAlertVisible(false); // Hide alert after confirming
+        onDismiss(); // Close modal
+    };
 
     return (
         <Portal>
@@ -39,7 +59,7 @@ const MarkAsPaidModal = ({ visible, onDismiss, balance }) => {
                 onDismiss={onDismiss}
                 theme={{
                     colors: {
-                        backdrop: "rgba(0, 0, 0, 0.5)", // Adjust opacity here (0.3 for lighter effect)
+                        backdrop: "rgba(0, 0, 0, 0.7)", // Adjust opacity here (0.3 for lighter effect)
                     },
                 }}
                 contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}
@@ -79,6 +99,17 @@ const MarkAsPaidModal = ({ visible, onDismiss, balance }) => {
                     <Text variant="titleSmall" style={[styles.title, { color: theme.colors.secondary }]}>Recording a payment does not process an actual transaction. This feature is for tracking purposes only. Ensure the payment is made separately before marking it as paid.</Text>
                 </ScrollView>
 
+                <CustomAlert
+                    visible={alertVisible}
+                    title="Confirm Settlement"
+                    message="This settlement will not be reversed. Do you want to proceed?"
+                    onClose={() => setAlertVisible(false)}
+                    onConfirm={confirmSettlement} // Call confirm function on confirm button
+                    confirmText="Confirm"
+                    cancelText="Cancel"
+                    showCancel={true}
+                    icon="alert-circle"
+                />
 
             </Modal>
         </Portal>

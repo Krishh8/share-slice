@@ -11,6 +11,8 @@ import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance, EventType } from '@notifee/react-native'
 import firestore from '@react-native-firebase/firestore';
 import { sendReminder } from '../redux/slices/reminderSlice';
+import { showToast } from '../services/toastService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const BalanceComponent = ({ balance }) => {
@@ -19,6 +21,8 @@ const BalanceComponent = ({ balance }) => {
     const dispatch = useDispatch()
     const uid = user?.uid
     const [visible, setVisible] = useState(false)
+    const [reminderDisabled, setReminderDisabled] = useState(false);
+    const [remainingTime, setRemainingTime] = useState(null);
 
     if (!user) {
         return null;
@@ -28,34 +32,46 @@ const BalanceComponent = ({ balance }) => {
         payGroupViaRazorpay(balance.creditor, balance.amountOwed, balance.debtor, balance.groupId)
     }
 
-    // useEffect(() => {
-    //     // Request permissions on component mount
-    //     requestPermission();
+    useEffect(() => {
+        const checkReminderStatus = async () => {
+            const lastReminderTime = await AsyncStorage.getItem(`lastReminder_${balance.debtor.uid}`);
+            if (lastReminderTime) {
+                const elapsedTime = Date.now() - parseInt(lastReminderTime, 10);
+                const remaining = 43200000 - elapsedTime; // 12 hours = 43200000 ms
 
-    //     // Setup listeners
-    //     const unsubscribe = setupNotificationListeners();
+                if (remaining > 0) {
+                    setReminderDisabled(true);
+                    setRemainingTime(Math.ceil(remaining / 60000)); // Convert to minutes
+                    setTimeout(() => setReminderDisabled(false), remaining);
+                } else {
+                    setReminderDisabled(false);
+                }
+            }
+        };
 
-    //     return () => {
-    //         // Cleanup listeners
-    //         unsubscribe();
-    //     };
-    // }, []);
-
-    // const triggerReminder = async () => {
-    //     await sendDebtReminder({
-    //         amount: balance.amountOwed,
-    //         creditorName: balance.creditor.fullName,
-    //         dueDate: new Date('2025-04-15')
-    //     });
-    // };
+        checkReminderStatus();
+    }, []);
 
     const handleSendReminder = async () => {
-        dispatch(sendReminder({
-            creditor: balance.creditor,
-            amountOwed: balance.amountOwed,
-            debtor: balance.debtor
-        }));
-        alert("Reminder sent successfully!");
+        try {
+            await dispatch(sendReminder({
+                creditor: balance.creditor,
+                amountOwed: balance.amountOwed,
+                debtor: balance.debtor
+            })).unwrap();
+
+            showToast('success', 'Reminder sent successfully.');
+
+            const currentTime = Date.now();
+            await AsyncStorage.setItem(`lastReminder_${balance.debtor.uid}`, currentTime.toString());
+
+            setReminderDisabled(true);
+            setRemainingTime(720); // 12 hours in minutes
+
+            setTimeout(() => setReminderDisabled(false), 43200000); // 12 hours = 43200000 ms
+        } catch (error) {
+            showToast('error', 'Failed to send reminder.');
+        }
     };
 
     return (
@@ -68,8 +84,8 @@ const BalanceComponent = ({ balance }) => {
 
             <View style={styles.amount}>
                 <Text style={[styles.amountText, { color: uid == balance.debtor.uid ? theme.colors.red : theme.colors.green }]}>₹{balance.amountOwed}</Text>
-                <Icon source="arrow-right-thin" color={theme.colors.inversePrimary} size={rfs(5)} />
-                <Text>will pay </Text>
+                <Icon source="arrow-right-thin" color={uid == balance.debtor.uid ? theme.colors.red : theme.colors.green} size={rfs(5)} />
+                <Text style={[{ color: uid == balance.debtor.uid ? theme.colors.red : theme.colors.green }]}>will pay </Text>
             </View>
 
             <View style={[styles.user]}>
@@ -79,14 +95,25 @@ const BalanceComponent = ({ balance }) => {
             </View>
 
             <View style={[styles.btns]}>
-                {uid == balance.debtor.uid && <Chip mode='flat' onPress={pay} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
-                {uid == balance.creditor.uid && <Chip mode='outlined' onPress={handleSendReminder} style={{ backgroundColor: theme.colors.secondaryContainer }}>Remind</Chip>}
-                {uid == balance.creditor.uid && <Chip mode='outlined' style={{ backgroundColor: theme.colors.secondaryContainer }} onPress={() => setVisible(true)}>Settle Up</Chip>}
+                {uid == balance.debtor.uid && <Chip onPress={pay} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
+                {uid == balance.creditor.uid && (
+                    <Chip
+                        onPress={handleSendReminder}
+                        style={{ backgroundColor: theme.colors.secondaryContainer }}
+                        disabled={reminderDisabled}
+                    >
+                        {reminderDisabled
+                            ? `Wait ${Math.floor(remainingTime / 60)}h ${remainingTime % 60}m`
+                            : "Remind"}
+
+                    </Chip>
+                )}
+                {uid == balance.creditor.uid && <Chip style={{ backgroundColor: theme.colors.secondaryContainer }} onPress={() => setVisible(true)}>Settle Up</Chip>}
             </View>
 
             <MarkAsPaidModal visible={visible} onDismiss={() => setVisible(false)} balance={balance} />
         </View>
-    )
+    );
 }
 
 export default BalanceComponent
@@ -102,6 +129,7 @@ const styles = StyleSheet.create({
     user: {
         justifyContent: "center",
         alignItems: 'center',
+        flexShrink: 1,
     },
     name: {
         fontSize: rfs(1.8),
@@ -113,13 +141,14 @@ const styles = StyleSheet.create({
     },
     amount: {
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
     },
     amountText: {
         fontSize: rfs(2),
         fontWeight: 'bold'
     },
     btns: {
-        gap: rh(1)
+        gap: rh(1),
+        flexShrink: 1,
     }
 })

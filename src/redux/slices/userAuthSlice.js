@@ -8,8 +8,6 @@ export const sendOTP = createAsyncThunk(
     async (phoneNumber, thunkAPI) => {
         try {
             const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
-            console.log("OTP sent")
-            // return { verificationId: confirmation.verificationId, phoneNumber };
             return { confirmation: confirmation.verificationId, phoneNumber }
         } catch (error) {
             console.log(error.message)
@@ -73,7 +71,6 @@ export const verifyOTP = createAsyncThunk(
 
             return userData;
         } catch (error) {
-            console.error("OTP verification failed:", error);
             return rejectWithValue(error.message);
         }
     }

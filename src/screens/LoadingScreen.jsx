@@ -7,9 +7,9 @@ const LoadingScreen = ({ message = "Loading..." }) => {
     const theme = useTheme();
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={[styles.text, { color: theme.colors.secondary }]}>{message}</Text>
+            <Text style={[styles.text, { color: theme.colors.primary }]}>{message}</Text>
         </View>
     );
 };

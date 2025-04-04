@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
-import { View, FlatList, StyleSheet } from "react-native";
+import { View, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import { Avatar, Text, IconButton, useTheme, Icon, Card } from "react-native-paper";
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import CreateGroupModal from "./CreateGroupModal";
@@ -37,35 +37,29 @@ const RecentGroupsComponent = () => {
 
 
     const renderItem = ({ item, index }) => (
-        <Animated.View entering={FadeInRight.delay(index * 50)} style={styles.groupContainer}>
-            <View style={styles.avatarContainer}>
-                <Avatar.Icon size={rfs(7)} icon={item.category.icon} />
+        <Animated.View entering={FadeInRight.delay(index * 50)} style={[styles.groupContainer]}>
+            <TouchableOpacity onPress={() => navigation.navigate('GroupDetails', { groupId: item.groupId })} style={[styles.avatarContainer, { backgroundColor: theme.colors.shadow }]}>
                 <IconButton
-                    icon="arrow-right-bottom"
-                    size={rfs(2)}
-                    onPress={() => navigation.navigate('GroupDetails', { groupId: item.groupId })}
-                    style={[styles.arrowIcon, { backgroundColor: theme.colors.surface }]}
+                    mode="contained"
+                    icon={item.category.icon}
+                    size={rfs(4)}
                 />
-            </View>
-            <Text style={[styles.groupName, { color: theme.colors.primary }]}>{item.groupName}</Text>
+                <Text style={[styles.groupName, { color: theme.colors.primary }]}>{item.groupName}</Text>
+            </TouchableOpacity>
         </Animated.View >
     );
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={[styles.div]}>
-                <View style={styles.createGroupContainer}>
+                <TouchableOpacity onPress={() => setVisible(true)} style={[styles.createGroupContainer,]}>
                     <IconButton
-                        icon="plus"
                         mode="contained"
-                        onPress={() => setVisible(true)}
-                        style={styles.addButton}
-                        size={rfs(7)}
-                    // iconColor={theme.colors.primaryContainer}
-                    // containerColor={theme.colors.onPrimaryContainer}
+                        icon="plus"
+                        size={rfs(4)}
                     />
                     <Text style={[styles.createGroupText, { color: theme.colors.primary }]}>Create Group</Text>
-                </View>
+                </TouchableOpacity>
                 <FlatList
                     data={displayGroups}
                     keyExtractor={(item) => item.groupId}
@@ -75,7 +69,7 @@ const RecentGroupsComponent = () => {
                 />
             </View>
             <CreateGroupModal visible={visible} onDismiss={() => setVisible(false)} />
-        </View>
+        </View >
     );
 };
 
@@ -88,7 +82,8 @@ export const styles = StyleSheet.create({
     },
     createGroupContainer: {
         alignItems: "center",
-        marginRight: rw(3),
+        // marginRight: rw(3),
+        padding: rh(1)
     },
     addButton: {
         width: rh(7),
@@ -97,13 +92,15 @@ export const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     },
-    title: {
-        fontSize: rfs(3.3),
-        fontWeight: '500',
+    avatarContainer: {
+        borderRadius: rh(2),
+        padding: rh(1),
+        alignItems: "center",
+        marginRight: rw(3),
     },
     createGroupText: {
         fontSize: rfs(2),
-        marginTop: rh(1),
+        // marginTop: rh(1),
         fontWeight: 'bold'
     },
     div: {
@@ -113,20 +110,9 @@ export const styles = StyleSheet.create({
     },
     groupContainer: {
         alignItems: "center",
-        marginRight: rw(5),
-        marginTop: rh(0.7),
     },
     groupName: {
-        marginTop: rh(1.6),
         fontSize: rfs(1.8),
     },
-    avatarContainer: {
-        position: 'relative', // Enables absolute positioning for children
-    },
-    arrowIcon: {
-        position: 'absolute',
-        bottom: rh(-2), // Aligns to bottom
-        right: rw(-5), // Aligns to right
-        borderRadius: rh(1),
-    },
+
 });

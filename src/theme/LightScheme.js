@@ -1,50 +1,3 @@
-// export const LightScheme = {
-//     "primary": "rgb(83, 70, 216)",
-//     "onPrimary": "rgb(255, 255, 255)",
-//     "primaryContainer": "rgb(227, 223, 255)",
-//     "onPrimaryContainer": "rgb(19, 0, 104)",
-//     "lightPrimaryContainer": "rgb(225, 221, 253)", //similar to upper
-//     "onLightPrimaryContainer": "rgb(19, 0, 104)", //similar to upper
-//     "secondary": "rgb(94, 92, 113)",
-//     "onSecondary": "rgb(255, 255, 255)",
-//     "secondaryContainer": "rgb(228, 223, 249)",
-//     "onSecondaryContainer": "rgb(27, 26, 44)",
-//     "tertiary": "rgb(122, 82, 103)",
-//     "onTertiary": "rgb(255, 255, 255)",
-//     "tertiaryContainer": "rgb(255, 216, 233)",
-//     "onTertiaryContainer": "rgb(47, 17, 35)",
-//     "error": "rgb(186, 26, 26)",
-//     "onError": "rgb(255, 255, 255)",
-//     "errorContainer": "rgb(255, 218, 214)",
-//     "onErrorContainer": "rgb(65, 0, 2)",
-//     "background": "rgb(255, 251, 255)",
-//     "onBackground": "rgb(28, 27, 31)",
-//     "surface": "rgb(255, 251, 255)",
-//     "onSurface": "rgb(28, 27, 31)",
-//     "surfaceVariant": "rgb(229, 225, 236)",
-//     "onSurfaceVariant": "rgb(71, 70, 79)",
-//     "outline": "rgb(120, 118, 128)",
-//     "outlineVariant": "rgb(200, 197, 208)",
-//     "shadow": "rgb(0, 0, 0)",
-//     "scrim": "rgb(0, 0, 0)",
-//     "inverseSurface": "rgb(49, 48, 52)",
-//     "inverseOnSurface": "rgb(244, 239, 244)",
-//     "inversePrimary": "rgb(196, 192, 255)",
-//     "elevation": {
-//         "level0": "transparent",
-//         "level1": "rgb(246, 242, 253)",
-//         "level2": "rgb(241, 237, 252)",
-//         "level3": "rgb(236, 231, 251)",
-//         "level4": "rgb(234, 229, 250)",
-//         "level5": "rgb(231, 226, 250)"
-//     },
-//     "surfaceDisabled": "rgba(28, 27, 31, 0.12)",
-//     "onSurfaceDisabled": "rgba(28, 27, 31, 0.38)",
-//     "backdrop": "rgba(48, 47, 56, 0.4)",
-//     "red": "rgb(192, 1, 0)",
-//     "green": "rgb(0, 110, 0)",
-// }
-
 export const LightScheme = {
     "primary": "rgb(129, 86, 0)",
     "onPrimary": "rgb(255, 255, 255)",
@@ -91,7 +44,7 @@ export const LightScheme = {
     "blue": "rgb(0, 86, 179)",
     "onBlue": "rgb(255, 255, 255)",
     "blueContainer": "rgb(177, 211, 255)",
-    "onBlueContainer": "rgb(0, 24, 58)"
-
+    "onBlueContainer": "rgb(0, 24, 58)",
+    "shadow": "rgb(241, 238, 238)"
 
 }

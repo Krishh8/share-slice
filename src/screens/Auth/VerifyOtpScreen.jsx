@@ -1,13 +1,13 @@
 import { Alert, Keyboard, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, TextInput, Text, useTheme, Card, Surface, IconButton } from 'react-native-paper';
+import { Button, Text, useTheme } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
-import firestore, { Timestamp } from '@react-native-firebase/firestore';
 import { useDispatch, useSelector } from 'react-redux';
 import { sendOTP, verifyOTP } from '../../redux/slices/userAuthSlice';
 import { OtpInput } from "react-native-otp-entry";
+import { showToast } from '../../services/toastService';
+import CustomAlert from '../../components/CustomAlert';
 
 const VerifyOtpScreen = () => {
     const theme = useTheme();
@@ -15,32 +15,29 @@ const VerifyOtpScreen = () => {
     const dispatch = useDispatch();
     const route = useRoute();
     const { phoneNumber } = route.params;
-
-    const { user, otpSent, loading, error } = useSelector(state => state.userAuth)
-
-    // const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const { loading, error } = useSelector(state => state.userAuth)
     const [otp, setOtp] = useState("");
-    const inputRefs = useRef([]);
     const [resendDisabled, setResendDisabled] = useState(false);
     const [countdown, setCountdown] = useState(0);
-    const [confirmation, setConfirmation] = useState(null)
     const countdownRef = useRef(null);
+    // const [alertVisible, setAlertVisible] = useState(false)
+    const [confirmation, setConfirmation] = useState(null)
 
 
     const handleSendOTP = async () => {
         try {
             const result = await dispatch(sendOTP(phoneNumber)).unwrap();
             setConfirmation(result.confirmation); // Store confirmation object in state
-            console.log("OTP sent successfully", result.confirmation);
+            showToast('success', 'OTP sent successfully.')
         } catch (error) {
             console.error("Error sending OTP:", error);
         }
     };
 
     useEffect(() => {
-        console.log('in otp screen')
         handleSendOTP()
         setCountdown(30);
+        return () => clearTimeout(countdownRef.current); // Cleanup on unmount
     }, [phoneNumber]);
 
     useEffect(() => {
@@ -53,56 +50,10 @@ const VerifyOtpScreen = () => {
         return () => clearTimeout(countdownRef.current);
     }, [countdown]);
 
-    const handleOtpChange = (value, index) => {
-        if (isNaN(value)) return;
-        const newOtp = [...otp];
-        newOtp[index] = value;
-        setOtp(newOtp);
-
-        if (value !== "") {
-            // Move to next input if a digit is entered
-            if (index < 5) {
-                inputRefs.current[index + 1]?.focus()
-            }
-        }
-
-        if (newOtp.every((digit) => digit !== "")) {
-            handleSubmit(newOtp.join(""))
-        }
-    };
-
-    const handleKeyPress = (event, index) => {
-        if (event.nativeEvent.key === "Backspace") {
-            if (otp[index] === "" && index > 0) {
-                // Move to previous input on backspace if current input is empty
-                const newOtp = [...otp]
-                newOtp[index - 1] = ""
-                setOtp(newOtp)
-                inputRefs.current[index - 1]?.focus()
-            } else {
-                // Clear current input on backspace
-                const newOtp = [...otp]
-                newOtp[index] = ""
-                setOtp(newOtp)
-            }
-        }
-    }
-
-    const handleSubmit = async (enteredOtp) => {
-        if (enteredOtp.length !== 6) {
-            Alert.alert('Invalid OTP', 'Please enter a 6-digit OTP.');
-            return;
-        }
-
-        if (!confirmation) {
-            Alert.alert('Error', 'OTP confirmation not initialized. Please resend OTP.');
-            return;
-        }
-
+    const handleSubmit = async (otp) => {
         try {
-            const result = await dispatch(verifyOTP({ confirmation, otp: enteredOtp })).unwrap();
-            console.log("OTP Verified Result:", result);
-
+            const result = await dispatch(verifyOTP({ confirmation, otp })).unwrap();
+            // showToast('success', 'OTP verified successfully.')
             if (!result.isProfileComplete) {
                 navigation.replace('AuthStack', { screen: 'Profile' });
             }
@@ -113,7 +64,8 @@ const VerifyOtpScreen = () => {
                 navigation.replace('MainStack');
             }
         } catch (error) {
-            Alert.alert("Error", error);
+            setOtp("")
+            // setAlertVisible(true);
         }
     };
 
@@ -128,12 +80,15 @@ const VerifyOtpScreen = () => {
             <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
 
                 <View style={[styles.card]}>
-                    <View style={styles.textContainer}>
-                        <Text variant="headlineMedium" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
-                            Verify your mobile number
+                    <View style={[styles.textContainer,]}>
+                        <Text variant="headlineMedium" style={{ color: theme.colors.primary, fontWeight: 'bold', textAlign: 'center' }}>
+                            Verify Your
                         </Text>
-                        <Text variant="bodyLarge" style={{ color: theme.colors.secondary, marginTop: rh(1) }}>
-                            OTP has been sent to {phoneNumber} via SMS
+                        <Text variant="headlineMedium" style={{ color: theme.colors.primary, fontWeight: 'bold', textAlign: 'center' }}>
+                            Mobile Number
+                        </Text>
+                        <Text variant="bodyLarge" style={{ color: theme.colors.secondary, marginTop: rh(1), textAlign: 'center' }}>
+                            OTP has been sent to {phoneNumber} via SMS.
                         </Text>
                     </View>
 
@@ -141,34 +96,13 @@ const VerifyOtpScreen = () => {
                         Enter OTP
                     </Text>
 
+
                     <View style={styles.otpContainer}>
-                        {/* {otp.map((digit, index) => (
-                            <TextInput
-                                key={index}
-                                style={[
-                                    styles.otpInput,
-                                    {
-                                        borderColor: digit ? theme.colors.primary : theme.colors.outline,
-                                        backgroundColor: digit ? theme.colors.primaryContainer : theme.colors.surface
-                                    }
-                                ]}
-                                value={digit}
-                                onChangeText={(value) => handleOtpChange(value, index)}
-                                onKeyPress={(event) => handleKeyPress(event, index)}
-                                keyboardType="numeric"
-                                maxLength={1}
-                                ref={(ref) => (inputRefs.current[index] = ref)}
-                                textAlign="center"
-                                textColor={theme.colors.onSurface}
-                                mode="outlined"
-                            />
-                        ))} */}
                         <OtpInput
                             numberOfDigits={6}
                             focusColor={theme.colors.primary}
                             autoFocus={true}
                             hideStick={true}
-                            placeholder="******"
                             blurOnFilled={true}
                             disabled={false}
                             type="numeric"
@@ -176,7 +110,6 @@ const VerifyOtpScreen = () => {
                             focusStickBlinkingDuration={500}
                             onFocus={() => console.log("Focused")}
                             onBlur={() => console.log("Blurred")}
-                            onTextChange={(text) => console.log(text)}
                             onFilled={handleSubmit}
                             textInputProps={{
                                 accessibilityLabel: "One-Time Password",
@@ -190,18 +123,18 @@ const VerifyOtpScreen = () => {
                                 // containerStyle: styles.container,
                                 pinCodeContainerStyle: { backgroundColor: theme.colors.background, borderColor: theme.colors.outline },
                                 pinCodeTextStyle: { color: theme.colors.primary },
-                                focusStickStyle: { color: theme.colors.primary },
-                                focusedPinCodeContainerStyle: styles.activePinCodeContainer,
-                                placeholderTextStyle: styles.placeholderText,
-                                filledPinCodeContainerStyle: styles.filledPinCodeContainer,
-                                disabledPinCodeContainerStyle: styles.disabledPinCodeContainer,
+                                focusStickStyle: { color: theme.colors.red, width: rw(1) },
+                                focusedPinCodeContainerStyle: { backgroundColor: theme.colors.surface, },
+                                // placeholderTextStyle: styles.placeholderText,
+                                filledPinCodeContainerStyle: { backgroundColor: theme.colors.background, borderColor: theme.colors.primaryContainer },
+                                // disabledPinCodeContainerStyle: styles.disabledPinCodeContainer,
                             }}
                         />
                     </View>
 
                     {error && (
                         <Text style={{ color: theme.colors.error, marginTop: rh(1), }}>
-                            {error}
+                            Please check and enter the correct OTP again.
                         </Text>
                     )}
 
@@ -232,7 +165,18 @@ const VerifyOtpScreen = () => {
                         </Button>
                     </View>
                 </View>
+
+                {/* <CustomAlert
+                    visible={alertVisible}
+                    title="Invalid OTP"
+                    message={'Please check and enter the correct OTP again.'}
+                    onClose={() => setAlertVisible(false)}
+                    onConfirm={() => setAlertVisible(false)}
+                    confirmText="Okay"
+                    showCancel={false}
+                    icon="information-variant" /> */}
             </View>
+
         </TouchableWithoutFeedback>
     )
 }

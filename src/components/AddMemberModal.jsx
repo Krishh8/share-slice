@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native'
 import { addMember } from '../redux/slices/groupSlice'
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import queryString from 'query-string'
+import { showToast } from '../services/toastService'
 
 const AddMemberModal = ({ visible, onDismiss }) => {
     const theme = useTheme()
@@ -34,21 +35,6 @@ const AddMemberModal = ({ visible, onDismiss }) => {
             cleanedNumber = cleanedNumber.slice(-10)
         }
         return `+91${cleanedNumber}`
-    }, [])
-
-    // Handle deep links for invitations
-    const handleDeepLink = useCallback(async (link) => {
-        if (link) {
-            console.log('Received deep link:', link.url)
-            const parsed = queryString.parseUrl(link.url)
-            const groupId = parsed.query.groupId
-            if (groupId) {
-                console.log('Extracted Group ID from URL:', groupId); // Log the groupId
-                await AsyncStorage.setItem('pendingGroupId', groupId);
-            } else {
-                console.log('No groupId found in deep link.');
-            }
-        }
     }, [])
 
     // Generate invite link for sharing
@@ -163,8 +149,14 @@ const AddMemberModal = ({ visible, onDismiss }) => {
 
 
     // Add member to group
-    const handleAddMember = useCallback((uid) => {
-        dispatch(addMember({ uid, groupId }))
+    const handleAddMember = useCallback(async (uid) => {
+        try {
+            await dispatch(addMember({ uid, groupId })).unwrap()
+            showToast('success', 'Member added successfully.')
+        }
+        catch (error) {
+            showToast('error', "Failed to add Member.")
+        }
     }, [dispatch, groupId])
 
     // Filter contacts based on search query
@@ -310,6 +302,11 @@ const AddMemberModal = ({ visible, onDismiss }) => {
             <Modal
                 visible={visible}
                 onDismiss={onDismiss}
+                theme={{
+                    colors: {
+                        backdrop: "rgba(0, 0, 0, 0.7)", // Adjust opacity here (0.3 for lighter effect)
+                    },
+                }}
                 contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.secondaryContainer }]}
             >
                 <View style={[styles.header]}>
@@ -337,76 +334,6 @@ const AddMemberModal = ({ visible, onDismiss }) => {
 
                 {renderResults()}
 
-                {/* <View style={styles.manualEntrySection}>
-                    <Text variant='titleMedium' style={styles.sectionTitle}>
-                        Enter Phone Number
-                    </Text>
-                    <View style={styles.manualInputRow}>
-                        <TextInput
-                            style={styles.manualInput}
-                            placeholder="Enter phone number"
-                            value={manualPhoneNumber}
-                            keyboardType="phone-pad"
-                            onChangeText={setManualPhoneNumber}
-                        />
-                        <Button
-                            mode="contained"
-                            onPress={handleManualCheck}
-                            disabled={!manualPhoneNumber || isLoading}
-                            style={styles.checkButton}
-                        >
-                            Check
-                        </Button>
-                    </View>
-                </View> */}
-
-                {/* {manualUserState && (
-                    <View style={styles.manualUserRow}>
-                        <Text style={styles.manualUserPhone}>
-                            {manualUserState.phoneNumber}
-                        </Text>
-                        {manualUserState.exists ? (
-                            <Button
-                                mode="contained"
-                                onPress={() => handleAddMember(manualUserState.uid)}
-                                style={styles.actionButton}
-                            >
-                                Add
-                            </Button>
-                        ) : (
-                            <Button
-                                mode="outlined"
-                                onPress={() => sendInviteViaSMS(manualUserState.phoneNumber)}
-                                style={styles.actionButton}
-                            >
-                                Invite
-                            </Button>
-                        )}
-                    </View>
-                )} */}
-                {/* 
-                {filteredContacts.length > 0 && (
-                    <Text variant='titleMedium' style={[styles.sectionTitle, { color: theme.colors.primary }]}>
-                        Friends
-                    </Text>
-                )}
-
-                {isLoading && filteredContacts.length === 0 ? (
-                    <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loader} />
-                ) : (
-                    <FlatList
-                        data={filteredContacts}
-                        showsVerticalScrollIndicator={false}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderContactItem}
-                        contentContainerStyle={styles.contactsList}
-                        ListEmptyComponent={
-                            permissionGranted && !isLoading ? (
-                                <Text style={styles.emptyListText}>No contacts found</Text>
-                            ) : null
-                        }
-                    />
-                )} */}
             </Modal>
         </Portal>
     )

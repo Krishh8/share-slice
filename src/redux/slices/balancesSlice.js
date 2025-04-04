@@ -1,6 +1,64 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import firestore from "@react-native-firebase/firestore";
-import { stopListeningToBalances } from "../listeners/balanceListener";
+
+export const fetchBalances = createAsyncThunk(
+    'balance/fetchBalances',
+    async ({ uid, groupId = null }, { rejectWithValue }) => {
+        try {
+            let balancesRef = firestore().collection("balances").where("amountOwed", ">", 0);
+            if (groupId) balancesRef = balancesRef.where("groupId", "==", groupId);
+
+            const snapshot = await balancesRef.get();
+
+            let userBalances = [];
+            const userIds = new Set();
+
+            snapshot.forEach(doc => {
+                const balance = { balanceId: doc.id, ...doc.data() };
+                if (balance.creditorId === uid || balance.debtorId === uid) {
+                    userBalances.push(balance);
+                    userIds.add(balance.creditorId);
+                    userIds.add(balance.debtorId);
+                }
+            });
+
+            if (userBalances.length === 0) return [];
+
+            const usersSnapshot = await firestore()
+                .collection("users")
+                .where(firestore.FieldPath.documentId(), "in", Array.from(userIds))
+                .get();
+
+            const userMap = {};
+            usersSnapshot.forEach(doc => {
+                userMap[doc.id] = doc.data();
+            });
+
+            return userBalances.map(balance => ({
+                ...balance,
+                updatedAt: balance.updatedAt.toDate().toISOString(),
+                creditor: {
+                    uid: userMap[balance.creditorId]?.uid || "",
+                    fullName: userMap[balance.creditorId]?.fullName || "Unknown",
+                    avatar: userMap[balance.creditorId]?.avatar || "",
+                    upiId: userMap[balance.creditorId]?.upiId || "",
+                    phoneNumber: userMap[balance.creditorId]?.phoneNumber || "",
+                    email: userMap[balance.creditorId]?.email || "",
+                },
+                debtor: {
+                    uid: userMap[balance.debtorId]?.uid || "",
+                    fullName: userMap[balance.debtorId]?.fullName || "Unknown",
+                    avatar: userMap[balance.debtorId]?.avatar || "",
+                    upiId: userMap[balance.debtorId]?.upiId || "",
+                    phoneNumber: userMap[balance.debtorId]?.phoneNumber || "",
+                    email: userMap[balance.debtorId]?.email || "",
+                },
+            }));
+        } catch (err) {
+            return rejectWithValue(err.message);
+        }
+    }
+);
 
 export const updateBalancesOnExpenseCreate = createAsyncThunk(
     "balance/updateBalancesOnExpenseCreate",
@@ -185,10 +243,11 @@ export const updateBalanceAfterPayment = createAsyncThunk(
             await firestore().collection('transactions').add({
                 creditorId,
                 debtorId,
-                groupId,
+                groupIds: [groupId],
                 paidAmount,
                 paymentMethod,
                 tid,
+                participants: [creditorId, debtorId],
                 timestamp: firestore.Timestamp.now()
             });
             console.log("Balances updated after upi payment successfully.");
@@ -220,9 +279,10 @@ export const updateBalanceAfterCashPayment = createAsyncThunk(
             await firestore().collection('transactions').add({
                 creditorId,
                 debtorId,
-                groupId,
+                groupIds: [groupId],
                 paidAmount: receivedAmount,
                 paymentMethod: "Cash",
+                participants: [creditorId, debtorId],
                 timestamp: firestore.Timestamp.now()
             });
 
@@ -238,7 +298,6 @@ export const settleFullBalanceOutsideGroup = createAsyncThunk(
     'balances/settleFullBalanceOutsideGroup',
     async ({ creditorId, debtorId, paidAmount, paymentMethod, tid }, { rejectWithValue }) => {
         try {
-            console.log(creditorId, debtorId, paidAmount, paymentMethod)
             const balancesRef = firestore().collection('balances');
             // Fetch all balances where the creditor and debtor are involved
             const snapshot = await balancesRef.get();
@@ -249,8 +308,7 @@ export const settleFullBalanceOutsideGroup = createAsyncThunk(
             const batch = firestore().batch();
 
             snapshot.forEach((doc) => {
-                const docId = doc.id; // Document ID is `${creditorId}_${debtorId}_${groupId}`
-
+                const docId = doc.id;
                 if (docId.startsWith(`${creditorId}_${debtorId}_`)) {
                     const balanceData = doc.data();
                     const { amountOwed } = balanceData;
@@ -262,31 +320,28 @@ export const settleFullBalanceOutsideGroup = createAsyncThunk(
                     batch.delete(doc.ref); // Delete the balance document
                 }
             });
-            console.log(totalAmountOwed)
             // 🔴 Verify that the paidAmount matches totalAmountOwed
             if (Math.abs(paidAmount - totalAmountOwed) > 0.01) {
                 return rejectWithValue("Paid amount does not match the total amount owed!");
             }
 
-            // Commit all deletions at once
-            await batch.commit();
-
-            const transactionData = {
-                creditorId,
-                debtorId,
-                paidAmount: totalAmountOwed,
-                paymentMethod,
-                groupIds, // Store all affected group IDs
-                timestamp: firestore.Timestamp.now()
-            };
-
-            if (tid) {
-                transactionData.tid = tid; // ✅ Add txnId only for UPI payments
+            if (groupIds.length === 0 || totalAmountOwed === 0) {
+                console.log("Nothing to settle.")
+                return rejectWithValue("Nothing to settle.");
             }
 
-            // Store the transaction record
-            await firestore().collection('transactions').add(transactionData);
-            console.log("Balances updated after FULL payment successfully.");
+            await batch.commit();
+
+            await firestore().collection('transactions').add({
+                creditorId,
+                debtorId,
+                groupIds,
+                paidAmount,
+                paymentMethod,
+                tid,
+                participants: [creditorId, debtorId],
+                timestamp: firestore.Timestamp.now()
+            });
 
         } catch (error) {
             return rejectWithValue(error.message);
@@ -304,15 +359,8 @@ const balancesSlice = createSlice({
     },
     reducers: {
         setBalances: (state, action) => {
+            state.loading = false;
             state.balances = action.payload;
-            state.loading = false;
-        },
-        setLoading: (state, action) => {
-            state.loading = action.payload;
-        },
-        setError: (state, action) => {
-            state.error = action.payload;
-            state.loading = false;
         },
         setUnsubscribe: (state, action) => {
             state.unsubscribe = action.payload;
@@ -325,6 +373,22 @@ const balancesSlice = createSlice({
             }
         },
     },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchBalances.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchBalances.fulfilled, (state, action) => {
+                state.loading = false;
+                state.balances = action.payload;
+            })
+            .addCase(fetchBalances.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Something went wrong";
+            });
+    }
+
 
 })
 

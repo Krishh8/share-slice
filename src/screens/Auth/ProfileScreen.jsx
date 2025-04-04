@@ -13,6 +13,8 @@ import { updateProfile, updateProfileAndJoinGroup } from '../../redux/slices/use
 import LoadingScreen from '../LoadingScreen';
 import avatars from '../../data/Avatar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { showToast } from '../../services/toastService';
+import CustomAlert from '../../components/CustomAlert';
 
 const validationSchema = Yup.object().shape({
     fullName: Yup.string()
@@ -37,8 +39,9 @@ const ProfileScreen = () => {
     const { loading, user, error } = useSelector(state => state.userAuth)
     const { fullName, email, phoneNumber, avatar, uid, isEmailVerified, upiId } = user
 
+
     const initialValues = {
-        avatar: avatar || 0,
+        avatar: avatar || '0',
         fullName: fullName || '',
         email: email || '',
         phoneNumber: phoneNumber || '',
@@ -75,7 +78,7 @@ const ProfileScreen = () => {
         try {
             const signInMethods = await auth().fetchSignInMethodsForEmail(email);
             if (signInMethods.includes(auth.EmailAuthProvider.PROVIDER_ID)) {
-                console.log("Email already linked.");
+                showToast('info', "Email already linked.")
                 return true;
             }
 
@@ -83,14 +86,12 @@ const ProfileScreen = () => {
             const credential = auth.EmailAuthProvider.credential(email, tempPassword);
             await user.linkWithCredential(credential);
 
-            console.log('Phone authentication linked with email successfully!');
             return true;
 
         } catch (error) {
             if (error.code === 'auth/email-already-in-use') {
                 Alert.alert('Error', 'This email is already linked to another account.');
             } else {
-                console.error('Error linking phone with email:', error);
                 Alert.alert('Error', 'Could not link phone and email. Please try again.');
             }
             return false;
@@ -122,9 +123,8 @@ const ProfileScreen = () => {
                         isEmailLinked: true,
                         updatedAt: Timestamp.now(),
                     });
-                    Alert.alert("Success", "Email successfully linked to your phone.");
+                    showToast('success', 'Email successfully linked to your phone!');
                 } else {
-                    Alert.alert("Error", "Failed to link email.");
                     return;
                 }
             } else {
@@ -164,10 +164,6 @@ const ProfileScreen = () => {
             await currentUser.reload();
             if (!currentUser.emailVerified) {
                 await currentUser.sendEmailVerification();
-                Alert.alert(
-                    "Verify Your Email",
-                    "A verification email has been sent. Please verify before proceeding."
-                );
             }
 
             navigation.replace('VerifyEmail');
@@ -298,6 +294,7 @@ const ProfileScreen = () => {
                         </Formik>
                     </View>
                 </View>
+
             </ScrollView>
         </TouchableWithoutFeedback>
     );

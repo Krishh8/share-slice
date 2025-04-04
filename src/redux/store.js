@@ -4,6 +4,7 @@ import groupReducer from './slices/groupSlice';
 import expenseReducer from './slices/expensesSlice';
 import balanceReducer from './slices/balancesSlice'
 import reminderReducer from './slices/reminderSlice'
+import transactionReducer from './slices/transactionsSlice'
 
 export const store = configureStore({
     reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
         expense: expenseReducer,
         balance: balanceReducer,
         reminder: reminderReducer,
+        transaction: transactionReducer
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

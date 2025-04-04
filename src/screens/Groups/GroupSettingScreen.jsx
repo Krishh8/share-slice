@@ -28,6 +28,8 @@ import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as r
 import categories from '../../data/GroupCategory';
 import avatars from '../../data/Avatar';
 import HeaderComponent from '../../components/HeaderComponent';
+import { showToast } from '../../services/toastService';
+import CustomAlert from '../../components/CustomAlert';
 
 const GroupSettingScreen = () => {
     const theme = useTheme();
@@ -43,8 +45,9 @@ const GroupSettingScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [nameError, setNameError] = useState('');
     const { user } = useSelector(state => state.userAuth)
-    const { groupDetails } = useSelector(state => state.group);
+    const { groupDetails, loadingGroups, errorGroupDetails } = useSelector(state => state.group);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [alertVisible, setAlertVisible] = useState(false)
 
     if (!user) {
         return null;
@@ -81,6 +84,16 @@ const GroupSettingScreen = () => {
                 setNameError(error.message || "Failed to update group name.");
             });
     };
+
+    const handleRemoveMember = async (groupId, uid) => {
+        try {
+            await dispatch(removeMember({ groupId, uid })).unwrap();
+            showToast('success', 'Leaved group successfully! 🎉');
+        } catch (error) {
+            setAlertVisible(true);
+        }
+    };
+
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -150,7 +163,7 @@ const GroupSettingScreen = () => {
                         </Button>
                     ) : (
                         <View style={styles.actionButtons}>
-                            <Button mode="contained" onPress={handleSubmit} style={styles.saveButton}>
+                            <Button mode="contained" onPress={handleSubmit} disabled={loadingGroups} loading={loadingGroups} icon={loadingGroups ? 'loading' : ''} style={styles.saveButton}>
                                 Save
                             </Button>
                             <Button
@@ -246,7 +259,7 @@ const GroupSettingScreen = () => {
                                                     <IconButton
                                                         icon={currentUser ? "logout" : "account-remove"}
                                                         iconColor={theme.colors.primary}
-                                                        onPress={() => dispatch(removeMember({ groupId, uid: member.uid }))}
+                                                        onPress={() => handleRemoveMember(groupId, member.uid)}
                                                     />
                                                 </Tooltip>
                                             )}
@@ -307,6 +320,15 @@ const GroupSettingScreen = () => {
 
 
             <AddMemberModal visible={visible} onDismiss={() => setVisible(false)} />
+            <CustomAlert
+                visible={alertVisible}
+                title="Leave Group"
+                message={errorGroupDetails || 'Failed to remove member. Please try again!'}
+                onClose={() => setAlertVisible(false)}
+                onConfirm={() => setAlertVisible(false)}
+                confirmText="Okay"
+                showCancel={false}
+                icon="information-variant" />
         </View >
     );
 };

@@ -24,8 +24,6 @@ const GroupBalanceScreen = () => {
 
     useFocusEffect(
         React.useCallback(() => {
-            console.log('BALANCEID:::::::::; ', groupId)
-
             dispatch(listenToBalances({ uid, groupId }));
 
             return () => {
@@ -39,7 +37,7 @@ const GroupBalanceScreen = () => {
     //     dispatch(listenToBalances({ uid, groupId }));
 
     //     return () => {
-    //         dispatch(stopListeningToBalances()); // ✅ Stop Firestore listener when leaving screen
+    //         dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
     //     };
     // }, [dispatch, uid, groupId])
 
@@ -58,6 +56,8 @@ const GroupBalanceScreen = () => {
             </View>
         </View>
     );
+
+    if (loading) <LoadingScreen />
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

@@ -1,51 +1,3 @@
-// export const DarkScheme = {
-//     "primary": "rgb(196, 192, 255)",
-//     "onPrimary": "rgb(35, 0, 163)",
-//     "primaryContainer": "rgb(78, 64, 185)", //edited to display light in dark mode
-//     "onPrimaryContainer": "rgb(227, 223, 255)",
-//     "lightPrimaryContainer": "rgb(225, 221, 253)", //to add new color
-//     "onLightPrimaryContainer": "rgb(19, 0, 104)",  //to add new color
-//     "secondary": "rgb(199, 196, 220)",
-//     "onSecondary": "rgb(48, 46, 66)",
-//     "secondaryContainer": "rgb(70, 69, 89)",
-//     "onSecondaryContainer": "rgb(228, 223, 249)",
-//     "tertiary": "rgb(235, 185, 208)",
-//     "onTertiary": "rgb(71, 38, 56)",
-//     "tertiaryContainer": "rgb(96, 59, 79)",
-//     "onTertiaryContainer": "rgb(255, 216, 233)",
-//     "error": "rgb(255, 180, 171)",
-//     "onError": "rgb(105, 0, 5)",
-//     "errorContainer": "rgb(147, 0, 10)",
-//     "onErrorContainer": "rgb(255, 180, 171)",
-//     "background": "rgb(28, 27, 31)",
-//     "onBackground": "rgb(229, 225, 230)",
-//     "surface": "rgb(28, 27, 31)",
-//     "onSurface": "rgb(229, 225, 230)",
-//     "surfaceVariant": "rgb(71, 70, 79)",
-//     "onSurfaceVariant": "rgb(200, 197, 208)",
-//     "outline": "rgb(146, 143, 153)",
-//     "outlineVariant": "rgb(71, 70, 79)",
-//     "shadow": "rgb(0, 0, 0)",
-//     "scrim": "rgb(0, 0, 0)",
-//     "inverseSurface": "rgb(229, 225, 230)",
-//     "inverseOnSurface": "rgb(49, 48, 52)",
-//     "inversePrimary": "rgb(83, 70, 216)",
-//     "elevation": {
-//         "level0": "transparent",
-//         "level1": "rgb(36, 35, 42)",
-//         "level2": "rgb(41, 40, 49)",
-//         "level3": "rgb(47, 45, 56)",
-//         "level4": "rgb(48, 47, 58)",
-//         "level5": "rgb(52, 50, 62)"
-//     },
-//     "surfaceDisabled": "rgba(229, 225, 230, 0.12)",
-//     "onSurfaceDisabled": "rgba(229, 225, 230, 0.38)",
-//     "backdrop": "rgba(48, 47, 56, 0.4)",
-//     "red": "rgb(255, 180, 168)",
-//     "green": "rgb(114, 222, 94)",
-
-// }
-
 export const DarkScheme = {
     "primary": "rgb(255, 186, 75)",
     "onPrimary": "rgb(68, 43, 0)",
@@ -92,7 +44,8 @@ export const DarkScheme = {
     "blue": "rgb(75, 156, 255)",
     "onBlue": "rgb(0, 30, 68)",
     "blueContainer": "rgb(0, 64, 128)",
-    "onBlueContainer": "rgb(177, 211, 255)"
+    "onBlueContainer": "rgb(177, 211, 255)",
+    "shadow": "rgb(56, 41, 34)"
 
 
 }

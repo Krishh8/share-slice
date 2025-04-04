@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth'
 import avatars from '../data/Avatar';
 import HeaderComponent from '../components/HeaderComponent';
+import { showToast } from '../services/toastService';
 
 const validationSchema = Yup.object().shape({
     fullName: Yup.string()
@@ -46,8 +47,6 @@ const EditAccountScreen = () => {
         }
 
         try {
-            console.log('update email')
-
             const providers = user.providerData.map((p) => p.providerId);
             if (providers.includes(auth.EmailAuthProvider.PROVIDER_ID)) {
                 await user.unlink(auth.EmailAuthProvider.PROVIDER_ID);
@@ -59,15 +58,14 @@ const EditAccountScreen = () => {
 
             // Step 5: Send email verification
             await user.sendEmailVerification();
-            Alert.alert(
-                "Verify Your Email",
-                "A verification email has been sent to your new email. Please verify it before proceeding."
-            );
 
             return true;
         } catch (error) {
-            console.error("Error updating email:", error);
-            Alert.alert('Error', error.message);
+            if (error.code === 'auth/email-already-in-use') {
+                Alert.alert('Error', 'This email is already linked to another account.');
+            } else {
+                Alert.alert('Error', 'Could not link phone and email. Please try again.');
+            }
             return false;
         }
     };
@@ -86,14 +84,19 @@ const EditAccountScreen = () => {
             // Check if email has changed
             if (values.email && values.email !== user.email) {
                 emailUpdated = await updateEmail(values.email);
-                console.log(`is Email updated : ${emailUpdated}`)
+                if (emailUpdated) {
+                    showToast('success', 'Email successfully linked to your phone!');
+                }
+                else {
+                    return
+                }
             }
             // Update other profile details
             await dispatch(updateProfile({
                 uid,
                 fullName: values.fullName,
                 email: values.email,
-                avatar: values.avatar,
+                avatar: values.avatar || '0',
                 upiId: values.upiId
             })).unwrap();
 
@@ -107,7 +110,6 @@ const EditAccountScreen = () => {
             }
 
         } catch (error) {
-            console.error('Error updating profile:', error);
             Alert.alert('Error', error.message);
         }
     };

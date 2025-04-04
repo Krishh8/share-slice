@@ -4,16 +4,21 @@ import GroupBalanceScreen from '../screens/Groups/GroupBalanceScreen';
 import GroupSummaryScreen from '../screens/Groups/GroupSummaryScreen';
 import { useTheme } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
+import GroupTransactionScreen from '../screens/Groups/GroupTransactionScreen';
 
 const TopTab = createMaterialTopTabNavigator();
 
 const GroupTopTabNavigator = ({ groupId }) => {
     const theme = useTheme()
     return (
+
         <TopTab.Navigator
             screenOptions={{
                 tabBarStyle: {
                     backgroundColor: theme.colors.secondaryContainer,
+                },
+                tabBarItemStyle: {
+                    width: rw(35)
                 },
                 tabBarLabelStyle: {
                     fontWeight: 'bold',
@@ -25,6 +30,7 @@ const GroupTopTabNavigator = ({ groupId }) => {
                     height: rh(0.3),
                     borderRadius: rh(1)
                 },
+                tabBarScrollEnabled: true,
             }
             }
             initialRouteName='GroupExpenses'
@@ -42,6 +48,12 @@ const GroupTopTabNavigator = ({ groupId }) => {
                 initialParams={{ groupId }} // ✅ Pass groupId
             />
             <TopTab.Screen
+                name="GroupTransaction"
+                component={GroupTransactionScreen}
+                options={{ title: "Settlements" }}
+                initialParams={{ groupId }} // ✅ Pass groupId
+            />
+            <TopTab.Screen
                 name="SummaryTopTab"
                 component={GroupSummaryScreen}
                 options={{ title: "Summary" }}
@@ -49,6 +61,7 @@ const GroupTopTabNavigator = ({ groupId }) => {
             />
 
         </TopTab.Navigator >
+
     );
 }
 

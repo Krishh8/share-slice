@@ -2,6 +2,7 @@ import RazorpayCheckout from 'react-native-razorpay';
 import { store } from '../redux/store';
 import { RAZORPAY_KEY_ID } from '@env';
 import { settleFullBalanceOutsideGroup, updateBalanceAfterPayment } from '../redux/slices/balancesSlice';
+import { showToast } from './toastService';
 
 export const payGroupViaRazorpay = async (creditor, amountOwed, debtor, groupId) => {
     try {
@@ -19,33 +20,31 @@ export const payGroupViaRazorpay = async (creditor, amountOwed, debtor, groupId)
                 email: debtor.email, // Fetch from user profile
                 contact: debtor.phoneNumber, // Fetch from user profile
                 // vpa: creditor.upiId,
-                name: creditor.fullName,// Fetch from user profile
+                name: debtor.fullName,// Fetch from user profile
             },
             theme: { color: '#ffba4b' }
         };
 
         RazorpayCheckout.open(options).then((data) => {
-            // handle success
-            alert(`Success: ${data.razorpay_payment_id}`);
             store.dispatch(updateBalanceAfterPayment({
                 creditorId: creditor.uid,
                 debtorId: debtor.uid,
                 groupId: groupId,
                 paidAmount: parseFloat((amountOwed).toFixed(2)),
-                paymentMethod: "UPI",
+                paymentMethod: "Online",
                 tid: data.razorpay_payment_id,
             }))
 
+            showToast('success', "Your payment was successful!");
+
+
         }).catch((error) => {
             if (error.code === 0 || error.description === "BAD_REQUEST_ERROR") {
-                console.log("User cancelled the payment");
+                showToast('info', "You cancelled the payment")
                 return; // ❌ Don't show an alert for cancellation
             }
-            // ✅ Show alert only for actual errors
-            alert(`Error: ${error.code} | ${error.description}`);
+            showToast('error', "Payment failed. Please try again.");
         });
-
-
     } catch (error) {
         console.error('Payment Failed:', error);
         alert('Payment Failed');
@@ -67,31 +66,27 @@ export const payViaRazorpay = async (creditor, amountOwed, debtor) => {
             prefill: {
                 email: debtor.email, // Fetch from user profile
                 contact: debtor.phoneNumber, // Fetch from user profile
-                vpa: creditor.upiId,
-                name: creditor.fullName,// Fetch from user profile
+                // vpa: creditor.upiId,
+                name: debtor.fullName,// Fetch from user profile
             },
-            theme: { color: '#F37254' }
+            theme: { color: '#ffba4b' }
         };
 
         RazorpayCheckout.open(options).then((data) => {
-            // handle success
-            alert(`Success: ${data.razorpay_payment_id}`);
-
             store.dispatch(settleFullBalanceOutsideGroup({
                 creditorId: creditor.uid,
                 debtorId: debtor.uid,
-                paidAmount: parseFloat((balance.amountOwed).toFixed(2)),
-                paymentMethod: "UPI",
+                paidAmount: parseFloat((amountOwed).toFixed(2)),
+                paymentMethod: "Online",
                 tid: data.razorpay_payment_id,
             }));
-
+            showToast('success', "Your payment was successful!");
         }).catch((error) => {
             if (error.code === 0 || error.description === "BAD_REQUEST_ERROR") {
-                console.log("User cancelled the payment");
+                showToast('info', "You cancelled the payment")
                 return; // ❌ Don't show an alert for cancellation
             }
-            // handle failure
-            alert(`Error: ${error.code} | ${error.description}`);
+            showToast('error', "Payment failed. Please try again.");
         });
     } catch (error) {
         console.error('Payment Failed:', error);

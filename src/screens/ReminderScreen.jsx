@@ -3,7 +3,7 @@ import { View, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchReminders } from '../redux/slices/reminderSlice';
 import HeaderComponent from '../components/HeaderComponent';
-import { Chip, IconButton, Text, useTheme } from 'react-native-paper';
+import { Chip, Icon, IconButton, Text, useTheme } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import avatars from '../data/Avatar';
 import ReminderComponent from '../components/ReminderComponent';
@@ -12,10 +12,10 @@ import LottieView from "lottie-react-native";
 const EmptyComponent = () => {
     return (
         <View style={[styles.emptyContainer]}>
-            <LottieView
+            {/* <LottieView
                 style={{ width: 200, height: 200, }} // Fixed size
                 source={require("../assets/lottieFiles/NoDataFound.json")}
-            />
+            /> */}
             <Text style={[styles.emptyText]}>No Reminders yet.</Text>
         </View >
     )
@@ -33,9 +33,6 @@ const ReminderScreen = () => {
         dispatch(fetchReminders());
     }, [dispatch]);
 
-    console.log("Received Reminders:", receivedReminders);
-    console.log("Sent Reminders:", sentReminders);
-
     if (loading) return <ActivityIndicator size="large" />;
     if (error) return <Text>Error: {error}</Text>;
 
@@ -52,10 +49,7 @@ const ReminderScreen = () => {
                     <Text style={[styles.sectionText, { color: theme.colors.primary }]}>
                         Received Reminders ({receivedReminders.length})
                     </Text>
-                    <IconButton
-                        icon={isReceived ? "unfold-less-horizontal" : "unfold-more-horizontal"}
-                        iconColor={theme.colors.primary}
-                    />
+                    <Icon source={isReceived ? "unfold-more-horizontal" : "unfold-less-horizontal"} size={rfs(3)} color={theme.colors.primary} />
                 </TouchableOpacity>
 
                 {isReceived && (
@@ -75,10 +69,7 @@ const ReminderScreen = () => {
                     <Text style={[styles.sectionText, { color: theme.colors.primary }]}>
                         Sent Reminders ({sentReminders.length})
                     </Text>
-                    <IconButton
-                        icon={isSent ? "unfold-less-horizontal" : "unfold-more-horizontal"}
-                        iconColor={theme.colors.primary}
-                    />
+                    <Icon source={isSent ? "unfold-more-horizontal" : "unfold-less-horizontal"} size={rfs(3)} color={theme.colors.primary} />
                 </TouchableOpacity>
 
                 {isSent && (
@@ -117,7 +108,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingLeft: rh(2),
+        padding: rh(1),
+        marginHorizontal: rw(2),
         borderRadius: rh(1),
         marginBottom: rh(2)
     },

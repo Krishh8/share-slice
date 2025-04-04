@@ -17,17 +17,22 @@ import React, { useEffect, useState } from 'react';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
+import { Image } from 'react-native-svg';
 
 const SignUpScreen = () => {
     const theme = useTheme();
     const [phoneNumber, setPhoneNumber] = useState("");
     const [error, setError] = useState("");
     const navigation = useNavigation();
+    const [loading, setLoading] = useState(false)
 
     const handleSubmit = () => {
+        setLoading(true)
         if (!/^\d{10}$/.test(phoneNumber)) {
             setError("Enter a valid 10-digit mobile number.");
+            setLoading(false)
         } else {
+            setLoading(false)
             setError("");
             console.log("Submitted Mobile Number:", phoneNumber);
             setPhoneNumber(""); // Reset after submission
@@ -44,10 +49,10 @@ const SignUpScreen = () => {
 
                 // colors={[theme.colors.primary, theme.colors.inversePrimary, theme.colors.background]}
 
-                colors={[theme.colors.primary, theme.colors.primaryContainer, theme.colors.secondaryContainer, theme.colors.primaryContainer, theme.colors.primary]}
+                colors={[theme.colors.surfaceVariant, theme.colors.inversePrimary, theme.colors.inversePrimary, theme.colors.surfaceVariant]}
 
-                // useAngle={true}
-                // angle={20}
+                useAngle={true}
+                angle={20}
 
                 start={{ x: 0, y: 1 }}
                 end={{ x: 1, y: 0 }}
@@ -60,6 +65,7 @@ const SignUpScreen = () => {
                     <View style={styles.signupCardContent}>
                         <View style={styles.logoContainer}>
                             <Icon source="wallet" size={rfs(10)} color={theme.colors.primary} />
+                            {/* <Image source={require('../../../android/app/src/main/res/play_store_512.png')} width={rw(10)} height={rh(10)} /> */}
                         </View>
 
                         <Text style={styles.welcomeText}>Get Started With</Text>
@@ -75,6 +81,7 @@ const SignUpScreen = () => {
                             onChangeText={(text) => setPhoneNumber(text)}
                             outlineStyle={{ borderRadius: rh(1) }}
                             activeOutlineColor={theme.colors.primary}
+                            error={error}
                             left={<TextInput.Icon icon="phone" size={rfs(3)} color={theme.colors.primary} />}
                         />
 
@@ -87,6 +94,9 @@ const SignUpScreen = () => {
                             labelStyle={styles.buttonText}
                             mode="contained"
                             onPress={handleSubmit}
+                            loading={loading}
+                            disabled={loading}
+                            icon={loading ? 'loading' : ""}
                         >
                             Request OTP
                         </Button>

@@ -6,6 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import { settleFullBalanceOutsideGroup, updateBalanceAfterCashPayment } from '../redux/slices/balancesSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { terminate } from '@react-native-firebase/firestore';
+import CustomAlert from './CustomAlert';
+import { showToast } from '../services/toastService';
 
 const MarkAsAllPaidModal = ({ visible, onDismiss, amountOwed, debtor }) => {
     const theme = useTheme()
@@ -15,6 +17,7 @@ const MarkAsAllPaidModal = ({ visible, onDismiss, amountOwed, debtor }) => {
     const navigation = useNavigation();
     const { user } = useSelector(state => state.userAuth)
     const uid = user.uid
+    const [alertVisible, setAlertVisible] = useState(false)
 
     const handleSubmit = () => {
         if (isNaN(amount) || amount <= 0 || !amount) {
@@ -22,11 +25,18 @@ const MarkAsAllPaidModal = ({ visible, onDismiss, amountOwed, debtor }) => {
             return;
         }
         else if (amount > amountOwed) {
-            setError("Error", "Amount received cannot be more than amount owed.");
+            setError("Amount received cannot be more than amount owed.");
             return;
-        } else {
-            setError("");
-            console.log("Submitted Amount:", amount);
+        }
+        else {
+            setError(""); // Clear any previous errors
+            setAlertVisible(true); // Show confirmation alert before processing
+        }
+
+    };
+
+    const confirmSettlement = () => {
+        try {
             dispatch(settleFullBalanceOutsideGroup({
                 creditorId: uid,
                 debtorId: debtor.uid,
@@ -34,10 +44,14 @@ const MarkAsAllPaidModal = ({ visible, onDismiss, amountOwed, debtor }) => {
                 paymentMethod: "Cash",
                 tid: null
             }))
-            Alert.alert("Success", `Updated balance after receiving ₹${amount} in cash.`);
-            onDismiss()
+
+            showToast('success', `Successfully settled ₹${amount} in cash.`);
+        } catch (error) {
+            showToast('error', 'Failed to settle balance.');
         }
-    }
+        setAlertVisible(false); // Hide alert after confirming
+        onDismiss(); // Close modal
+    };
 
     return (
         <Portal>
@@ -46,7 +60,7 @@ const MarkAsAllPaidModal = ({ visible, onDismiss, amountOwed, debtor }) => {
                 onDismiss={onDismiss}
                 theme={{
                     colors: {
-                        backdrop: "rgba(0, 0, 0, 0.5)", // Adjust opacity here (0.3 for lighter effect)
+                        backdrop: "rgba(0, 0, 0, 0.7)", // Adjust opacity here (0.3 for lighter effect)
                     },
                 }}
                 contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}
@@ -86,6 +100,18 @@ const MarkAsAllPaidModal = ({ visible, onDismiss, amountOwed, debtor }) => {
                     <Text variant="titleSmall" style={[styles.title, { color: theme.colors.secondary }]}>Recording a payment does not process an actual transaction. This feature is for tracking purposes only. Ensure the payment is made separately before marking it as paid.</Text>
                     <Text variant="titleSmall" style={[styles.title, { color: theme.colors.secondary }]}>Partial settlements of balances are only allowed within groups.Only Full settlements can be made here.</Text>
                 </ScrollView>
+
+                <CustomAlert
+                    visible={alertVisible}
+                    title="Confirm Settlement"
+                    message="This settlement will not be reversed. Do you want to proceed?"
+                    onClose={() => setAlertVisible(false)}
+                    onConfirm={confirmSettlement} // Call confirm function on confirm button
+                    confirmText="Confirm"
+                    cancelText="Cancel"
+                    showCancel={true}
+                    icon="alert-circle"
+                />
             </Modal>
         </Portal>
     )

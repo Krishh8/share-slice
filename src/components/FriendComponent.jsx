@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import { Avatar, Button, Card, Chip, Divider, List, Text, useTheme } from 'react-native-paper';
 import avatars from '../data/Avatar';
@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { sendReminder } from '../redux/slices/reminderSlice';
 import Toast from 'react-native-toast-message';
 import { showToast } from '../services/toastService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FriendComponent = ({ friend }) => {
     if (!friend || !friend.otherUser) return null; // Ensure otherUser data exists
@@ -20,25 +21,52 @@ const FriendComponent = ({ friend }) => {
     const isOwed = totalAmount > 0;
     const theme = useTheme();
     const { user } = useSelector(state => state.userAuth)
+    const [reminderDisabled, setReminderDisabled] = useState(false);
+    const [remainingTime, setRemainingTime] = useState(null);
 
     const pay = () => {
         payViaRazorpay(otherUser, amountOwed, user)
     }
 
+    useEffect(() => {
+        const checkReminderStatus = async () => {
+            const lastReminderTime = await AsyncStorage.getItem(`lastReminder_${otherUser.uid}`);
+            if (lastReminderTime) {
+                const elapsedTime = Date.now() - parseInt(lastReminderTime, 10);
+                const remaining = 43200000 - elapsedTime; // 12 hours = 43200000 ms
+
+                if (remaining > 0) {
+                    setReminderDisabled(true);
+                    setRemainingTime(Math.ceil(remaining / 60000)); // Convert to minutes
+                    setTimeout(() => setReminderDisabled(false), remaining);
+                } else {
+                    setReminderDisabled(false);
+                }
+            }
+        };
+
+        checkReminderStatus();
+    }, []);
+
     const handleSendReminder = async () => {
         try {
-            const result = await dispatch(sendReminder({
+            await dispatch(sendReminder({
                 creditor: user,
                 amountOwed,
                 debtor: otherUser
-            })).unwrap(); // Unwrap returns only the payload
+            })).unwrap();
 
-            console.log("Reminder sent successfully:", result);
-            showToast('success', 'Reminder sent successfully! 🎉');
-        }
-        catch (error) {
-            console.error("Reminder failed:", error);
-            showToast('error', `Failed to send reminder. ${error.message || 'Please try again.'} ❌`);
+            showToast('success', 'Reminder sent successfully.');
+
+            const currentTime = Date.now();
+            await AsyncStorage.setItem(`lastReminder_${otherUser.uid}`, currentTime.toString());
+
+            setReminderDisabled(true);
+            setRemainingTime(720); // 12 hours in minutes
+
+            setTimeout(() => setReminderDisabled(false), 43200000); // 12 hours = 43200000 ms
+        } catch (error) {
+            showToast('error', 'Failed to send reminder.');
         }
     };
 
@@ -64,7 +92,16 @@ const FriendComponent = ({ friend }) => {
             </View>
             <View style={[styles.btns]}>
                 {!isOwed && <Chip onPress={pay} style={{ backgroundColor: theme.colors.secondaryContainer }}>Pay</Chip>}
-                {isOwed && <Chip onPress={handleSendReminder} style={{ backgroundColor: theme.colors.secondaryContainer }}>Remind</Chip>}
+                {isOwed && <Chip
+                    onPress={handleSendReminder}
+                    style={{ backgroundColor: theme.colors.secondaryContainer }}
+                    disabled={reminderDisabled}
+                >
+                    {reminderDisabled
+                        ? `Wait ${Math.floor(remainingTime / 60)}h ${remainingTime % 60}m`
+                        : "Remind"}
+
+                </Chip>}
                 {isOwed && <Chip onPress={() => setVisible(true)} style={{ backgroundColor: theme.colors.secondaryContainer }} >Settle Up</Chip>}
             </View>
 

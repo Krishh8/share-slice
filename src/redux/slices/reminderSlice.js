@@ -7,13 +7,17 @@ export const sendReminder = createAsyncThunk(
     'reminders/sendReminder',
     async ({ creditor, amountOwed, debtor }, thunkAPI) => {
         try {
-            console.log(creditor, amountOwed, debtor)
+            // const durationInDays=durationInDays * 24 * 60 * 60 * 1000;
+            // const now = new Date();
+            // const ttlDate = new Date(now.getTime() + 60 * 1000); // Add days
+            // const ttlTimestamp = firestore.Timestamp.fromDate(ttlDate);
             const reminderRef = await firestore().collection('reminders').add({
                 debtorId: debtor.uid,
                 creditorId: creditor.uid,
                 debtorName: debtor.fullName,
                 creditorName: creditor.fullName,
                 amountOwed,
+                // ttl: ttlTimestamp,
                 createdAt: firestore.Timestamp.now(),
                 seen: false,
             });
@@ -89,21 +93,23 @@ export const fetchReminders = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const userId = auth().currentUser?.uid;
-            console.log(userId)
             if (!userId) return rejectWithValue("User not logged in");
 
-            const sentRemindersSnapshot = await firestore()
-                .collection('reminders')
-                .where('creditorId', '==', userId)
-                .orderBy('createdAt', 'desc')
-                .get();
+            // 🔥 Run both queries concurrently
+            const [sentRemindersSnapshot, receivedRemindersSnapshot] = await Promise.all([
+                firestore()
+                    .collection('reminders')
+                    .where('creditorId', '==', userId)
+                    .orderBy('createdAt', 'desc')
+                    .get(),
+                firestore()
+                    .collection('reminders')
+                    .where('debtorId', '==', userId)
+                    .orderBy('createdAt', 'desc')
+                    .get()
+            ]);
 
-            const receivedRemindersSnapshot = await firestore()
-                .collection('reminders')
-                .where('debtorId', '==', userId)
-                .orderBy('createdAt', 'desc')
-                .get();
-
+            // 🔄 Process both snapshots
             const sentReminders = sentRemindersSnapshot.empty
                 ? []
                 : sentRemindersSnapshot.docs.map(doc => ({
@@ -124,7 +130,6 @@ export const fetchReminders = createAsyncThunk(
         }
     }
 );
-
 
 // Slice for managing reminders
 const reminderSlice = createSlice({

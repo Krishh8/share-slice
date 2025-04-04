@@ -6,6 +6,7 @@ import auth from '@react-native-firebase/auth';
 import { useDispatch, useSelector } from 'react-redux';
 import { checkEmailVerification, checkSession, resendVerificationEmail } from "../../redux/slices/userAuthSlice";
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
+import CustomAlert from "../../components/CustomAlert";
 
 const VerifyEmailScreen = () => {
     const [disabled, setDisabled] = useState(false);
@@ -18,13 +19,11 @@ const VerifyEmailScreen = () => {
         return null; // Don't render anything if user is null
     }
     const { isEmailVerified } = user
+    const [alertVisible, setAlertVisible] = useState(false)
 
     useEffect(() => {
         if (isEmailVerified) {
             navigation.replace('MainStack', { screen: 'BottomTab' });
-        }
-        else {
-            console.log('not verified')
         }
     }, [isEmailVerified, navigation]);
 
@@ -42,7 +41,7 @@ const VerifyEmailScreen = () => {
     const handleResendEmail = async () => {
         try {
             await dispatch(resendVerificationEmail()).unwrap();
-            Alert.alert("Verification Email Sent", "Please check your email again.");
+            setAlertVisible(true)
             setCountdown(60); // Disable for 60 seconds
         } catch (error) {
             Alert.alert("Error", error);
@@ -51,9 +50,7 @@ const VerifyEmailScreen = () => {
 
     const handleCheckEmailVerification = async () => {
         try {
-            console.log("Calling checkEmailVerification...");
-            const result = await dispatch(checkEmailVerification()).unwrap();
-            console.log("Dispatch result:", result);
+            await dispatch(checkEmailVerification()).unwrap();
         } catch (error) {
             console.error(error);
             Alert.alert("Error", error.message);
@@ -71,7 +68,7 @@ const VerifyEmailScreen = () => {
                     <Text variant="headlineMedium" style={styles.title}>Verify Your Email</Text>
 
                     <Text variant="bodyLarge" style={styles.message}>
-                        We've sent a verification email to {auth().currentUser?.email}.
+                        We have sent a verification email to <Text style={{ color: theme.colors.primary }}>{auth().currentUser?.email}.</Text>
                         Please verify your email before continuing.
                     </Text>
 
@@ -90,15 +87,25 @@ const VerifyEmailScreen = () => {
                             mode="outlined"
                             onPress={handleCheckEmailVerification}
                             disabled={loading}
+                            loading={loading}
                             style={styles.button}
-                            icon="refresh"
+                            icon={loading ? 'loading' : 'refresh'}
                         >
                             {loading ? 'Checking...' : 'Check Verification Status'}
                         </Button>
                     </View>
 
-                    {loading && <ActivityIndicator style={styles.loader} size="large" color={theme.colors.primary} />}
                 </View>
+                <CustomAlert
+                    visible={alertVisible}
+                    title="Verification Email Sent"
+                    message="Please check your email again."
+                    onClose={() => setAlertVisible(false)}
+                    onConfirm={() => setAlertVisible(false)}
+                    confirmText="Okay"
+                    showCancel={false}
+                    icon="information-variant"
+                />
             </View>
         </View >
     );

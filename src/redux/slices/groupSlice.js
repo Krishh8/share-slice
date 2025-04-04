@@ -259,11 +259,8 @@ export const addMember = createAsyncThunk(
 
             // 🔹 Step 5: Commit batch update
             await batch.commit();
-
-            console.log("Member added successfully.");
             return { groupId, newMember }; // ✅ Returning full member data
         } catch (error) {
-            console.error("Error adding member:", error.message);
             return rejectWithValue(error.message);
         }
     }
@@ -335,7 +332,7 @@ export const removeMember = createAsyncThunk(
                 .get();
 
             if (!balancesSnapshot.empty || !balancesSnapshot2.empty) {
-                throw new Error("Cannot remove member: They have outstanding balances.");
+                return rejectWithValue("Cannot remove member: Member has outstanding balances.");
             }
 
             const groupData = groupDoc.data();
@@ -362,7 +359,7 @@ export const removeMember = createAsyncThunk(
             console.log("Member removed successfully.");
             return { uid, groupId };
         } catch (error) {
-            console.error("Error removing member:", error.message);
+            return rejectWithValue(error.message)
         }
     }
 );
@@ -468,6 +465,9 @@ const groupSlice = createSlice({
                 state.errorGroupDetails = action.payload;
             })
 
+            .addCase(addMember.pending, (state) => {
+                state.errorGroupDetails = null; // Clear any previous error
+            })
             .addCase(addMember.fulfilled, (state, action) => {
                 const { groupId, newMember } = action.payload
                 if (state.groupDetails.groupId === groupId) {
@@ -477,6 +477,10 @@ const groupSlice = createSlice({
                     }
                 }
             })
+            .addCase(addMember.rejected, (state, action) => {
+                state.errorGroupDetails = action.payload; // Clear any previous error
+            })
+
             .addCase(makeAdmin.fulfilled, (state, action) => {
                 const { groupId, uid } = action.payload
                 if (state.groupDetails.groupId === groupId) {
@@ -489,6 +493,10 @@ const groupSlice = createSlice({
                     state.groupDetails.admins = state.groupDetails.admins.filter(id => id !== uid);
                 }
             })
+
+            .addCase(removeMember.pending, (state) => {
+                state.errorGroupDetails = null; // Clear any previous error
+            })
             .addCase(removeMember.fulfilled, (state, action) => {
                 const { groupId, uid } = action.payload;
                 if (state.groupDetails.groupId === groupId) {
@@ -498,6 +506,9 @@ const groupSlice = createSlice({
                     // ✅ Remove from admins list if they were an admin
                     state.groupDetails.admins = state.groupDetails.admins.filter(adminUid => adminUid !== uid);
                 }
+            })
+            .addCase(removeMember.rejected, (state, action) => {
+                state.errorGroupDetails = action.payload; // Store error message from rejected action
             });
 
 

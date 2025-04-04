@@ -120,9 +120,9 @@ const BillsScreen = () => {
                     />
                 </View>
 
-                <View style={[styles.shrinkIcon]}>
+                {expenses.length > 0 && <View style={[styles.shrinkIcon]}>
                     <IconButton icon={isShrink ? "unfold-more-horizontal" : "unfold-less-horizontal"} size={rfs(4)} iconColor={theme.colors.primary} onPress={() => setIsShrink((prev) => !prev)} />
-                </View>
+                </View>}
 
                 <SectionList
                     showsVerticalScrollIndicator={false}

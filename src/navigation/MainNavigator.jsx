@@ -14,6 +14,7 @@ import { customScreenInterpolator } from '../animation/customScreenInterpolator'
 import { Easing } from 'react-native';
 import ReminderScreen from '../screens/ReminderScreen';
 import FAQScreen from '../screens/FAQScreen';
+import AboutUsScreen from '../screens/AboutUsScreen';
 
 
 const MainStack = createStackNavigator();
@@ -35,6 +36,7 @@ const MainNavigator = () => {
             <MainStack.Screen name="UpdateExpense" component={UpdateExpenseScreen} />
             <MainStack.Screen name="AddFriends" component={AddFriendsScreen} />
             <MainStack.Screen name="FAQ" component={FAQScreen} />
+            <MainStack.Screen name="AboutUs" component={AboutUsScreen} />
 
         </MainStack.Navigator>
     );

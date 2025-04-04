@@ -131,26 +131,8 @@ const AddExpenseScreen = () => {
             createdBy: uid
         };
 
-        // try {
-        //     const result = await dispatch(createExpense({ groupId, expenseData })).unwrap();
-        //     const expenseId = result?.expenseId; // Extract the expense ID
-        //     console.log("Created Expense ID:", expenseId);
-        //     setDescription('');
-        //     setAmount('');
-        //     setCategory(null);
-        //     setPaidBy(null);
-        //     setSplitType('equal');
-        //     setSplitDetails([]);
-        //     setSelectedMembers(groupMembers.map(member => member.uid));
-        //     setErrors({});
-
-        //     navigation.replace('GroupDetails', { groupId: groupId });
-        // } catch (error) {
-        //     console.error("Failed to create expense:", error);
-        // }
-
         try {
-            const result = await dispatch(createExpense({ groupId, expenseData }));
+            const result = dispatch(createExpense({ groupId, expenseData }));
 
             if (createExpense.fulfilled.match(result)) {
                 console.log('expense created successfully:', result.payload);

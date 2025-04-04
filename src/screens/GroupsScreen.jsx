@@ -14,6 +14,8 @@ import { listenToBalances, stopListeningToBalances } from "../redux/listeners/ba
 import { clearBalances } from "../redux/slices/balancesSlice"
 import Animated, { FadeInDown } from "react-native-reanimated"
 
+
+
 const GroupsScreen = () => {
     const theme = useTheme()
     const [modalVisible, setModalVisible] = useState(false)
@@ -26,7 +28,6 @@ const GroupsScreen = () => {
     const uid = user.uid
     const [displayGroups, setDisplayGroups] = useState([])
     const { balances, loading, error } = useSelector((state) => state.balance);
-
 
 
     useFocusEffect(

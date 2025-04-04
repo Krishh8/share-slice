@@ -42,7 +42,6 @@ const GroupExpensesScreen = () => {
 
     // const expensesList = [...(groupExpenses[groupId] || [])]; // ✅ Clone to prevent mutation
     const expensesList = Array.isArray(groupExpenses[groupId]) ? [...groupExpenses[groupId]] : [];
-    console.log('groexpene:', groupExpenses[groupId])
     const groupedExpenses = groupExpensesByMonth(expensesList); // ✅ Grouped expenses
 
     const renderEmptyComponent = () => (
@@ -70,9 +69,9 @@ const GroupExpensesScreen = () => {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <View style={[styles.shrinkIcon]}>
+            {groupedExpenses.length > 0 && <View style={[styles.shrinkIcon]}>
                 <IconButton icon={isShrink ? "unfold-more-horizontal" : "unfold-less-horizontal"} size={rfs(4)} iconColor={theme.colors.primary} onPress={() => setIsShrink((prev) => !prev)} />
-            </View>
+            </View>}
 
             {/* ✅ Use SectionList Instead of FlatList */}
             <SectionList

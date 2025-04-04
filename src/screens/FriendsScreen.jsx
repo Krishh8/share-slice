@@ -64,7 +64,7 @@ const FriendsScreen = () => {
             setFilteredFriends(groupedBalancesArray); // Reset if empty
         } else {
             const filtered = groupedBalancesArray.filter(friend =>
-                friend.user.fullName.toLowerCase().includes(query.toLowerCase())
+                friend.otherUser?.fullName.toLowerCase().includes(query.toLowerCase())
             );
             setFilteredFriends(filtered);
         }

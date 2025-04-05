@@ -8,6 +8,7 @@ import {
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
+    Alert,
 } from 'react-native';
 import {
     Text,
@@ -132,28 +133,26 @@ const AddExpenseScreen = () => {
         };
 
         try {
-            const result = dispatch(createExpense({ groupId, expenseData }));
+            const result = await dispatch(createExpense({ groupId, expenseData })).unwrap();
+            console.log('expense created successfully:', result);
 
-            if (createExpense.fulfilled.match(result)) {
-                console.log('expense created successfully:', result.payload);
-                setDescription('');
-                setAmount('');
-                setCategory(null);
-                setPaidBy(null);
-                setSplitType('equal');
-                setSplitDetails([]);
-                setSelectedMembers(groupMembers.map(member => member.uid));
-                setErrors({});
+            setDescription('');
+            setAmount('');
+            setCategory(null);
+            setPaidBy(null);
+            setSplitType('equal');
+            setSplitDetails([]);
+            setSelectedMembers(groupMembers.map(member => member.uid));
+            setErrors({});
 
-                // Navigate to the GroupDetails screen with the newly created groupId
-                navigation.replace('MainStack', { screen: 'ExpenseDetails', params: { expenseId: result.payload?.expenseId } });
-            } else {
-                console.error('Error creating expense:', result.error?.message);
-                Alert.alert('Error', result.error?.message);
-            }
+            navigation.replace('MainStack', {
+                screen: 'ExpenseDetails',
+                params: { expenseId: result.expenseId }
+            });
         } catch (error) {
             console.error('Unexpected error:', error);
         }
+
     };
 
     // Calculate equal split when needed

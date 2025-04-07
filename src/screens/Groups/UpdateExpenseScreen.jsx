@@ -40,14 +40,14 @@ const UpdateExpenseScreen = () => {
     const route = useRoute();
     const dispatch = useDispatch();
     const navigation = useNavigation();
-    const { expenseId } = route.params;
+    const { expenseId, groupId } = route.params;
 
     const { user } = useSelector(state => state.userAuth);
     const uid = user?.uid
     if (!user) {
         return null; // Don't render anything if user is null
     }
-    const { groupDetails } = useSelector(state => state.group);
+    const { groupDetails, loadingGroupDetails } = useSelector(state => state.group);
     const { expenseDetails } = useSelector(state => state.expense);
 
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
@@ -80,6 +80,17 @@ const UpdateExpenseScreen = () => {
             prev.includes(uid) ? prev.filter((id) => id !== uid) : [...prev, uid]
         );
     };
+
+    useEffect(() => {
+        if (!groupDetails) {
+            console.log('fetching')
+            dispatch(fetchGroupDetails(groupId))
+        }
+        else if (groupDetails.groupId != groupId) {
+            console.log('fetching')
+            dispatch(fetchGroupDetails(groupId))
+        }
+    }, [groupId])
 
     // Load initial data when expenseDetails change
     useEffect(() => {

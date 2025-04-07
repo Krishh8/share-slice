@@ -23,15 +23,15 @@ const FriendsScreen = () => {
     const [groupedBalancesArray, setGroupedBalancesArray] = useState([]);
     const [filteredFriends, setFilteredFriends] = useState([]); // 🔹 Separate state for search
 
-    useFocusEffect(
-        React.useCallback(() => {
-            dispatch(listenToBalances({ uid }));
+    // useFocusEffect(
+    //     React.useCallback(() => {
+    //         dispatch(listenToBalances({ uid }));
 
-            return () => {
-                dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
-            };
-        }, [dispatch, uid])
-    );
+    //         return () => {
+    //             dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
+    //         };
+    //     }, [dispatch, uid])
+    // );
 
 
     const groupedBalances = balances.reduce((acc, balance) => {

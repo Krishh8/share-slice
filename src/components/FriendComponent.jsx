@@ -74,7 +74,7 @@ const FriendComponent = ({ friend }) => {
 
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }, { borderColor: theme.colors.outline }]}>
+        <View style={[styles.container, { backgroundColor: theme.colors.shadow }, { borderColor: theme.colors.outline }]}>
             <View style={[styles.details]}>
                 <View style={[styles.details, { justifyContent: 'flex-start' }]}>
                     <Avatar.Image
@@ -115,16 +115,17 @@ export default FriendComponent
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: rh(1),
+        padding: rh(1.5),
         marginBottom: rh(1),
         marginHorizontal: rw(2),
-        borderWidth: rw(0.2),
-        borderRadius: rw(4),
+        // borderWidth: rw(0.2),
+        borderRadius: rw(3),
         borderStyle: 'dashed'
     },
     details: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: rh(1),
         justifyContent: 'space-between'
     },
     name: {
@@ -136,10 +137,11 @@ const styles = StyleSheet.create({
     },
     amount: {
         fontWeight: 'bold',
-        fontSize: rfs(2)
+        fontSize: rfs(2),
+        marginRight: rh(1)
     },
     info: {
-        marginLeft: rw(2)
+        // marginLeft: rw(2)
     },
     btns: {
         flexDirection: 'row',

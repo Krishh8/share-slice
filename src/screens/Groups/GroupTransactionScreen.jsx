@@ -1,5 +1,5 @@
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Avatar, Button, Chip, Divider, Icon, IconButton, Text, useTheme } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -24,18 +24,29 @@ const GroupTransactionScreen = () => {
     const [alertVisible, setAlertVisible] = useState(false);
     const [selectedTransactionId, setSelectedTransactionId] = useState(null);
     const [isShrink, setIsShrink] = useState(false)
+    const [paymentFilter, setPaymentFilter] = useState('All'); // 'All', 'Cash', 'Online'
+    const [refreshing, setRefreshing] = useState(false)
+
 
     useEffect(() => {
-        dispatch(fetchTransactions()); // Fetch initial transactions
-        const unsubscribe = dispatch(listenToTransactions()); // Listen for real-time updates
-
-        return () => unsubscribe(); // Cleanup listener when unmounting
+        // Only start listener once if not already active
+        if (!transactions || Object.keys(transactions).length === 0) {
+            dispatch(fetchTransactions());
+            const unsubscribe = dispatch(listenToTransactions());
+            return () => unsubscribe();
+        }
     }, [dispatch]);
+
 
     if (loading) return <LoadingScreen />;
     if (error) return <Text style={{ color: 'red' }}>Error: {error}</Text>;
 
-    const groupTransactions = transactions[groupId] || [];
+    let groupTransactions = transactions[groupId] || [];
+
+    if (paymentFilter !== 'All') {
+        groupTransactions = groupTransactions.filter(txn => txn.paymentMethod === paymentFilter);
+    }
+
 
     const handleDeleteTransaction = (transactionId) => {
         setSelectedTransactionId(transactionId);
@@ -66,6 +77,13 @@ const GroupTransactionScreen = () => {
 
         return isShrink ? `${datePart}` : `${datePart}  :  ${timePart}`;
     };
+
+    // const onRefresh = useCallback(() => {
+    //     setRefreshing(true);
+    //     dispatch(fetchTransactions()).finally(() => {
+    //         setRefreshing(false);
+    //     });
+    // }, [dispatch]);
 
     const renderEmptyComponent = () => (
         <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
@@ -146,8 +164,6 @@ const GroupTransactionScreen = () => {
         );
     };
 
-
-
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <TouchableOpacity onPress={() => setIsShrink((prev) => !prev)} style={[styles.title, { backgroundColor: theme.colors.secondaryContainer }]}>
@@ -155,11 +171,29 @@ const GroupTransactionScreen = () => {
                 <Icon source={isShrink ? "unfold-more-horizontal" : "unfold-less-horizontal"} size={rfs(3)} color={theme.colors.primary} />
             </TouchableOpacity>
 
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: rh(2) }}>
+                {['All', 'Cash', 'Online'].map((type) => (
+                    <Chip
+                        key={type}
+                        mode={paymentFilter === type ? 'flat' : 'outlined'}
+                        style={{
+                            marginHorizontal: rw(2),
+                            backgroundColor: paymentFilter === type ? theme.colors.primary : theme.colors.surface,
+                        }}
+                        textStyle={{ color: paymentFilter === type ? theme.colors.onPrimary : theme.colors.onSurface }}
+                        onPress={() => setPaymentFilter(type)}
+                    >
+                        {type}
+                    </Chip>
+                ))}
+            </View>
+
             <FlatList
                 data={groupTransactions}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => renderItem({ item })}
                 ListEmptyComponent={renderEmptyComponent}
+            // refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             />
 
             {/* Delete Confirmation Alert */}
@@ -188,8 +222,8 @@ const styles = StyleSheet.create({
     title: {
         flexDirection: 'row',
         marginHorizontal: rw(2),
-        marginTop: rh(1),
-        marginBottom: rh(2),
+        marginVertical: rh(1),
+        // marginBottom: rh(2),
         borderRadius: rh(1),
         padding: rh(1),
         alignItems: 'center',
@@ -219,7 +253,7 @@ const styles = StyleSheet.create({
         marginBottom: rh(3),
     },
     divider: {
-        marginVertical: rh(1),
+        marginVertical: rh(2),
     },
     header: {
         flexDirection: "row",

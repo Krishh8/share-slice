@@ -71,15 +71,19 @@ const TotalBalanceComponent = () => {
     const dispatch = useDispatch()
 
 
-    useFocusEffect(
-        React.useCallback(() => {
-            dispatch(listenToBalances({ uid }));
+    // useFocusEffect(
+    //     React.useCallback(() => {
+    //         dispatch(listenToBalances({ uid }));
 
-            return () => {
-                dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
-            };
-        }, [dispatch, uid])
-    );
+    //         // return () => {
+    //         //     dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
+    //         // };
+    //     }, [dispatch, uid])
+    // );
+
+    useEffect(() => {
+        dispatch(listenToBalances({ uid }));
+    }, [dispatch, uid])
 
 
     // Calculate total amount the user owes (debts)

@@ -3,18 +3,27 @@ import React, { useEffect, useState } from 'react';
 import { FAB, useTheme, Text, Icon, Surface, Card, Avatar, Appbar, Chip } from 'react-native-paper';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import TotalBalanceComponent from '../components/TotalBalanceComponent';
 import RecentGroupsComponent from '../components/RecentGroupsComponent';
 import CreateGroupModal from '../components/CreateGroupModal';
 import avatars from '../data/Avatar';
 import RecentBillComponent from '../components/RecentBillComponent';
+import { fetchTransactions } from '../redux/slices/transactionsSlice';
+import { listenToTransactions } from '../redux/listeners/transactionListener';
+
 
 const HomeScreen = () => {
     const theme = useTheme();
     const navigation = useNavigation();
+    const dispatch = useDispatch();
     const [modalVisible, setModalVisible] = useState(false);
     const { user } = useSelector(state => state.userAuth);
+
+    useEffect(() => {
+        dispatch(fetchTransactions()); // Fetch initial transactions
+        dispatch(listenToTransactions());
+    }, [dispatch]);
 
     if (!user) {
         return null; // Don't render anything if user is null

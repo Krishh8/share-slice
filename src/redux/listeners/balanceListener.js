@@ -2,13 +2,13 @@ import firestore from "@react-native-firebase/firestore";
 import { setBalances, setUnsubscribe } from "../slices/balancesSlice";
 
 
-export const listenToBalances = ({ uid, groupId = null }) => async (dispatch) => {
+export const listenToBalances = ({ uid }) => async (dispatch) => {
 
     let balancesRef = firestore().collection("balances").where("amountOwed", ">", 0);
 
-    if (groupId) {
-        balancesRef = balancesRef.where("groupId", "==", groupId); // ✅ Filter by group
-    }
+    // if (groupId) {
+    //     balancesRef = balancesRef.where("groupId", "==", groupId); // ✅ Filter by group
+    // }
 
     const unsubscribe = balancesRef.onSnapshot(async (snapshot) => {
         let userBalances = [];
@@ -58,6 +58,7 @@ export const listenToBalances = ({ uid, groupId = null }) => async (dispatch) =>
                 upiId: userMap[balance.debtorId]?.upiId || "",
                 phoneNumber: userMap[balance.debtorId]?.phoneNumber || "",
                 email: userMap[balance.debtorId]?.email || "",
+
             },
         }));
 

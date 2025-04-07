@@ -8,6 +8,7 @@ import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as r
 import avatars from '../data/Avatar';
 import ReminderComponent from '../components/ReminderComponent';
 import LottieView from "lottie-react-native";
+import LoadingScreen from './LoadingScreen';
 
 const EmptyComponent = () => {
     return (
@@ -33,7 +34,7 @@ const ReminderScreen = () => {
         dispatch(fetchReminders());
     }, [dispatch]);
 
-    if (loading) return <ActivityIndicator size="large" />;
+    if (loading) return <LoadingScreen />;
     if (error) return <Text>Error: {error}</Text>;
 
     return (

@@ -30,18 +30,18 @@ const GroupsScreen = () => {
     const { balances, loading, error } = useSelector((state) => state.balance);
 
 
-    useFocusEffect(
-        React.useCallback(() => {
+    // useFocusEffect(
+    //     React.useCallback(() => {
 
-            // if (!loading) {
-            dispatch(listenToBalances({ uid }));
-            // }
+    //         // if (!loading) {
+    //         dispatch(listenToBalances({ uid }));
+    //         // }
 
-            return () => {
-                dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
-            };
-        }, [dispatch, uid])
-    );
+    //         // return () => {
+    //         //     dispatch(clearBalances()); // ✅ Stop Firestore listener when leaving screen
+    //         // };
+    //     }, [dispatch, uid])
+    // );
 
 
     const groupedBalances = balances.reduce((acc, balance) => {

@@ -60,7 +60,7 @@ const ExpenseDetailScreen = () => {
     console.table(expenseDetails)
 
     return (
-        <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <ScrollView showsVerticalScrollIndicator={false} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <Animated.View>
                 <Appbar.Header>
                     <Appbar.Action icon="chevron-left" size={rfs(3.5)} iconColor={theme.colors.primary} onPress={() => {
@@ -115,11 +115,11 @@ const ExpenseDetailScreen = () => {
                             </Text>
                         </View>
 
-                        <View style={[styles.buttons]}>
+                        {/* <View style={[styles.buttons]}>
                             <IconButton icon="pencil" size={rfs(3)}
-                                onPress={() => navigation.navigate("UpdateExpense", { expenseId })}
+                                onPress={() => navigation.navigate("UpdateExpense", { expenseId, groupId: expenseDetails?.groupId })}
                                 disabled={!isAdmin} iconColor={theme.colors.primary} />
-                        </View>
+                        </View> */}
                     </View>
                 </Surface>
 

@@ -10,8 +10,7 @@ export const sendOTP = createAsyncThunk(
             const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
             return { confirmation: confirmation.verificationId, phoneNumber }
         } catch (error) {
-            console.log(error.message)
-            return thunkAPI.rejectWithValue(error.message);
+            return thunkAPI.rejectWithValue('A network error.');
         }
     }
 );

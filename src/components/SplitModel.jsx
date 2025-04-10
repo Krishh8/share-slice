@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView, StyleSheet, Alert } from "react-native";
+import { View, ScrollView, StyleSheet, Alert, KeyboardAvoidingView } from "react-native";
 import { Modal, Portal, Button, TextInput, Checkbox, Text, useTheme, Divider, Surface, IconButton } from "react-native-paper";
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import { useSelector } from "react-redux";
@@ -69,76 +69,78 @@ const SplitModel = ({ visible, onDismiss, onSplit, totalBillAmount, splitDetails
     };
 
     return (
-        <Portal>
-            <Modal
-                visible={visible}
-                onDismiss={onDismiss}
-                theme={{
-                    colors: {
-                        backdrop: "rgba(0, 0, 0, 0.5)", // Adjust opacity here (0.3 for lighter effect)
-                    },
-                }}
-                contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}
-            >
-                <Surface style={styles.header}>
-                    <Text variant="titleLarge" style={styles.title}>Split Expense</Text>
-                    <IconButton icon="close" onPress={onDismiss} />
-                </Surface>
-
-                <Divider />
-
-                <View style={styles.toggleContainer}>
-                    <Button
-                        mode={splitMethod === "amount" ? "contained" : "outlined"}
-                        onPress={() => setSplitMethod("amount")}
-                        style={styles.toggleButton}
-                    >
-                        Split by Amount
-                    </Button>
-                    <Button
-                        mode={splitMethod === "percentage" ? "contained" : "outlined"}
-                        onPress={() => setSplitMethod("percentage")}
-                        style={styles.toggleButton}
-                    >
-                        Split by Percentage
-                    </Button>
-                </View>
-
-                <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
-                    {friends.map((friend) => (
-                        <View key={friend.uid} style={styles.friendRow}>
-                            <Checkbox.Android
-                                status={splitData.some((p) => p.uid === friend.uid) ? "checked" : "unchecked"}
-                                onPress={() => toggleFriendSelection(friend)}
-                            />
-                            <Text style={styles.friendName}>{friend.fullName}</Text>
-                            <TextInput
-                                mode="outlined"
-                                style={styles.valueInput}
-                                placeholder={splitMethod === "amount" ? "₹ Amount" : "% Share"}
-                                keyboardType="numeric"
-                                value={splitData.find((p) => p.uid === friend.uid)?.value?.toString() || ""}
-                                onChangeText={(value) => updateValue(friend.uid, value)}
-                            />
-                        </View>
-                    ))}
-                </ScrollView>
-
-                {splitMethod === "percentage" && (
-                    <Text style={styles.totalPercentage}>
-                        Total: {getTotalPercentage()}%
-                    </Text>
-                )}
-
-                <Button
-                    mode="contained"
-                    onPress={handleSubmit}
-                    style={styles.submitButton}
+        <KeyboardAvoidingView>
+            <Portal>
+                <Modal
+                    visible={visible}
+                    onDismiss={onDismiss}
+                    theme={{
+                        colors: {
+                            backdrop: "rgba(0, 0, 0, 0.5)", // Adjust opacity here (0.3 for lighter effect)
+                        },
+                    }}
+                    contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}
                 >
-                    Confirm Split
-                </Button>
-            </Modal>
-        </Portal>
+                    <Surface style={styles.header}>
+                        <Text variant="titleLarge" style={styles.title}>Split Expense</Text>
+                        <IconButton icon="close" onPress={onDismiss} />
+                    </Surface>
+
+                    <Divider />
+
+                    <View style={styles.toggleContainer}>
+                        <Button
+                            mode={splitMethod === "amount" ? "contained" : "outlined"}
+                            onPress={() => setSplitMethod("amount")}
+                            style={styles.toggleButton}
+                        >
+                            Split by Amount
+                        </Button>
+                        <Button
+                            mode={splitMethod === "percentage" ? "contained" : "outlined"}
+                            onPress={() => setSplitMethod("percentage")}
+                            style={styles.toggleButton}
+                        >
+                            Split by Percentage
+                        </Button>
+                    </View>
+
+                    <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+                        {friends.map((friend) => (
+                            <View key={friend.uid} style={styles.friendRow}>
+                                <Checkbox.Android
+                                    status={splitData.some((p) => p.uid === friend.uid) ? "checked" : "unchecked"}
+                                    onPress={() => toggleFriendSelection(friend)}
+                                />
+                                <Text style={styles.friendName}>{friend.fullName}</Text>
+                                <TextInput
+                                    mode="outlined"
+                                    style={styles.valueInput}
+                                    placeholder={splitMethod === "amount" ? "₹ Amount" : "% Share"}
+                                    keyboardType="numeric"
+                                    value={splitData.find((p) => p.uid === friend.uid)?.value?.toString() || ""}
+                                    onChangeText={(value) => updateValue(friend.uid, value)}
+                                />
+                            </View>
+                        ))}
+                    </ScrollView>
+
+                    {splitMethod === "percentage" && (
+                        <Text style={styles.totalPercentage}>
+                            Total: {getTotalPercentage()}%
+                        </Text>
+                    )}
+
+                    <Button
+                        mode="contained"
+                        onPress={handleSubmit}
+                        style={styles.submitButton}
+                    >
+                        Confirm Split
+                    </Button>
+                </Modal>
+            </Portal>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -149,7 +151,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 0,
         width: "100%",
-        height: "55%",
+        minHeight: "50%",
         overflow: 'hidden',
     },
     header: {

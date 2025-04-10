@@ -14,15 +14,16 @@ const GroupBalanceScreen = () => {
     const { groupId } = route.params;
     const theme = useTheme();
     const dispatch = useDispatch();
+    const { user } = useSelector(state => state.userAuth);
+    const uid = user?.uid;
     const { balances, loading, error } = useSelector((state) => state.balance);
     console.log('Balances ', balances)
-    const groupBalances = balances?.filter(balance => balance.groupId === groupId)
+    const groupBalances = balances?.filter(balance => balance.groupId === groupId && (balance.creditor.uid === uid || balance.debtor.uid === uid))
     // const groupBalances = useSelector(state =>
     //     state.balances.balance.filter(balance => balance.groupId === groupId)
     // );
 
-    const { user } = useSelector(state => state.userAuth);
-    const uid = user?.uid;
+
 
     if (!user) {
         return null;

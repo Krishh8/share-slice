@@ -54,7 +54,7 @@ const AddExpenseScreen = () => {
     const [splitModalVisible, setSplitModalVisible] = useState(false);
 
     const [description, setDescription] = useState('');
-    const [amount, setAmount] = useState('');
+    const [amount, setAmount] = useState('0');
     const [category, setCategory] = useState(null);
     const [paidBy, setPaidBy] = useState(null);
     const [splitType, setSplitType] = useState('equal');

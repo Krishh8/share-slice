@@ -89,7 +89,8 @@ const ProfileScreen = () => {
             return true;
 
         } catch (error) {
-            if (error.code === 'auth/email-already-in-use') {
+            console.log(error)
+            if (error.code === 'auth/email-already-in-use' || error.code === 'auth/unknown') {
                 Alert.alert('Error', 'This email is already linked to another account.');
             } else {
                 Alert.alert('Error', 'Could not link phone and email. Please try again.');

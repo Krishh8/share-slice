@@ -101,26 +101,26 @@ const ExpenseDetailScreen = () => {
                         </View>
                     </View>
 
-                    <View style={[styles.dateContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
-                        <View style={styles.dateItem}>
-                            <Text style={[styles.dateLabel, { color: theme.colors.onSurfaceVariant }]}>Created</Text>
-                            <Text style={[styles.dateValue, { color: theme.colors.onSurfaceVariant }]}>
-                                {formatDate(expenseDetails?.createdAt)}
-                            </Text>
-                        </View>
-                        <View style={styles.dateItem}>
+                    {/* <View style={[styles.dateContainer, { backgroundColor: theme.colors.surfaceVariant }]}> */}
+                    <View style={[styles.dateItem, { backgroundColor: theme.colors.surfaceVariant }]}>
+                        <Text style={[styles.dateLabel, { color: theme.colors.onSurfaceVariant }]}>Created On : </Text>
+                        <Text style={[styles.dateValue, { color: theme.colors.secondary }]}>
+                            {formatDate(expenseDetails?.createdAt)}
+                        </Text>
+                    </View>
+                    {/* <View style={styles.dateItem}>
                             <Text style={[styles.dateLabel, { color: theme.colors.onSurfaceVariant }]}>Updated</Text>
                             <Text style={[styles.dateValue, { color: theme.colors.onSurfaceVariant }]}>
                                 {formatDate(expenseDetails?.updatedAt)}
                             </Text>
-                        </View>
+                        </View> */}
 
-                        {/* <View style={[styles.buttons]}>
+                    {/* <View style={[styles.buttons]}>
                             <IconButton icon="pencil" size={rfs(3)}
                                 onPress={() => navigation.navigate("UpdateExpense", { expenseId, groupId: expenseDetails?.groupId })}
                                 disabled={!isAdmin} iconColor={theme.colors.primary} />
                         </View> */}
-                    </View>
+                    {/* </View> */}
                 </Surface>
 
                 <Card style={[styles.detailCard,]}>
@@ -275,11 +275,15 @@ const styles = StyleSheet.create({
     dateContainer: {
         flexDirection: "row",
         padding: rw(3),
-        justifyContent: "space-between",
+        justifyContent: "flex-end",
         alignItems: "center",
     },
     dateItem: {
-        flex: 1,
+        // flex: 1,
+        flexDirection: "row",
+        padding: rw(3),
+        justifyContent: "flex-end",
+        alignItems: "center",
     },
     dateLabel: {
         fontSize: rfs(1.5),

@@ -466,9 +466,11 @@ const groupSlice = createSlice({
             })
 
             .addCase(addMember.pending, (state) => {
+                state.loadingGroupDetails = true;
                 state.errorGroupDetails = null; // Clear any previous error
             })
             .addCase(addMember.fulfilled, (state, action) => {
+                state.loadingGroupDetails = false;
                 const { groupId, newMember } = action.payload
                 if (state.groupDetails.groupId === groupId) {
                     const isAlreadyMember = state.groupDetails.members.some(member => member.uid === newMember.uid);
@@ -478,6 +480,7 @@ const groupSlice = createSlice({
                 }
             })
             .addCase(addMember.rejected, (state, action) => {
+                state.loadingGroupDetails = false;
                 state.errorGroupDetails = action.payload; // Clear any previous error
             })
 
@@ -495,9 +498,11 @@ const groupSlice = createSlice({
             })
 
             .addCase(removeMember.pending, (state) => {
+                state.loadingGroupDetails = true;
                 state.errorGroupDetails = null; // Clear any previous error
             })
             .addCase(removeMember.fulfilled, (state, action) => {
+                state.loadingGroupDetails = false;
                 const { groupId, uid } = action.payload;
                 if (state.groupDetails.groupId === groupId) {
                     // ✅ Remove the member by filtering `uid` inside objects
@@ -506,8 +511,10 @@ const groupSlice = createSlice({
                     // ✅ Remove from admins list if they were an admin
                     state.groupDetails.admins = state.groupDetails.admins.filter(adminUid => adminUid !== uid);
                 }
+
             })
             .addCase(removeMember.rejected, (state, action) => {
+                state.loadingGroupDetails = false;
                 state.errorGroupDetails = action.payload; // Store error message from rejected action
             });
 

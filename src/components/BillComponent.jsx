@@ -153,8 +153,8 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
                                         </Text>
                                     </>
                                     :
-                                    <Text variant="titleSmall">
-                                        Not Involved
+                                    <Text variant="titleSmall" style={{ color: theme.colors.secondary }}>
+                                        All Settled Up
                                     </Text>}
                             </View>
                         </View>

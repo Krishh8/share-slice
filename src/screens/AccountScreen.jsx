@@ -16,13 +16,13 @@ import {
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
-import LogOutBtn from '../components/LogOutBtn';
 import LoadingScreen from './LoadingScreen';
 import { useDispatch, useSelector } from 'react-redux';
 import avatars from '../data/Avatar';
 import HeaderComponent from '../components/HeaderComponent';
-import { clearUser } from '../redux/slices/userAuthSlice';
-import auth from '@react-native-firebase/auth';
+import { handleLogout } from '../services/logoutHandler';
+// import { clearUser } from '../redux/slices/userAuthSlice';
+// import auth from '@react-native-firebase/auth';
 
 const AccountScreen = () => {
     const theme = useTheme();
@@ -34,21 +34,21 @@ const AccountScreen = () => {
     }
     const { phoneNumber, fullName, email, avatar, upiId } = user;
 
-    const handleLogout = async () => {
-        try {
-            console.log('Logging out...');
-            await auth().signOut();  // Firebase logout
-            dispatch(clearUser());   // Reset Redux state
+    // const handleLogout = async () => {
+    //     try {
+    //         console.log('Logging out...');
+    //         await auth().signOut();  // Firebase logout
+    //         dispatch(clearUser());   // Reset Redux state
 
-            // Wait a moment for Firebase state to update
-            // setTimeout(() => {
-            navigation.replace('AuthStack'); // Redirect to Auth screens
-            // }, 500);
+    //         // Wait a moment for Firebase state to update
+    //         // setTimeout(() => {
+    //         navigation.replace('AuthStack'); // Redirect to Auth screens
+    //         // }, 500);
 
-        } catch (error) {
-            console.error('Logout failed:', error);
-        }
-    };
+    //     } catch (error) {
+    //         console.error('Logout failed:', error);
+    //     }
+    // };
 
     if (loading) {
         return <LoadingScreen />;
@@ -126,7 +126,7 @@ const AccountScreen = () => {
                         <Divider style={styles.optionDivider} />
 
 
-                        <TouchableOpacity onPress={handleLogout} style={styles.optionButton}>
+                        <TouchableOpacity onPress={() => handleLogout(dispatch, navigation)} style={styles.optionButton}>
                             <Icon source="logout" size={rfs(3)} color={theme.colors.primary} />
                             <Text variant="titleMedium" style={styles.optionText}>Log out</Text>
                         </TouchableOpacity>

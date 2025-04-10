@@ -1,15 +1,30 @@
 import { StatusBar } from 'react-native';
 import AppNavigator from './navigation/AppNavigator';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Linking } from 'react-native';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch } from 'react-redux';
 import { checkReminders } from './redux/slices/reminderSlice';
 import Toast from 'react-native-toast-message';
+import auth from '@react-native-firebase/auth'
 
 
 const App = () => {
+    const dispatch = useDispatch();
+    // const [initializing, setInitializing] = useState(true);
+
+    // // Firebase Auth check
+    // useEffect(() => {
+    //     const subscriber = auth().onAuthStateChanged(() => {
+    //         if (initializing) setInitializing(false);
+    //     });
+    //     return subscriber;
+    // }, []);
+
+    // if (initializing) return null;
+
+    //Handling deep link
     useEffect(() => {
         const handleDeepLink = async (link) => {
             if (link) {
@@ -34,8 +49,7 @@ const App = () => {
         return () => unsubscribe();
     }, []);
 
-    const dispatch = useDispatch();
-
+    //Fetch reminders
     useEffect(() => {
         dispatch(checkReminders());
     }, []);

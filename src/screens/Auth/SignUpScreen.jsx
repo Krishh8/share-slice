@@ -42,69 +42,49 @@ const SignUpScreen = () => {
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false} >
-            <LinearGradient
-                // colors={[theme.colors.primary, theme.colors.primaryContainer, theme.colors.secondary]}
-
-                // colors={[theme.colors.primary, theme.colors.inversePrimary, theme.colors.secondaryContainer]}
-
-                // colors={[theme.colors.primary, theme.colors.inversePrimary, theme.colors.background]}
-
-                colors={[theme.colors.surfaceVariant, theme.colors.inversePrimary, theme.colors.inversePrimary, theme.colors.surfaceVariant]}
-
-                useAngle={true}
-                angle={20}
-
-                start={{ x: 0, y: 1 }}
-                end={{ x: 1, y: 0 }}
-                style={[styles.signupContainer, { backgroundColor: theme.colors.background }]}>
-
-                <KeyboardAvoidingView>
-
-
-                    {/* <View style={[styles.signupContainer, { backgroundColor: theme.colors.background }]} > */}
-                    <View style={styles.signupCardContent}>
-                        <View style={styles.logoContainer}>
-                            <Icon source="wallet" size={rfs(10)} color={theme.colors.primary} />
-                            {/* <Image source={require('../../../android/app/src/main/res/play_store_512.png')} width={rw(10)} height={rh(10)} /> */}
-                        </View>
-
-                        <Text style={styles.welcomeText}>Get Started With</Text>
-                        <Text style={[styles.appNameText, { color: theme.colors.primary }]}>ShareSlice!</Text>
-                        <Text style={styles.taglineText}>Simplify shared expenses</Text>
-
-                        <TextInput
-                            style={styles.phoneInput}
-                            label="Mobile Number"
-                            mode="outlined"
-                            value={phoneNumber}
-                            keyboardType="number-pad"
-                            onChangeText={(text) => setPhoneNumber(text)}
-                            outlineStyle={{ borderRadius: rh(1) }}
-                            activeOutlineColor={theme.colors.primary}
-                            error={error}
-                            left={<TextInput.Icon icon="phone" size={rfs(3)} color={theme.colors.primary} />}
-                        />
-
-                        {error ? (
-                            <Text style={{ color: theme.colors.error, marginTop: rh(1) }}>{error}</Text>
-                        ) : null}
-
-                        <Button
-                            style={styles.otpButton}
-                            labelStyle={styles.buttonText}
-                            mode="contained"
-                            onPress={handleSubmit}
-                            loading={loading}
-                            disabled={loading}
-                            icon={loading ? 'loading' : ""}
-                        >
-                            Request OTP
-                        </Button>
+            <View style={[styles.signupContainer, { backgroundColor: theme.colors.background }]} >
+                <View style={styles.signupCardContent}>
+                    <View style={styles.logoContainer}>
+                        <Icon source="wallet" size={rfs(10)} color={theme.colors.primary} />
+                        {/* <Image source={require('../../../android/app/src/main/res/play_store_512.png')} width={rw(10)} height={rh(10)} /> */}
                     </View>
-                    {/* </View> */}
-                </KeyboardAvoidingView>
-            </LinearGradient>
+
+                    <Text style={styles.welcomeText}>Get Started With</Text>
+                    <Text style={[styles.appNameText, { color: theme.colors.primary }]}>ShareSlice!</Text>
+                    <Text style={styles.taglineText}>Simplify shared expenses</Text>
+
+                    <TextInput
+                        style={styles.phoneInput}
+                        label="Mobile Number"
+                        mode="outlined"
+                        value={phoneNumber}
+                        keyboardType="number-pad"
+                        onChangeText={(text) => setPhoneNumber(text)}
+                        outlineStyle={{ borderRadius: rh(1) }}
+                        activeOutlineColor={theme.colors.primary}
+                        error={error}
+                        left={<TextInput.Icon icon="phone" size={rfs(3)} color={theme.colors.primary} />}
+                    />
+
+                    {error ? (
+                        <Text style={{ color: theme.colors.error, marginTop: rh(1) }}>{error}</Text>
+                    ) : null}
+
+                    <Button
+                        style={styles.otpButton}
+                        labelStyle={styles.buttonText}
+                        mode="contained"
+                        onPress={handleSubmit}
+                        loading={loading}
+                        disabled={loading}
+                        icon={loading ? 'loading' : ""}
+                    >
+                        Request OTP
+                    </Button>
+                </View>
+            </View>
         </TouchableWithoutFeedback >
+
     );
 };
 

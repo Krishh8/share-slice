@@ -35,9 +35,6 @@ const BillsScreen = () => {
     const navigation = useNavigation();
     const { expenses, expensesLoading, expensesError } = useSelector((state) => state.expense);
     const { user } = useSelector(state => state.userAuth);
-    if (!user) {
-        return null; // Don't render anything if user is null
-    }
     const uid = user?.uid
     const theme = useTheme();
     const [searchQuery, setSearchQuery] = useState("")

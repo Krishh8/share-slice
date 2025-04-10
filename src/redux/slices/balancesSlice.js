@@ -182,19 +182,19 @@ export const updateBalancesOnExpenseCreate = createAsyncThunk(
 
             const balanceDocRefs = new Map(); // Map<docId, docRef>
 
-            // Step 1: Build a set of all relevant balance doc IDs
-            for (const { uid: debtorId, share } of splitDetails) {
+            // Step 1: Build all possible doc IDs
+            for (const { uid: debtorId } of splitDetails) {
                 for (const creditorId of Object.keys(payerMap)) {
-                    if (creditorId !== debtorId) {
-                        const balanceId = `${creditorId}_${debtorId}_${groupId}`;
-                        const reverseBalanceId = `${debtorId}_${creditorId}_${groupId}`;
-                        balanceDocRefs.set(balanceId, balancesRef.doc(balanceId));
-                        balanceDocRefs.set(reverseBalanceId, balancesRef.doc(reverseBalanceId));
-                    }
+                    if (creditorId === debtorId) continue;
+
+                    const balanceId = `${creditorId}_${debtorId}_${groupId}`;
+                    const reverseBalanceId = `${debtorId}_${creditorId}_${groupId}`;
+                    balanceDocRefs.set(balanceId, balancesRef.doc(balanceId));
+                    balanceDocRefs.set(reverseBalanceId, balancesRef.doc(reverseBalanceId));
                 }
             }
 
-            // Step 2: Fetch all relevant balance documents in one go
+            // Step 2: Fetch all needed balance docs
             const balanceDocs = await Promise.all(
                 Array.from(balanceDocRefs.values()).map((ref) => ref.get())
             );
@@ -205,79 +205,86 @@ export const updateBalancesOnExpenseCreate = createAsyncThunk(
                 docDataMap.set(docId, balanceDocs[i++]);
             }
 
-            // Step 3: Calculate and apply balance updates
+            // Step 3: Calculate net balances
+            const netBalances = new Map(); // key: "creditor_debtor", value: amount
+
             for (const { uid: debtorId, share } of splitDetails) {
                 for (const creditorId of Object.keys(payerMap)) {
                     if (creditorId === debtorId) continue;
 
-                    const balanceId = `${creditorId}_${debtorId}_${groupId}`;
-                    const reverseBalanceId = `${debtorId}_${creditorId}_${groupId}`;
-                    const balanceRef = balanceDocRefs.get(balanceId);
-                    const reverseBalanceRef = balanceDocRefs.get(reverseBalanceId);
-                    const balanceDoc = docDataMap.get(balanceId);
-                    const reverseBalanceDoc = docDataMap.get(reverseBalanceId);
-
+                    const key = `${creditorId}_${debtorId}`;
+                    const reverseKey = `${debtorId}_${creditorId}`;
                     const amountOwed = parseFloat(
                         (share * (payerMap[creditorId] / totalAmount)).toFixed(2)
                     );
 
-                    if (!isFinite(amountOwed)) {
-                        throw new Error(`Invalid amountOwed: ${amountOwed}`);
-                    }
+                    if (!isFinite(amountOwed) || amountOwed < 0.01) continue;
 
-                    if (reverseBalanceDoc.exists) {
-                        const existingReverseAmount = reverseBalanceDoc.data()?.amountOwed || 0;
-                        const netAmount = existingReverseAmount - amountOwed;
+                    if (netBalances.has(reverseKey)) {
+                        const reverseAmount = netBalances.get(reverseKey);
+                        const net = reverseAmount - amountOwed;
 
-                        if (netAmount > 0) {
-                            batch.update(reverseBalanceRef, {
-                                amountOwed: netAmount,
-                                updatedAt: firestore.Timestamp.now(),
-                            });
-                        } else if (netAmount < 0) {
-                            batch.set(balanceRef, {
-                                creditorId,
-                                debtorId,
-                                groupId,
-                                amountOwed: Math.abs(netAmount),
-                                updatedAt: firestore.Timestamp.now(),
-                            });
-                            batch.delete(reverseBalanceRef);
+                        if (Math.abs(net) < 0.01) {
+                            netBalances.delete(reverseKey); // cancel out
+                        } else if (net > 0) {
+                            netBalances.set(reverseKey, net);
                         } else {
-                            batch.delete(reverseBalanceRef);
-                        }
-                    } else if (balanceDoc.exists) {
-                        const existingAmount = balanceDoc.data()?.amountOwed || 0;
-                        const updatedAmount = existingAmount + amountOwed;
-
-                        if (updatedAmount === 0) {
-                            batch.delete(balanceRef);
-                        } else {
-                            batch.update(balanceRef, {
-                                amountOwed: updatedAmount,
-                                updatedAt: firestore.Timestamp.now(),
-                            });
+                            netBalances.set(key, Math.abs(net));
+                            netBalances.delete(reverseKey);
                         }
                     } else {
-                        batch.set(balanceRef, {
-                            creditorId,
-                            debtorId,
-                            groupId,
-                            amountOwed,
-                            updatedAt: firestore.Timestamp.now(),
-                        });
+                        netBalances.set(key, amountOwed);
                     }
                 }
             }
 
+            // Step 4: Write net balances
+            for (const [key, amount] of netBalances) {
+                const [creditorId, debtorId] = key.split("_");
+                const balanceId = `${creditorId}_${debtorId}_${groupId}`;
+                const reverseBalanceId = `${debtorId}_${creditorId}_${groupId}`;
+                const balanceRef = balanceDocRefs.get(balanceId);
+                const reverseBalanceRef = balanceDocRefs.get(reverseBalanceId);
+
+                const balanceDoc = docDataMap.get(balanceId);
+                const reverseBalanceDoc = docDataMap.get(reverseBalanceId);
+
+                console.log(`[DEBUG] ${debtorId} owes ${creditorId}: ${amount}`);
+
+                if (reverseBalanceDoc?.exists) {
+                    batch.delete(reverseBalanceRef);
+                }
+
+                if (balanceDoc?.exists) {
+                    const updatedAmount = (balanceDoc.data()?.amountOwed || 0) + amount;
+                    if (Math.abs(updatedAmount) < 0.01) {
+                        batch.delete(balanceRef);
+                    } else {
+                        batch.update(balanceRef, {
+                            amountOwed: parseFloat(updatedAmount.toFixed(2)),
+                            updatedAt: firestore.Timestamp.now(),
+                        });
+                    }
+                } else {
+                    batch.set(balanceRef, {
+                        creditorId,
+                        debtorId,
+                        groupId,
+                        amountOwed: parseFloat(amount.toFixed(2)),
+                        updatedAt: firestore.Timestamp.now(),
+                    });
+                }
+            }
+
             await batch.commit();
-            console.log("Balances updated successfully.");
+            console.log("✅ Balances updated successfully.");
         } catch (error) {
-            console.error("Balance update failed:", error);
+            console.error("❌ Balance update failed:", error);
             return thunkAPI.rejectWithValue(error.message);
         }
     }
 );
+
 
 
 // export const revertOldBalances = createAsyncThunk(

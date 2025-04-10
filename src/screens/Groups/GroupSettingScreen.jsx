@@ -45,7 +45,7 @@ const GroupSettingScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [nameError, setNameError] = useState('');
     const { user } = useSelector(state => state.userAuth)
-    const { groupDetails, loadingGroups, errorGroupDetails } = useSelector(state => state.group);
+    const { groupDetails, loadingGroups, loadingGroupDetails, errorGroupDetails } = useSelector(state => state.group);
     const [isAdmin, setIsAdmin] = useState(false);
     const [alertVisible, setAlertVisible] = useState(false)
 
@@ -94,6 +94,7 @@ const GroupSettingScreen = () => {
         }
     };
 
+    if (loadingGroupDetails) return <LoadingScreen />
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

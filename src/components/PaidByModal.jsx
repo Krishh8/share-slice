@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
 import { Modal, Portal, Button, List, TextInput, Checkbox, Text, useTheme, Divider, Surface, IconButton } from "react-native-paper";
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import { useSelector } from "react-redux";
@@ -77,87 +77,94 @@ const PaidByModal = ({ visible, onDismiss, onPaidBy, totalBillAmount, paidBy }) 
     };
 
     return (
-        <Portal>
-            <Modal
-                visible={visible}
-                onDismiss={onDismiss}
-                theme={{
-                    colors: {
-                        backdrop: "rgba(0, 0, 0, 0.5)", // Adjust opacity here (0.3 for lighter effect)
-                    },
-                }}
-                contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}
-            >
-                <Surface style={styles.header}>
-                    <Text variant="titleLarge" style={styles.title}>Who Paid?</Text>
-                    <IconButton icon="close" onPress={onDismiss} />
-                </Surface>
+        <KeyboardAvoidingView>
 
-                <Divider />
-
-                <View style={styles.toggleContainer}>
-                    <Button
-                        mode={isSinglePayer ? "contained" : "outlined"}
-                        onPress={() => setIsSinglePayer(true)}
-                        style={styles.toggleButton}
-                    >
-                        Single Payer
-                    </Button>
-                    <Button
-                        mode={!isSinglePayer ? "contained" : "outlined"}
-                        onPress={() => setIsSinglePayer(false)}
-                        style={styles.toggleButton}
-                    >
-                        Multi Payer
-                    </Button>
-                </View>
-
-                <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
-                    {isSinglePayer ? (
-                        friends.map((friend) => (
-                            <List.Item
-                                key={friend.uid}
-                                title={friend.fullName}
-                                onPress={() => handleSinglePayer(friend)}
-                                left={(props) => (
-                                    <List.Icon {...props} icon={selectedPayer?.uid === friend.uid ? "check-circle" : "account"} />
-                                )}
-                                style={[
-                                    styles.listItem,
-                                    selectedPayer?.uid === friend.uid && { backgroundColor: theme.colors.primaryContainer }
-                                ]}
-                            />
-                        ))
-                    ) : (
-                        friends.map((friend) => (
-                            <View key={friend.uid} style={styles.multiPayerRow}>
-                                <Checkbox.Android
-                                    status={multiPayer.some((p) => p.uid === friend.uid) ? "checked" : "unchecked"}
-                                    onPress={() => toggleMultiPayer(friend)}
-                                />
-                                <Text style={styles.payerName}>{friend.fullName}</Text>
-                                <TextInput
-                                    mode="outlined"
-                                    style={styles.amountInput}
-                                    placeholder="Amount"
-                                    keyboardType="numeric"
-                                    value={multiPayer.find((p) => p.uid === friend.uid)?.amount?.toString() || ""}
-                                    onChangeText={(value) => updateAmount(friend.uid, value)}
-                                />
-                            </View>
-                        ))
-                    )}
-                </ScrollView>
-
-                <Button
-                    mode="contained"
-                    onPress={handleSubmitMultiPayer}
-                    style={styles.submitButton}
+            <Portal>
+                <Modal
+                    visible={visible}
+                    onDismiss={onDismiss}
+                    theme={{
+                        colors: {
+                            backdrop: "rgba(0, 0, 0, 0.5)", // Adjust opacity here (0.3 for lighter effect)
+                        },
+                    }}
+                    contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}
                 >
-                    Submit
-                </Button>
-            </Modal>
-        </Portal>
+
+                    <Surface style={styles.header}>
+                        <Text variant="titleLarge" style={styles.title}>Who Paid?</Text>
+                        <IconButton icon="close" onPress={onDismiss} />
+                    </Surface>
+
+                    <Divider />
+
+                    <View style={styles.toggleContainer}>
+                        <Button
+                            mode={isSinglePayer ? "contained" : "outlined"}
+                            onPress={() => setIsSinglePayer(true)}
+                            style={styles.toggleButton}
+                        >
+                            Single Payer
+                        </Button>
+                        <Button
+                            mode={!isSinglePayer ? "contained" : "outlined"}
+                            onPress={() => setIsSinglePayer(false)}
+                            style={styles.toggleButton}
+                        >
+                            Multi Payer
+                        </Button>
+                    </View>
+
+                    <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+                        {isSinglePayer ? (
+                            friends.map((friend) => (
+                                <List.Item
+                                    key={friend.uid}
+                                    title={friend.fullName}
+                                    onPress={() => handleSinglePayer(friend)}
+                                    left={(props) => (
+                                        <List.Icon {...props} icon={selectedPayer?.uid === friend.uid ? "check-circle" : "account"} />
+                                    )}
+                                    style={[
+                                        styles.listItem,
+                                        selectedPayer?.uid === friend.uid && { backgroundColor: theme.colors.primaryContainer }
+                                    ]}
+                                />
+                            ))
+                        ) : (
+                            friends.map((friend) => (
+                                <View key={friend.uid} style={styles.multiPayerRow}>
+                                    <Checkbox.Android
+                                        status={multiPayer.some((p) => p.uid === friend.uid) ? "checked" : "unchecked"}
+                                        onPress={() => toggleMultiPayer(friend)}
+                                    />
+                                    <Text style={styles.payerName}>{friend.fullName}</Text>
+                                    <TextInput
+                                        mode="outlined"
+                                        style={styles.amountInput}
+                                        placeholder="Amount"
+                                        keyboardType="numeric"
+                                        value={multiPayer.find((p) => p.uid === friend.uid)?.amount?.toString() || ""}
+                                        onChangeText={(value) => updateAmount(friend.uid, value)}
+                                    />
+                                </View>
+                            ))
+                        )}
+                    </ScrollView>
+
+                    <Button
+                        mode="contained"
+                        onPress={handleSubmitMultiPayer}
+                        style={styles.submitButton}
+                    >
+                        Submit
+                    </Button>
+
+                </Modal>
+
+            </Portal>
+        </KeyboardAvoidingView>
+
     );
 };
 
@@ -168,7 +175,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 0,
         width: "100%",
-        height: "55%",
+        minHeight: "50%",
         overflow: 'hidden',
     },
     header: {

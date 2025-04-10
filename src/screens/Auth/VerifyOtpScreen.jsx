@@ -8,6 +8,7 @@ import { sendOTP, verifyOTP } from '../../redux/slices/userAuthSlice';
 import { OtpInput } from "react-native-otp-entry";
 import { showToast } from '../../services/toastService';
 import CustomAlert from '../../components/CustomAlert';
+import LinearGradient from 'react-native-linear-gradient';
 
 const VerifyOtpScreen = () => {
     const theme = useTheme();
@@ -30,7 +31,7 @@ const VerifyOtpScreen = () => {
             setConfirmation(result.confirmation); // Store confirmation object in state
             showToast('success', 'OTP sent successfully.')
         } catch (error) {
-            console.error("Error sending OTP:", error);
+            showToast('error', 'Unable to send OTP!')
         }
     };
 
@@ -55,10 +56,10 @@ const VerifyOtpScreen = () => {
             const result = await dispatch(verifyOTP({ confirmation, otp })).unwrap();
             // showToast('success', 'OTP verified successfully.')
             if (!result.isProfileComplete) {
-                navigation.replace('AuthStack', { screen: 'Profile' });
+                navigation.navigate('AuthStack', { screen: 'Profile' });
             }
             else if (!result.isEmailVerified) {
-                navigation.replace('AuthStack', { screen: 'VerifyEmail' });
+                navigation.navigate('AuthStack', { screen: 'VerifyEmail' });
             }
             else {
                 navigation.replace('MainStack');
@@ -76,6 +77,7 @@ const VerifyOtpScreen = () => {
     };
 
     return (
+
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
 
@@ -134,7 +136,7 @@ const VerifyOtpScreen = () => {
 
                     {error && (
                         <Text style={{ color: theme.colors.error, marginTop: rh(1), }}>
-                            Please check and enter the correct OTP again.
+                            {error}
                         </Text>
                     )}
 
@@ -176,8 +178,7 @@ const VerifyOtpScreen = () => {
                     showCancel={false}
                     icon="information-variant" /> */}
             </View>
-
-        </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback >
     )
 }
 

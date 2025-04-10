@@ -1,4 +1,4 @@
-import { FlatList, Linking, StyleSheet, View } from 'react-native'
+import { FlatList, Keyboard, Linking, StyleSheet, TouchableWithoutFeedback, View } from 'react-native'
 import React, { useEffect, useState, useCallback } from 'react'
 import { ActivityIndicator, Button, Modal, Portal, Searchbar, Text, TextInput, useTheme } from 'react-native-paper'
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions'
@@ -12,6 +12,7 @@ import { addMember } from '../redux/slices/groupSlice'
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import queryString from 'query-string'
 import { showToast } from '../services/toastService'
+import LoadingScreen from '../screens/LoadingScreen'
 
 const AddMemberModal = ({ visible, onDismiss }) => {
     const theme = useTheme()
@@ -23,9 +24,12 @@ const AddMemberModal = ({ visible, onDismiss }) => {
     const [permissionGranted, setPermissionGranted] = useState(false)
     const [manualPhoneNumber, setManualPhoneNumber] = useState('')
     const [manualUserState, setManualUserState] = useState(null)
-    const [isLoading, setIsLoading] = useState(false)
-    const { groupDetails } = useSelector(state => state.group)
+    const [loadingContactId, setLoadingContactId] = useState(null)
+    const { groupDetails, loadingGroupDetails } = useSelector(state => state.group)
     const groupId = groupDetails?.groupId
+    const [checkedUsers, setCheckedUsers] = useState({})
+    const [isLoading, setIsLoading] = useState(false)
+
 
     // Normalize phone number to standard format
     const normalizePhoneNumber = useCallback((phoneNumber) => {
@@ -77,11 +81,16 @@ const AddMemberModal = ({ visible, onDismiss }) => {
 
     // Check if users exist in the system
     const checkUserStatus = useCallback(async (contactList) => {
-        setIsLoading(true)
         try {
             const updatedContacts = await Promise.all(contactList.map(async (contact) => {
+                setLoadingContactId(contact.id)
                 const formattedNumber = normalizePhoneNumber(contact.phoneNumber)
+                if (checkedUsers[formattedNumber]) {
+                    return { ...contact, phoneNumber: formattedNumber, userState: checkedUsers[formattedNumber] }
+                }
                 const userState = await checkUserExists(formattedNumber)
+                setCheckedUsers(prev => ({ ...prev, [formattedNumber]: userState }))
+
                 return { ...contact, phoneNumber: formattedNumber, userState }
             }))
             setContacts(updatedContacts)
@@ -89,9 +98,9 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         } catch (error) {
             console.error('Error checking user status:', error)
         } finally {
-            setIsLoading(false)
+            setLoadingContactId(null)
         }
-    }, [normalizePhoneNumber])
+    }, [normalizePhoneNumber, checkedUsers])
 
     // Fetch contacts from device
     const fetchContacts = useCallback(async () => {
@@ -157,6 +166,8 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         catch (error) {
             showToast('error', "Failed to add Member.")
         }
+        onDismiss()
+
     }, [dispatch, groupId])
 
     // Filter contacts based on search query
@@ -222,7 +233,8 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                 {item.userState?.exists ? (
                     <Button
                         mode="contained"
-                        disabled={isMemberAlready}
+                        loading={loadingContactId === item.id}
+                        disabled={isMemberAlready || loadingContactId === item.id}
                         onPress={() => handleAddMember(item.userState.uid)}
                         style={styles.actionButton}
                     >
@@ -230,6 +242,7 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                     </Button>
                 ) : (
                     <Button
+                        loading={isLoading}
                         mode="outlined"
                         onPress={() => sendInviteViaSMS(item.phoneNumber)}
                         style={styles.actionButton}
@@ -296,6 +309,8 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         }
         return null
     }
+
+    if (loadingGroupDetails) return <LoadingScreen />
 
     return (
         <Portal>

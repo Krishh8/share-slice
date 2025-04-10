@@ -17,7 +17,6 @@ export const checkUserExists = async (phoneNumber) => {
             return { exists: false, uid: null };
         }
     } catch (error) {
-        console.error('Error checking user existence:', error);
         return { exists: false, uid: null, error: error.message };
     }
 };
@@ -34,7 +33,6 @@ export const getUserByUserId = async (uid) => {
             return null; // Return null if the group doesn't exist
         }
     } catch (error) {
-        console.error('Error fetching user name:', error);
         return null; // Return null on error
     }
 };

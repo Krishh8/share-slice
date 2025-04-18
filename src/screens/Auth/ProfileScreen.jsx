@@ -41,7 +41,7 @@ const ProfileScreen = () => {
 
 
     const initialValues = {
-        avatar: avatar || '0',
+        avatar: '0',
         fullName: fullName || '',
         email: email || '',
         phoneNumber: phoneNumber || '',
@@ -68,36 +68,36 @@ const ProfileScreen = () => {
         fetchGroupId();
     }, []);
 
-    const linkPhoneWithEmail = async (email) => {
-        const user = auth().currentUser;
-        if (!user) {
-            Alert.alert('Error', 'No user is currently logged in.');
-            return false;
-        }
+    // const linkPhoneWithEmail = async (email) => {
+    //     const user = auth().currentUser;
+    //     if (!user) {
+    //         Alert.alert('Error', 'No user is currently logged in.');
+    //         return false;
+    //     }
 
-        try {
-            const signInMethods = await auth().fetchSignInMethodsForEmail(email);
-            if (signInMethods.includes(auth.EmailAuthProvider.PROVIDER_ID)) {
-                showToast('info', "Email already linked.")
-                return true;
-            }
+    //     try {
+    //         const signInMethods = await auth().fetchSignInMethodsForEmail(email);
+    //         if (signInMethods.includes(auth.EmailAuthProvider.PROVIDER_ID)) {
+    //             showToast('info', "Email already linked.")
+    //             return true;
+    //         }
 
-            const tempPassword = 'temporarypassword123';
-            const credential = auth.EmailAuthProvider.credential(email, tempPassword);
-            await user.linkWithCredential(credential);
+    //         const tempPassword = 'temporarypassword123';
+    //         const credential = auth.EmailAuthProvider.credential(email, tempPassword);
+    //         await user.linkWithCredential(credential);
 
-            return true;
+    //         return true;
 
-        } catch (error) {
-            console.log(error)
-            if (error.code === 'auth/email-already-in-use' || error.code === 'auth/unknown') {
-                Alert.alert('Error', 'This email is already linked to another account.');
-            } else {
-                Alert.alert('Error', 'Could not link phone and email. Please try again.');
-            }
-            return false;
-        }
-    };
+    //     } catch (error) {
+    //         console.log(error)
+    //         if (error.code === 'auth/email-already-in-use' || error.code === 'auth/unknown') {
+    //             Alert.alert('Error', 'This email is already linked to another account.');
+    //         } else {
+    //             Alert.alert('Error', 'Could not link phone and email. Please try again.');
+    //         }
+    //         return false;
+    //     }
+    // };
 
     const handleProfileSubmit = async (values) => {
         const currentUser = auth().currentUser;
@@ -116,60 +116,43 @@ const ProfileScreen = () => {
                 return;
             }
 
-            if (!userData.isEmailLinked) {
-                const emailLinked = await linkPhoneWithEmail(values.email);
-
-                if (emailLinked) {
-                    await userDocRef.update({
-                        isEmailLinked: true,
-                        updatedAt: Timestamp.now(),
-                    });
-                    showToast('success', 'Email successfully linked to your phone!');
-                } else {
-                    return;
-                }
-            } else {
-                console.log("Email already linked.");
-            }
-
             if (groupId) {
                 console.log("User was invited to group:", groupId);
                 console.log("calling updateProfileAndJoinGroup")
-                // ✅ Dispatch action to update profile & add user to group
-                await dispatch(updateProfileAndJoinGroup({
-                    uid: currentUser.uid,
-                    fullName: values.fullName,
-                    email: values.email,
-                    avatar: values.avatar,
-                    upiId: values.upiId,
-                    groupId: groupId
-                }));
+                try {
+                    await dispatch(updateProfileAndJoinGroup({
+                        uid: currentUser.uid,
+                        fullName: values.fullName,
+                        email: values.email,
+                        avatar: values.avatar,
+                        upiId: values.upiId,
+                        groupId: groupId
+                    })).unwrap();
 
-                // ✅ Remove stored groupId after adding user to group
-                await AsyncStorage.removeItem('pendingGroupId');
-                console.log("called  complete from frontend updateProfileAndJoinGroup")
+                    // ✅ Remove stored groupId after adding user to group
+                    await AsyncStorage.removeItem('pendingGroupId');
+                    navigation.replace('MainStack', { screen: 'BottomTab' });
 
+                } catch (error) {
+                    showToast('error', error)
+                }
             } else {
-                // ✅ Normal profile update if no group invite exists
-                await dispatch(updateProfile({
-                    uid: currentUser.uid,
-                    fullName: values.fullName,
-                    email: values.email,
-                    avatar: values.avatar,
-                    upiId: values.upiId
-                }));
+                try {
+                    await dispatch(updateProfile({
+                        uid: currentUser.uid,
+                        fullName: values.fullName,
+                        email: values.email,
+                        avatar: values.avatar,
+                        upiId: values.upiId
+                    })).unwrap();
+                    navigation.replace('MainStack', { screen: 'BottomTab' });
+
+                } catch (error) {
+                    showToast('error', error)
+                }
+
             }
-
-            // await dispatch(updateProfile({ uid, fullName: values.fullName, email: values.email, avatar: values.avatar, upiId: values.upiId }))
-
-            await currentUser.reload();
-            if (!currentUser.emailVerified) {
-                await currentUser.sendEmailVerification();
-            }
-
-            navigation.replace('VerifyEmail');
         } catch (error) {
-            console.error('Error saving profile:', error);
             Alert.alert('Error', error.message);
         }
     };
@@ -208,7 +191,7 @@ const ProfileScreen = () => {
                                                 onPress={() => setFieldValue('avatar', item.id)}
                                                 style={[
                                                     styles.avatarContainer,
-                                                    values.avatar === item.id && { borderColor: theme.colors.primary },
+                                                    values.avatar === item.id ? { borderColor: theme.colors.primary } : null
                                                 ]}
                                             >
                                                 <Avatar.Image
@@ -227,6 +210,8 @@ const ProfileScreen = () => {
                                         style={styles.input}
                                         label="Enter Full Name"
                                         mode="outlined"
+                                        textColor={theme.colors.secondary}
+                                        outlineColor={theme.colors.primary}
                                         onChangeText={handleChange('fullName')}
                                         onBlur={handleBlur('fullName')}
                                         value={values.fullName}
@@ -243,6 +228,8 @@ const ProfileScreen = () => {
                                         mode="outlined"
                                         keyboardType="email-address"
                                         autoCapitalize="none"
+                                        textColor={theme.colors.secondary}
+                                        outlineColor={theme.colors.primary}
                                         autoComplete="email"
                                         onChangeText={handleChange('email')}
                                         onBlur={handleBlur('email')}
@@ -258,9 +245,9 @@ const ProfileScreen = () => {
                                         style={styles.input}
                                         label="UPI ID"
                                         mode="outlined"
+                                        autoCapitalize="none"
                                         textColor={theme.colors.secondary}
                                         outlineColor={theme.colors.primary}
-                                        autoCapitalize="none"
                                         onChangeText={handleChange('upiId')}
                                         onBlur={handleBlur('upiId')}
                                         value={values.upiId}
@@ -277,6 +264,8 @@ const ProfileScreen = () => {
                                         mode="outlined"
                                         keyboardType="numeric"
                                         autoCapitalize="none"
+                                        textColor={theme.colors.secondary}
+                                        outlineColor={theme.colors.primary}
                                         value={values.phoneNumber}
                                         editable={false}
                                         left={<TextInput.Icon icon="phone" />}
@@ -286,6 +275,9 @@ const ProfileScreen = () => {
                                         mode="contained"
                                         onPress={handleSubmit}
                                         style={styles.submitBtn}
+                                        loading={loading}
+                                        disabled={loading}
+                                        icon={loading ? 'loading' : ""}
                                         labelStyle={styles.buttonText}
                                     >
                                         {groupId ? "Submit & Join" : "Submit"}

@@ -123,7 +123,7 @@ const MyChart = () => {
                                     datasets: [
                                         {
                                             data: dataValues,
-                                            color: (opacity = 1) => theme.colors.primary,
+                                            // color: (opacity = 1) => theme.colors.red,
                                         },
                                     ],
                                 }}
@@ -131,21 +131,42 @@ const MyChart = () => {
                                 height={rh(30)}
                                 yAxisLabel="₹"
                                 chartConfig={{
+                                    backgroundColor: theme.colors.surface, // fallback for solid bg
+                                    backgroundGradientFrom: theme.colors.surface, // sets top color of gradient
+                                    backgroundGradientTo: theme.colors.surface,   // sets bottom color of gradient
+
                                     decimalPlaces: 0,
-                                    color: (opacity = 1) => theme.colors.primary,
-                                    labelColor: (opacity = 1) => theme.colors.onSurface,
-                                    barPercentage: 0.8,
+
+                                    color: (opacity = 1) => theme.colors.onSurface, // bar color
+                                    labelColor: (opacity = 1) => theme.colors.onSurface, // axis label color
+
+                                    barPercentage: 1,
+
                                     propsForLabels: {
-                                        fontSize: rfs(1.2),
+                                        fontSize: rfs(1.5),
+                                    },
+
+                                    propsForBackgroundLines: {
+                                        stroke: theme.colors.outlineVariant, // color of grid lines
+                                        strokeDasharray: '', // solid line
+                                    },
+
+                                    propsForHorizontalLabels: {
+                                        fontSize: rfs(1.3),
+                                        fontWeight: '500',
+                                    },
+                                    propsForVerticalLabels: {
+                                        fontSize: rfs(1.3),
+                                        fontWeight: '500',
                                     },
                                 }}
                                 verticalLabelRotation={0}
                                 showValuesOnTopOfBars
                                 fromZero
                                 style={{
-                                    marginVertical: rh(1),
-                                    borderRadius: 8,
+                                    backgroundColor: theme.colors.primaryContainer,
                                 }}
+                                showBarTops
                             />
                         </ScrollView>
                     ) : (

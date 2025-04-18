@@ -132,10 +132,12 @@ const BillComponent = ({ expenseDetails, isShrink }) => {
                                 />
                             </View>
                             <View style={styles.details}>
-                                <Text style={{ fontSize: rfs(2.5) }}>
+                                <Text numberOfLines={1}
+                                    ellipsizeMode="tail" style={{ fontSize: rfs(2.5), flexShrink: 1 }}>
                                     {expenseDetails.description}
                                 </Text>
-                                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                                <Text numberOfLines={1}
+                                    ellipsizeMode="tail" variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
                                     {expenseDetails.paidBy.length === 1
                                         ? `${payerName} paid`
                                         : `${expenseDetails.paidBy.length} people paid`}{" "}

@@ -59,7 +59,7 @@ const AccountScreen = () => {
             <HeaderComponent title="Account" />
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={[styles.accountContainer, {
+                style={[styles.accountContainer, {
                     backgroundColor: theme.colors.background
                 }]}>
                 <Card style={styles.profileCard}>
@@ -79,7 +79,7 @@ const AccountScreen = () => {
                                 style={styles.avatar}
                             />
                         </View>
-                        <Text variant="headlineMedium" style={styles.profileName}>{fullName}</Text>
+                        <Text numberOfLines={1} ellipsizeMode="tail" variant="headlineMedium" style={styles.profileName}>{fullName}</Text>
                         <Divider bold style={styles.divider} />
 
                         <View style={styles.infoRow}>
@@ -89,12 +89,12 @@ const AccountScreen = () => {
 
                         <View style={styles.infoRow}>
                             <Icon source="email" size={rfs(3)} color={theme.colors.primary} />
-                            <Text variant="bodyLarge" style={styles.infoText}>{email}</Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" variant="bodyLarge" style={styles.infoText}>{email}</Text>
                         </View>
 
                         <View style={styles.infoRow}>
                             <Icon source="bank" size={rfs(3)} color={theme.colors.primary} />
-                            <Text variant="bodyLarge" style={styles.infoText}>{upiId}</Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" variant="bodyLarge" style={styles.infoText}>{upiId}</Text>
                         </View>
                     </Card.Content>
                 </Card>
@@ -133,7 +133,6 @@ const AccountScreen = () => {
 
                     </Card.Content>
                 </Card>
-                {/* <View style={{ height: rh(4) }}></View> */}
             </ScrollView>
         </>
     );
@@ -144,7 +143,6 @@ const styles = StyleSheet.create({
         marginVertical: rh(1),
     },
     accountContainer: {
-        flex: 1,
     },
     profileCard: {
         position: 'relative',

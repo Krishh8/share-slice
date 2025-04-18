@@ -7,8 +7,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { sendOTP, verifyOTP } from '../../redux/slices/userAuthSlice';
 import { OtpInput } from "react-native-otp-entry";
 import { showToast } from '../../services/toastService';
-import CustomAlert from '../../components/CustomAlert';
-import LinearGradient from 'react-native-linear-gradient';
 
 const VerifyOtpScreen = () => {
     const theme = useTheme();
@@ -21,7 +19,6 @@ const VerifyOtpScreen = () => {
     const [resendDisabled, setResendDisabled] = useState(false);
     const [countdown, setCountdown] = useState(0);
     const countdownRef = useRef(null);
-    // const [alertVisible, setAlertVisible] = useState(false)
     const [confirmation, setConfirmation] = useState(null)
 
 
@@ -57,9 +54,6 @@ const VerifyOtpScreen = () => {
             // showToast('success', 'OTP verified successfully.')
             if (!result.isProfileComplete) {
                 navigation.navigate('AuthStack', { screen: 'Profile' });
-            }
-            else if (!result.isEmailVerified) {
-                navigation.navigate('AuthStack', { screen: 'VerifyEmail' });
             }
             else {
                 navigation.replace('MainStack');
@@ -110,8 +104,8 @@ const VerifyOtpScreen = () => {
                             type="numeric"
                             secureTextEntry={false}
                             focusStickBlinkingDuration={500}
-                            onFocus={() => console.log("Focused")}
-                            onBlur={() => console.log("Blurred")}
+                            // onFocus={() => console.log("Focused")}
+                            // onBlur={() => console.log("Blurred")}
                             onFilled={handleSubmit}
                             textInputProps={{
                                 accessibilityLabel: "One-Time Password",
@@ -167,16 +161,6 @@ const VerifyOtpScreen = () => {
                         </Button>
                     </View>
                 </View>
-
-                {/* <CustomAlert
-                    visible={alertVisible}
-                    title="Invalid OTP"
-                    message={'Please check and enter the correct OTP again.'}
-                    onClose={() => setAlertVisible(false)}
-                    onConfirm={() => setAlertVisible(false)}
-                    confirmText="Okay"
-                    showCancel={false}
-                    icon="information-variant" /> */}
             </View>
         </TouchableWithoutFeedback >
     )

@@ -76,13 +76,14 @@ const FriendComponent = ({ friend }) => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.shadow }, { borderColor: theme.colors.outline }]}>
             <View style={[styles.details]}>
-                <View style={[styles.details, { justifyContent: 'flex-start' }]}>
+                <View style={[styles.details, { justifyContent: 'flex-start', width: '60%' }]}>
                     <Avatar.Image
                         source={otherUser.avatar ? avatars.find(a => a.id === otherUser.avatar)?.uri : null}
                         size={rfs(6)}
                     />
                     <View style={[styles.info]}>
-                        <Text style={[styles.name, { color: theme.colors.primary }]}>{otherUser.fullName}</Text>
+                        <Text numberOfLines={1}
+                            ellipsizeMode="tail" style={[styles.name, { color: theme.colors.primary }]}>{otherUser.fullName}</Text>
                         <Text style={[styles.phoneNumber, { color: theme.colors.secondary }]}>{otherUser.phoneNumber.slice(3)}</Text>
                     </View>
                 </View>
@@ -123,14 +124,17 @@ const styles = StyleSheet.create({
         borderStyle: 'dashed'
     },
     details: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         gap: rh(1),
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        flexShrink: 1
     },
     name: {
         fontWeight: 'bold',
-        fontSize: rfs(2)
+        fontSize: rfs(2),
+        flexShrink: 1
     },
     phoneNumber: {
         fontSize: rfs(1.8)
@@ -142,6 +146,7 @@ const styles = StyleSheet.create({
     },
     info: {
         // marginLeft: rw(2)
+        flex: 1,
     },
     btns: {
         flexDirection: 'row',

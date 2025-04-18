@@ -5,11 +5,14 @@ import LoadingScreen from '../screens/LoadingScreen';
 import { clearUser, setUser } from '../redux/slices/userAuthSlice';
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore';
-import { Text } from 'react-native-paper';
+import { Image, View } from 'react-native';
+import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
+import { Text, useTheme } from 'react-native-paper';
 
 const SplashScreen = () => {
     const dispatch = useDispatch();
     const navigation = useNavigation();
+    const theme = useTheme()
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -27,16 +30,12 @@ const SplashScreen = () => {
                             email: userData.email || '',
                             avatar: userData.avatar || '',
                             groups: userData.groups || [],
-                            isEmailVerified: userData.isEmailVerified || false,
                             isProfileComplete: userData.isProfileComplete || false,
                             upiId: userData.upiId || ''
                         }));
 
-                        // Route based on profile/email
                         if (!userData.isProfileComplete) {
                             navigation.replace('AuthStack', { screen: 'Profile' });
-                        } else if (!userData.isEmailVerified) {
-                            navigation.replace('AuthStack', { screen: 'VerifyEmail' });
                         } else {
                             navigation.replace('MainStack');
                         }
@@ -57,7 +56,12 @@ const SplashScreen = () => {
         return () => unsubscribe();
     }, []);
 
-    return null;
+    return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+            <Image source={require('../assets/icon.png')} style={{ width: rh(20), height: rh(20), borderRadius: rh(20) }} />
+            <Text variant='headlineLarge' style={{ marginVertical: rh(1) }}>ShareSlice</Text>
+        </View>
+    );
 };
 
 export default SplashScreen;

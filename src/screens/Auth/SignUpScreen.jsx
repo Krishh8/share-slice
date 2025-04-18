@@ -34,7 +34,6 @@ const SignUpScreen = () => {
         } else {
             setLoading(false)
             setError("");
-            console.log("Submitted Mobile Number:", phoneNumber);
             setPhoneNumber(""); // Reset after submission
             navigation.navigate('VerifyOTP', { phoneNumber: `+91${phoneNumber}` });
         }
@@ -46,7 +45,6 @@ const SignUpScreen = () => {
                 <View style={styles.signupCardContent}>
                     <View style={styles.logoContainer}>
                         <Icon source="wallet" size={rfs(10)} color={theme.colors.primary} />
-                        {/* <Image source={require('../../../android/app/src/main/res/play_store_512.png')} width={rw(10)} height={rh(10)} /> */}
                     </View>
 
                     <Text style={styles.welcomeText}>Get Started With</Text>
@@ -58,6 +56,8 @@ const SignUpScreen = () => {
                         label="Mobile Number"
                         mode="outlined"
                         value={phoneNumber}
+                        textColor={theme.colors.secondary}
+                        outlineColor={theme.colors.primary}
                         keyboardType="number-pad"
                         onChangeText={(text) => setPhoneNumber(text)}
                         outlineStyle={{ borderRadius: rh(1) }}

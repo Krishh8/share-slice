@@ -7,7 +7,7 @@ export const createGroup = createAsyncThunk(
     async ({ groupName, selectedCategory, uid }, thunkAPI) => {
         try {
             if (!groupName || !selectedCategory || !uid) {
-                throw new Error('Missing required fields.');
+                return thunkAPI.rejectWithValue('Missing required fields.');
             }
 
             const groupRef = firestore().collection('groups').doc(); // Auto-generate ID
@@ -19,6 +19,7 @@ export const createGroup = createAsyncThunk(
                 expenses: [],
                 admins: [uid],
                 createdAt: firestore.Timestamp.now(), // Firestore timestamp
+                updatedAt: firestore.Timestamp.now(), // Firestore timestamp
             };
 
             await groupRef.set(newGroup);
@@ -30,7 +31,6 @@ export const createGroup = createAsyncThunk(
                     groups: firestore.FieldValue.arrayUnion(groupRef.id),
                 });
 
-            console.log('Group created in groupSlice');
             return {
                 groupId: groupRef.id,
                 groupName: newGroup.groupName,
@@ -73,13 +73,13 @@ export const fetchGroups = createAsyncThunk(
                 acc[doc.id] = {
                     ...data,
                     groupId: doc.id,
-                    createdAt: data.createdAt?.toDate() || null, // ✅ Convert Firestore Timestamp
+                    updatedAt: data.updatedAt?.toDate() || null, // ✅ Convert Firestore Timestamp
                 };
                 return acc;
             }, {});
 
             // Uncomment if sorting is required
-            const sortedGroups = Object.values(groupObject).sort((a, b) => b.createdAt - a.createdAt);
+            const sortedGroups = Object.values(groupObject).sort((a, b) => b.updatedAt - a.updatedAt);
 
             groupObject = sortedGroups.reduce((acc, group) => {
                 acc[group.groupId] = group;
@@ -100,14 +100,13 @@ export const updateGroup = createAsyncThunk(
     async ({ groupId, groupName, groupCategory }, thunkAPI) => {
         try {
             if (!groupName || !groupId || !groupCategory) {
-                throw new Error('Missing required fields.');
+                return thunkAPI.rejectWithValue('Missing required fields.');
             }
 
             const groupRef = firestore().collection('groups').doc(groupId);
 
-            await groupRef.update({ groupName, category: groupCategory });
+            await groupRef.update({ groupName, category: groupCategory, updatedAt: firestore.Timestamp.now() });
 
-            console.log('Group updated successfully');
             return { groupId, groupName, category: groupCategory };
         } catch (error) {
             return thunkAPI.rejectWithValue(error.message);
@@ -118,44 +117,139 @@ export const updateGroup = createAsyncThunk(
 const removeGroupData = async (groupId) => {
     const batch = firestore().batch();
 
-    // 🔹 Step 1: Get all users in the group
-    const usersRef = firestore().collection("users").where("groups", "array-contains", groupId);
-    const usersSnapshot = await usersRef.get();
+    const usersCol = firestore().collection("users");
+    const expensesCol = firestore().collection("expenses");
+    const transactionsCol = firestore().collection("transactions");
+    const groupsCol = firestore().collection("groups");
 
+    // 🔹 Step 1: Remove groupId from each user's 'groups' array
+    const usersSnapshot = await usersCol.where("groups", "array-contains", groupId).get();
     usersSnapshot.forEach((doc) => {
-        const userRef = firestore().collection("users").doc(doc.id);
-        batch.update(userRef, {
-            groups: firestore.FieldValue.arrayRemove(groupId) // 🔹 Remove group from array
+        batch.update(doc.ref, {
+            groups: firestore.FieldValue.arrayRemove(groupId),
         });
     });
 
     // 🔹 Step 2: Delete all expenses in the group
-    const expensesRef = firestore().collection("expenses").where("groupId", "==", groupId);
-    const expensesSnapshot = await expensesRef.get();
-
+    const expensesSnapshot = await expensesCol.where("groupId", "==", groupId).get();
     expensesSnapshot.forEach((doc) => {
-        batch.delete(doc.ref); // 🔹 Delete each expense
+        batch.delete(doc.ref);
     });
 
-    // 🔹 Step 3: Delete the group document
-    const groupRef = firestore().collection("groups").doc(groupId);
+    // 🔹 Step 3: Handle transactions containing the groupId
+    const transactionsSnapshot = await transactionsCol.where("groupIds", "array-contains", groupId).get();
+    transactionsSnapshot.forEach((doc) => {
+        const { groupIds = [] } = doc.data();
+        if (groupIds.length === 1) {
+            batch.delete(doc.ref);
+        } else {
+            batch.update(doc.ref, {
+                groupIds: firestore.FieldValue.arrayRemove(groupId),
+            });
+        }
+    });
+
+    // 🔹 Step 4: Delete the group document itself
+    const groupRef = groupsCol.doc(groupId);
     batch.delete(groupRef);
 
-    // 🔹 Step 4: Commit batch deletion
+    // 🔹 Step 5: Commit the batch
+    const totalOps = usersSnapshot.size + expensesSnapshot.size + transactionsSnapshot.size + 1; // +1 for group doc
+    if (totalOps > 500) {
+        console.warn("⚠️ Exceeded Firestore batch limit. Consider chunking operations.");
+        throw new Error("Too many operations in one batch. Try deleting a group with fewer associated records.");
+    }
+
     await batch.commit();
+    console.log("✅ Group data removed from users, expenses, transactions, and group document.");
 };
 
-// delete Group
+/*
+const commitBatchChunks = async (operations, chunkSize = 450) => {
+    // Firestore's max batch size is 500 — stay below for safety
+    const chunks = [];
+    for (let i = 0; i < operations.length; i += chunkSize) {
+        chunks.push(operations.slice(i, i + chunkSize));
+    }
+
+    for (const chunk of chunks) {
+        const batch = firestore().batch();
+        chunk.forEach(op => {
+            const { ref, type, data } = op;
+            if (type === 'update') batch.update(ref, data);
+            else if (type === 'delete') batch.delete(ref);
+        });
+        await batch.commit();
+    }
+};
+
+const removeGroupData = async (groupId) => {
+    const usersCol = firestore().collection("users");
+    const expensesCol = firestore().collection("expenses");
+    const transactionsCol = firestore().collection("transactions");
+    const groupsCol = firestore().collection("groups");
+
+    const batchOps = [];
+
+    // 🔹 Step 1: Remove groupId from users
+    const usersSnapshot = await usersCol.where("groups", "array-contains", groupId).get();
+    usersSnapshot.forEach((doc) => {
+        batchOps.push({
+            ref: doc.ref,
+            type: 'update',
+            data: { groups: firestore.FieldValue.arrayRemove(groupId) }
+        });
+    });
+
+    // 🔹 Step 2: Delete all expenses in the group
+    const expensesSnapshot = await expensesCol.where("groupId", "==", groupId).get();
+    expensesSnapshot.forEach((doc) => {
+        batchOps.push({
+            ref: doc.ref,
+            type: 'delete'
+        });
+    });
+
+    // 🔹 Step 3: Transactions - delete or update groupIds
+    const transactionsSnapshot = await transactionsCol.where("groupIds", "array-contains", groupId).get();
+    transactionsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const groupIds = data.groupIds || [];
+
+        if (groupIds.length === 1) {
+            batchOps.push({ ref: doc.ref, type: 'delete' });
+        } else {
+            batchOps.push({
+                ref: doc.ref,
+                type: 'update',
+                data: { groupIds: firestore.FieldValue.arrayRemove(groupId) }
+            });
+        }
+    });
+
+    // 🔹 Step 4: Delete the group document
+    const groupRef = groupsCol.doc(groupId);
+    batchOps.push({ ref: groupRef, type: 'delete' });
+
+    // 🔹 Step 5: Commit in chunks
+    await commitBatchChunks(batchOps);
+
+    console.log("✅ Group and related data removed successfully.");
+};
+*/
+
 export const deleteGroup = createAsyncThunk(
     'group/deleteGroup',
     async (groupId, thunkAPI) => {
         try {
             if (!groupId) {
-                throw new Error('Missing required fields.');
+                return thunkAPI.rejectWithValue('Missing required fields.');
             }
 
-            const balancesRef = firestore().collection("balances").where("groupId", "==", groupId);
-            const balancesSnapshot = await balancesRef.get();
+            const balancesSnapshot = await firestore()
+                .collection("balances")
+                .where("groupId", "==", groupId)
+                .get();
 
             if (!balancesSnapshot.empty) {
                 return thunkAPI.rejectWithValue("This group has unpaid balances. Settle all debts before deleting.");
@@ -163,13 +257,15 @@ export const deleteGroup = createAsyncThunk(
 
             await removeGroupData(groupId);
 
-            console.log('Group  deleted successfully');
+            console.log('✅ Group deleted successfully');
             return groupId;
         } catch (error) {
+            console.error('❌ Error deleting group:', error);
             return thunkAPI.rejectWithValue(error.message);
         }
-    },
+    }
 );
+
 
 // Fetch Group Details
 export const fetchGroupDetails = createAsyncThunk(
@@ -364,6 +460,66 @@ export const removeMember = createAsyncThunk(
     }
 );
 
+export const leaveGroup = createAsyncThunk(
+    'group/leaveGroup',
+    async ({ groupId, uid }, { rejectWithValue }) => {
+        const batch = firestore().batch();
+
+        try {
+            const groupRef = firestore().collection("groups").doc(groupId);
+
+            // 🔹 Step 1: Fetch the group document
+            const groupDoc = await groupRef.get();
+            if (!groupDoc.exists) {
+                return rejectWithValue("Group does not exist.");
+            }
+            // 🔹 Step 1: Check if user has any outstanding balances
+            const balancesSnapshot = await firestore()
+                .collection("balances")
+                .where("groupId", "==", groupId)
+                .where("amountOwed", ">", 0)
+                .where("debtorId", "==", uid)
+                .get();
+
+            const balancesSnapshot2 = await firestore()
+                .collection("balances")
+                .where("groupId", "==", groupId)
+                .where("amountOwed", ">", 0)
+                .where("creditorId", "==", uid)
+                .get();
+
+            if (!balancesSnapshot.empty || !balancesSnapshot2.empty) {
+                return rejectWithValue("Cannot leave group: you have outstanding balances.");
+            }
+
+            const groupData = groupDoc.data();
+            const isAdmin = groupData.admins.includes(uid);
+
+            batch.update(groupRef, {
+                members: firestore.FieldValue.arrayRemove(uid),
+            });
+
+            if (isAdmin) {
+                batch.update(groupRef, {
+                    admins: firestore.FieldValue.arrayRemove(uid),
+                });
+            }
+
+            // 🔹 Step 3: Remove group from user's `groups` array
+            const userRef = firestore().collection("users").doc(uid);
+            batch.update(userRef, {
+                groups: firestore.FieldValue.arrayRemove(groupId),
+            });
+
+            // 🔹 Step 4: Commit batch update
+            await batch.commit();
+            console.log("Member removed successfully.");
+            return { uid, groupId };
+        } catch (error) {
+            return rejectWithValue(error.message)
+        }
+    }
+);
 
 const groupSlice = createSlice({
     name: 'group',
@@ -386,6 +542,7 @@ const groupSlice = createSlice({
     extraReducers: builder => {
         builder
             .addCase(createGroup.pending, state => {
+                state.errorGroups = null;
                 state.loadingGroups = true;
             })
             .addCase(createGroup.fulfilled, (state, action) => {
@@ -495,6 +652,27 @@ const groupSlice = createSlice({
                 if (state.groupDetails.groupId === groupId) {
                     state.groupDetails.admins = state.groupDetails.admins.filter(id => id !== uid);
                 }
+            })
+
+            .addCase(leaveGroup.pending, (state) => {
+                state.errorGroupDetails = null; // Clear any previous error
+            })
+            .addCase(leaveGroup.fulfilled, (state, action) => {
+                const { groupId, uid } = action.payload;
+                if (state.groupDetails.groupId === groupId) {
+                    // ✅ Remove the member by filtering `uid` inside objects
+                    state.groupDetails.members = state.groupDetails.members.filter(member => member.uid !== uid);
+                    // ✅ Remove from admins list if they were an admin
+                    state.groupDetails.admins = state.groupDetails.admins.filter(adminUid => adminUid !== uid);
+                }
+
+                if (state.groups?.[groupId]) {
+                    delete state.groups[groupId];
+                }
+
+            })
+            .addCase(leaveGroup.rejected, (state, action) => {
+                state.errorGroupDetails = action.payload; // Store error message from rejected action
             })
 
             .addCase(removeMember.pending, (state) => {

@@ -25,7 +25,7 @@ import { showToast } from '../services/toastService';
 const CreateGroupModal = ({ visible, onDismiss }) => {
     const theme = useTheme();
     const [groupName, setGroupName] = useState('');
-    const { loadingGroups } = useSelector(state => state.group)
+    const { loadingGroups, errorGroups } = useSelector(state => state.group)
     const [selectedCategory, setSelectedCategory] = useState(categories[0]);
     const [error, setError] = useState('');
     const { user } = useSelector(state => state.userAuth);
@@ -70,16 +70,13 @@ const CreateGroupModal = ({ visible, onDismiss }) => {
             setSelectedCategory(categories[0])
             setError("")
             navigation.navigate("MainStack", { screen: "GroupDetails", params: { groupId: result.payload.groupId } })
-            // showToast('success', 'Group Created Successfully 🎉', 'You can now add members and start splitting expenses!')
             // })
         } else {
             onDismiss()
             setGroupName("")
             setSelectedCategory(categories[0])
             setError("")
-            // showToast('error', 'Group Creation Failed ❌', 'Something went wrong. Please try again.')
-
-            console.error('Error creating group:', result.error.message);
+            Alert.alert('Error', 'Error creating group: ' + (typeof errorGroups === 'string' ? errorGroups : errorGroups?.message || 'Unknown error'));
         }
 
     };

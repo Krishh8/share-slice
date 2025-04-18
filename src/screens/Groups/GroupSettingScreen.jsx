@@ -1,7 +1,7 @@
 
 import AddMemberModal from '../../components/AddMemberModal';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchGroupDetails, makeAdmin, removeAdmin, removeMember, updateGroup } from '../../redux/slices/groupSlice';
+import { fetchGroupDetails, leaveGroup, makeAdmin, removeAdmin, removeMember, updateGroup } from '../../redux/slices/groupSlice';
 import LoadingScreen from '../LoadingScreen';
 import React, { useState, useEffect } from 'react';
 import {
@@ -23,7 +23,7 @@ import {
     Divider,
     Tooltip,
 } from 'react-native-paper';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
 import categories from '../../data/GroupCategory';
 import avatars from '../../data/Avatar';
@@ -34,6 +34,7 @@ import CustomAlert from '../../components/CustomAlert';
 const GroupSettingScreen = () => {
     const theme = useTheme();
     const route = useRoute();
+    const navigation = useNavigation()
     const { groupId } = route.params;
     const [visible, setVisible] = useState(false);
     const dispatch = useDispatch();
@@ -81,15 +82,26 @@ const GroupSettingScreen = () => {
                 setIsEditing(false);
             })
             .catch((error) => {
-                setNameError(error.message || "Failed to update group name.");
+                setNameError(error.message || "Failed to update group.");
             });
     };
 
     const handleRemoveMember = async (groupId, uid) => {
         try {
             await dispatch(removeMember({ groupId, uid })).unwrap();
+            showToast('success', 'Removed from group successfully! 🎉');
+        } catch (error) {
+            setAlertVisible(true);
+        }
+    };
+
+    const handleLeaveGroup = async (groupId, uid) => {
+        try {
+            await dispatch(leaveGroup({ groupId, uid })).unwrap();
+            navigation.replace('BottomTab', { screen: 'Groups' });
             showToast('success', 'Leaved group successfully! 🎉');
         } catch (error) {
+            console.log("❌ leaveGroup error:", error);
             setAlertVisible(true);
         }
     };
@@ -136,22 +148,20 @@ const GroupSettingScreen = () => {
                         contentContainerStyle={styles.categoriesContainer}
                     >
                         {categories.map((category) => (
-                            <Button
+                            <Chip
                                 key={category.label}
-                                mode={editGroupCategory === category ? "contained" : "outlined"}
+                                mode={editGroupCategory === category ? "flat" : "outlined"}
                                 onPress={() => setEditGroupCategory(category)}
                                 style={[
                                     styles.categoryButton,
-                                    editGroupCategory === category && { backgroundColor: theme.colors.primary },
                                 ]}
                                 labelStyle={[
                                     styles.categoryButtonLabel,
-                                    editGroupCategory === category && { color: theme.colors.onPrimary },
                                 ]}
                                 icon={category.icon}
                             >
                                 {category.label}
-                            </Button>
+                            </Chip>
                         ))}
                     </ScrollView>
                 )}
@@ -159,15 +169,15 @@ const GroupSettingScreen = () => {
                 {/* Action Buttons */}
                 {isAdmin ? (
                     !isEditing ? (
-                        <Button mode="contained" onPress={() => setIsEditing(true)} style={styles.editButton}>
+                        <Chip onPress={() => setIsEditing(true)} style={styles.editButton}>
                             Edit
-                        </Button>
+                        </Chip>
                     ) : (
                         <View style={styles.actionButtons}>
-                            <Button mode="contained" onPress={handleSubmit} disabled={loadingGroups} loading={loadingGroups} icon={loadingGroups ? 'loading' : ''} style={styles.saveButton}>
+                            <Chip mode="contained" onPress={handleSubmit} disabled={loadingGroups} loading={loadingGroups} icon={loadingGroups ? 'loading' : ''} style={styles.saveButton}>
                                 Save
-                            </Button>
-                            <Button
+                            </Chip>
+                            <Chip
                                 mode="outlined"
                                 onPress={() => {
                                     setIsEditing(false);
@@ -176,7 +186,7 @@ const GroupSettingScreen = () => {
                                 style={styles.cancelButton}
                             >
                                 Cancel
-                            </Button>
+                            </Chip>
                         </View>
                     )
                 ) : null}
@@ -216,7 +226,8 @@ const GroupSettingScreen = () => {
                                             style={[styles.sectionIcon, { backgroundColor: theme.colors.primary }]}
                                             color={theme.colors.onPrimary}
                                         />
-                                        <Text style={styles.memberName}>{currentUser ? <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>You</Text> : member.fullName}</Text>
+                                        <Text numberOfLines={1}
+                                            ellipsizeMode="tail" style={[styles.memberName, { flexShrink: 1 }]}>{currentUser ? <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>You</Text> : member.fullName}</Text>
                                     </View>
 
                                     {/* Show 'Owner' or 'Admin' chip */}
@@ -260,7 +271,11 @@ const GroupSettingScreen = () => {
                                                     <IconButton
                                                         icon={currentUser ? "logout" : "account-remove"}
                                                         iconColor={theme.colors.primary}
-                                                        onPress={() => handleRemoveMember(groupId, member.uid)}
+                                                        onPress={() => {
+                                                            currentUser
+                                                                ? handleLeaveGroup(groupId, member.uid)
+                                                                : handleRemoveMember(groupId, member.uid);
+                                                        }}
                                                     />
                                                 </Tooltip>
                                             )}
@@ -370,7 +385,7 @@ const styles = StyleSheet.create({
         fontSize: rfs(1.8),
     },
     categoriesContainer: {
-        paddingVertical: rh(1),
+        paddingVertical: rh(2),
     },
     editButton: {
         alignSelf: 'flex-end',
@@ -380,7 +395,7 @@ const styles = StyleSheet.create({
     actionButtons: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-        marginTop: rh(2),
+        marginTop: rh(0),
     },
     saveButton: {
         marginRight: rw(2),

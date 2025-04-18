@@ -7,11 +7,11 @@ import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as r
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteGroup, fetchGroupDetails } from '../../redux/slices/groupSlice';
 import { convertToTimestamp } from '../../assets/utilityFunc';
-import LoadingScreen from '../LoadingScreen';
 import { getUserByUserId } from '../../services/userService';
 import CustomAlert from '../../components/CustomAlert';
 import Toast from 'react-native-toast-message';
 import { showToast } from '../../services/toastService';
+import LoadingScreen from '../LoadingScreen';
 
 const GroupDetailScreen = () => {
     const theme = useTheme();
@@ -21,18 +21,18 @@ const GroupDetailScreen = () => {
     const dispatch = useDispatch();
     const [owner, setOwner] = useState(null);
     const { user } = useSelector(state => state.userAuth);
-    const { groups } = useSelector(state => state.group);
+    const { groups, errorGroups, loadingGroups } = useSelector(state => state.group);
     const [isAdmin, setIsAdmin] = useState(false);
     const [alertVisible, setAlertVisible] = useState(false);
 
-    const [group, setGroup] = useState({
+
+    const group = {
         category: groups[groupId]?.category,
         createdBy: groups[groupId]?.createdBy,
         groupId: groups[groupId]?.groupId,
         groupName: groups[groupId]?.groupName,
-    });
+    };
 
-    const { errorGroups, error } = useSelector(state => state.group);
 
     useEffect(() => {
         if (groupId) {
@@ -56,28 +56,18 @@ const GroupDetailScreen = () => {
 
 
     const handleDelete = async () => {
-        setAlertVisible(false); // Close the alert after confirmation
-
+        setAlertVisible(false);
         try {
-            const result = await dispatch(deleteGroup(groupId));
-            if (deleteGroup.fulfilled.match(result)) {
-                navigation.navigate('BottomTab', { screen: 'Groups' });
-                showToast('success', 'Group deleted successfully! 🎉')
-            } else {
-                showToast('error', 'Group deletion failed.', result.error.message)
-                console.error('Error deleting group:', result.error.message);
-                Alert.alert('Error', errorGroups);
-            }
+            await dispatch(deleteGroup(groupId)).unwrap();
+            navigation.navigate('BottomTab', { screen: 'Groups' });
+            showToast('success', 'Group deleted successfully! 🎉');
         } catch (error) {
-            console.error('Unexpected error:', error);
+            showToast('error', 'Group deletion failed.', error);
+            // Alert.alert('Error', error.message);
         }
     };
 
-    if (error) return (
-        <View style={styles.errorContainer}>
-            <Text style={{ color: theme.colors.error }}>Error: {error}</Text>
-        </View>
-    );
+    if (loadingGroups) return <LoadingScreen message='Deleting Group....' />
 
     return (
         <Surface style={{ flex: 1 }}>
@@ -100,8 +90,8 @@ const GroupDetailScreen = () => {
                 <View style={styles.iconContainer}>
                     <Avatar.Icon icon={group?.category?.icon} size={rfs(8)} />
                     <View>
-                        <Text style={styles.groupName}>{group?.groupName}</Text>
-                        <Text>Created By <Text style={[styles.admin, { color: theme.colors.primary }]}>{owner}</Text></Text>
+                        <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.groupName, { flexShrink: 1 }]}>{group?.groupName}</Text>
+                        <Text numberOfLines={1} ellipsizeMode="tail">Created By <Text style={[styles.admin, { color: theme.colors.primary }]}>{owner}</Text></Text>
                     </View>
                 </View>
                 <View style={styles.buttonContainer}>
@@ -151,21 +141,25 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingBottom: rh(3),
-        paddingHorizontal: rh(2)
+        paddingHorizontal: rh(2),
     },
     groupName: {
-        fontSize: rfs(4),
+        fontSize: rfs(3),
         fontWeight: 'bold',
     },
     buttonContainer: {
         flexDirection: 'row',
+        width: '30%',
     },
     admin: {
         fontWeight: 'bold',
+        flexShrink: 1
     },
     iconContainer: {
+        width: '50%',
         flexDirection: 'row',
         gap: rw(3),
+        alignItems: 'center'
     },
 
 });

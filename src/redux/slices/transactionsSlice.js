@@ -21,6 +21,10 @@ export const fetchTransactions = createAsyncThunk(
                 ...doc.data(),
             }));
 
+            if (transactions.length === 0) {
+                return {};
+            }
+
             // 🔥 Collect user IDs
             const userIds = new Set();
             transactions.forEach(({ creditorId, debtorId }) => {

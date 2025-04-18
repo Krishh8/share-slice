@@ -24,7 +24,6 @@ export const verifyOTP = createAsyncThunk(
             const credential = auth.PhoneAuthProvider.credential(confirmation, otp);
             const userCredential = await auth().signInWithCredential(credential);
             const { uid, phoneNumber } = userCredential.user;
-            console.log("OTP verified:", credential);
 
             // Reference to user document
             const userRef = firestore().collection("users").doc(uid);
@@ -36,13 +35,11 @@ export const verifyOTP = createAsyncThunk(
                 userData = {
                     uid,
                     phoneNumber,
-                    // isOtpVerified: true,
                     isProfileComplete: false,
                     fullName: "",
                     email: "",
                     avatar: "",
                     upiId: "",
-                    isEmailVerified: false,
                     groups: [],
                     createdAt: firestore.Timestamp.now(),
                     updatedAt: firestore.Timestamp.now(),
@@ -52,7 +49,6 @@ export const verifyOTP = createAsyncThunk(
             } else {
                 // Existing user - update OTP verification status
                 await userRef.update({
-                    // isOtpVerified: true,
                     updatedAt: firestore.Timestamp.now(),
                 });
 
@@ -70,11 +66,10 @@ export const verifyOTP = createAsyncThunk(
 
             return userData;
         } catch (error) {
-            return rejectWithValue(error.message);
+            return rejectWithValue('Please check and enter the correct verification code again.');
         }
     }
 );
-
 
 // Fetch user data
 export const fetchUserData = createAsyncThunk(
@@ -104,17 +99,8 @@ export const updateProfile = createAsyncThunk(
     'user/updateProfile',
     async ({ uid, fullName, email, avatar, upiId }, thunkAPI) => {
         try {
-            // console.log("Updating profile:", fullName, email, avatar, upiId);
 
-            const userRef = firestore().collection("users").doc(uid);
-            const userDoc = await userRef.get();
-
-            if (!userDoc.exists) {
-                return thunkAPI.rejectWithValue("User document not found in Firestore.");
-            }
-
-            const isEmailVerified = userDoc.data()?.email === email;
-
+            const userRef = firestore().collection('users').doc(uid);
             // 🔹 Update Firestore User Data
             await userRef.update({
                 fullName,
@@ -123,7 +109,6 @@ export const updateProfile = createAsyncThunk(
                 upiId,
                 updatedAt: firestore.Timestamp.now(),
                 isProfileComplete: true,
-                isEmailVerified,
             });
 
             // 🔹 Refresh Firebase Auth User
@@ -136,7 +121,6 @@ export const updateProfile = createAsyncThunk(
                 avatar,
                 upiId,
                 isProfileComplete: true,
-                isEmailVerified,
             };
         } catch (error) {
             return thunkAPI.rejectWithValue(error.message);
@@ -148,8 +132,6 @@ export const updateProfileAndJoinGroup = createAsyncThunk(
     'user/updateProfileAndJoinGroup',
     async ({ uid, fullName, email, avatar, upiId, groupId }, { rejectWithValue }) => {
         try {
-            console.log("called updateProfileAndJoinGroup")
-
             const userRef = firestore().collection('users').doc(uid);
             const groupRef = groupId ? firestore().collection('groups').doc(groupId) : null;
 
@@ -159,9 +141,6 @@ export const updateProfileAndJoinGroup = createAsyncThunk(
             if (!userDoc.exists) {
                 return rejectWithValue("User document not found in Firestore.");
             }
-
-            const userData = userDoc.data();
-            const isEmailVerified = userData?.email === email;
 
             // ✅ Batch Write for Performance Optimization
             const batch = firestore().batch();
@@ -174,7 +153,6 @@ export const updateProfileAndJoinGroup = createAsyncThunk(
                 upiId,
                 updatedAt: firestore.Timestamp.now(),
                 isProfileComplete: true,
-                isEmailVerified,
             });
 
             // Add user to the group (if applicable)
@@ -187,16 +165,7 @@ export const updateProfileAndJoinGroup = createAsyncThunk(
                 });
             }
 
-            await batch.commit(); // Execute batch update
-            console.log("ADDed in database")
-            // Reload Firebase Auth user (only if email changed)
-            if (auth().currentUser.email !== email) {
-                await auth().currentUser.reload();
-            }
-
-            console.log(`User ${uid} profile updated. Added to Group ${groupId || 'N/A'}`);
-            console.log("called  complete from thunk updateProfileAndJoinGroup")
-
+            await batch.commit();
             return {
                 uid,
                 fullName,
@@ -204,7 +173,6 @@ export const updateProfileAndJoinGroup = createAsyncThunk(
                 avatar,
                 upiId,
                 isProfileComplete: true,
-                isEmailVerified,
             };
         } catch (error) {
             return rejectWithValue(error.message);
@@ -213,48 +181,49 @@ export const updateProfileAndJoinGroup = createAsyncThunk(
 );
 
 
-//Resend email
-export const resendVerificationEmail = createAsyncThunk(
-    'user/resendVerificationEmail',
-    async (_, thunkAPI) => {
-        try {
-            await auth().currentUser.sendEmailVerification();
-            return "Verification Email Sent";
-        } catch (error) {
-            return thunkAPI.rejectWithValue(error.message);
-        }
-    }
-);
+// //Resend email
+// export const resendVerificationEmail = createAsyncThunk(
+//     'user/resendVerificationEmail',
+//     async (_, thunkAPI) => {
+//         try {
+//             await auth().currentUser.sendEmailVerification();
+//             return "Verification Email Sent";
+//         } catch (error) {
+//             return thunkAPI.rejectWithValue(error.message);
+//         }
+//     }
+// );
 
-// Check email verification
-export const checkEmailVerification = createAsyncThunk(
-    'user/checkEmailVerification',
-    async (_, thunkAPI) => {
-        try {
-            const user = auth().currentUser;
-            if (!user) {
-                console.error("No authenticated user found.");
-                return thunkAPI.rejectWithValue("User is not authenticated.");
-            }
+// // Check email verification
+// export const checkEmailVerification = createAsyncThunk(
+//     'user/checkEmailVerification',
+//     async (_, thunkAPI) => {
+//         try {
+//             const user = auth().currentUser;
+//             if (!user) {
+//                 console.error("No authenticated user found.");
+//                 return thunkAPI.rejectWithValue("User is not authenticated.");
+//             }
 
-            await user.reload();
-            const userRef = firestore().collection("users").doc(user.uid);
-            const userDoc = await userRef.get();
-            if (!userDoc.exists) {
-                throw new Error("User document does not exist");
-            }
+//             await user.reload();
+//             const userRef = firestore().collection("users").doc(user.uid);
+//             const userDoc = await userRef.get();
+//             if (!userDoc.exists) {
+//                 throw new Error("User document does not exist");
+//             }
 
-            await userRef.update({
-                isEmailVerified: user.emailVerified, // Mark as unverified
-            });
+//             await userRef.update({
+//                 isEmailVerified: user.emailVerified, // Mark as unverified
+//             });
 
-            return { isEmailVerified: user.emailVerified };
-        } catch (error) {
-            console.error("Error in checkEmailVerification:", error);
-            return thunkAPI.rejectWithValue(error.message);
-        }
-    }
-);
+//             return { isEmailVerified: user.emailVerified };
+//         } catch (error) {
+//             console.error("Error in checkEmailVerification:", error);
+//             return thunkAPI.rejectWithValue(error.message);
+//         }
+//     }
+// );
+
 
 const initialState = {
     user: null,
@@ -358,32 +327,32 @@ const userAuthSlice = createSlice({
                 state.error = action.payload;
             })
 
-            // **Resend Verification Email**
-            .addCase(resendVerificationEmail.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(resendVerificationEmail.fulfilled, (state) => {
-                state.loading = false;
-            })
-            .addCase(resendVerificationEmail.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
+        // **Resend Verification Email**
+        // .addCase(resendVerificationEmail.pending, (state) => {
+        //     state.loading = true;
+        // })
+        // .addCase(resendVerificationEmail.fulfilled, (state) => {
+        //     state.loading = false;
+        // })
+        // .addCase(resendVerificationEmail.rejected, (state, action) => {
+        //     state.loading = false;
+        //     state.error = action.payload;
+        // })
 
-            // **Check Email Verification**
-            .addCase(checkEmailVerification.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(checkEmailVerification.fulfilled, (state, action) => {
-                state.loading = false;
-                if (state.user) {
-                    state.user.isEmailVerified = action.payload.isEmailVerified;
-                }
-            })
-            .addCase(checkEmailVerification.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            });
+        // // **Check Email Verification**
+        // .addCase(checkEmailVerification.pending, (state) => {
+        //     state.loading = true;
+        // })
+        // .addCase(checkEmailVerification.fulfilled, (state, action) => {
+        //     state.loading = false;
+        //     if (state.user) {
+        //         state.user.isEmailVerified = action.payload.isEmailVerified;
+        //     }
+        // })
+        // .addCase(checkEmailVerification.rejected, (state, action) => {
+        //     state.loading = false;
+        //     state.error = action.payload;
+        // });
     },
 });
 

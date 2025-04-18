@@ -8,6 +8,7 @@ import { useDispatch } from 'react-redux';
 import { checkReminders } from './redux/slices/reminderSlice';
 import Toast from 'react-native-toast-message';
 import auth from '@react-native-firebase/auth'
+import queryString from 'query-string';
 
 
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
     //Handling deep link
     useEffect(() => {
         const handleDeepLink = async (link) => {
+            console.log(link)
             if (link) {
                 console.log('Received deep link:', link.url);
                 const parsed = queryString.parseUrl(link.url);
@@ -52,6 +54,23 @@ const App = () => {
     //Fetch reminders
     useEffect(() => {
         dispatch(checkReminders());
+    }, []);
+
+    useEffect(() => {
+        const fetchGroupId = async () => {
+            try {
+                const storedGroupId = await AsyncStorage.getItem('pendingGroupId');
+                if (storedGroupId) {
+                    console.log('Fetched Group ID:', storedGroupId);
+                } else {
+                    console.log('No pending Group ID found');
+                }
+            } catch (error) {
+                console.error('Error fetching Group ID:', error);
+            }
+        };
+
+        fetchGroupId();
     }, []);
 
     return (

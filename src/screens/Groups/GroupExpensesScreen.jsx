@@ -6,7 +6,6 @@ import { fetchGroupExpenses } from '../../redux/slices/expensesSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BillComponent from '../../components/BillComponent';
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions';
-import LoadingScreen from '../LoadingScreen';
 import { Surface, useTheme, Button, Card, Divider, Icon, IconButton, Avatar } from 'react-native-paper';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
@@ -48,9 +47,9 @@ const GroupExpensesScreen = () => {
         <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
             <View style={styles.emptyContent}>
                 <Icon source="receipt" size={rfs(8)} color={theme.colors.primary} />
-                <Text style={[styles.emptyText, { color: theme.colors.primary }]}>No expenses yet</Text>
+                <Text style={[styles.emptyText, { color: theme.colors.primary }]}>No expenses yet.</Text>
                 <Text style={[styles.emptySubtext, { color: theme.colors.secondary }]}>
-                    Add your first expense to start tracking group spending
+                    Add your first expense to start tracking group spending.
                 </Text>
                 <Button
                     mode="contained"

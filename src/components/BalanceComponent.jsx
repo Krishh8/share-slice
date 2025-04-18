@@ -78,7 +78,8 @@ const BalanceComponent = ({ balance }) => {
         <View style={[styles.balanceItem, { backgroundColor: theme.colors.background }]}>
             <View style={[styles.user]}>
                 <Avatar.Image source={avatars.find(a => a.id === (balance.debtor.avatar))?.uri} size={rfs(6)} />
-                <Text style={[styles.name]}>{uid == balance.debtor.uid ? "You" : balance.debtor.fullName}</Text>
+                <Text numberOfLines={1}
+                    ellipsizeMode="tail" style={[styles.name]}>{uid == balance.debtor.uid ? "You" : balance.debtor.fullName}</Text>
                 <Text style={[styles.phoneNumber]}>{balance.debtor.phoneNumber.slice(3)}</Text>
             </View>
 
@@ -90,7 +91,8 @@ const BalanceComponent = ({ balance }) => {
 
             <View style={[styles.user]}>
                 <Avatar.Image source={avatars.find(a => a.id === (balance.creditor.avatar))?.uri} size={rfs(6)} />
-                <Text style={[styles.name]}>{uid == balance.creditor.uid ? "You" : balance.creditor.fullName}</Text>
+                <Text numberOfLines={1}
+                    ellipsizeMode="tail" style={[styles.name]}>{uid == balance.creditor.uid ? "You" : balance.creditor.fullName}</Text>
                 <Text style={[styles.phoneNumber]}>{balance.creditor.phoneNumber.slice(3)}</Text>
             </View>
 
@@ -129,12 +131,14 @@ const styles = StyleSheet.create({
     user: {
         justifyContent: "center",
         alignItems: 'center',
-        flexShrink: 1,
+        // flexShrink: 1,
+        width: '25%'
     },
     name: {
         fontSize: rfs(1.8),
         marginTop: rh(1),
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        flexShrink: 1
     },
     phoneNumber: {
         fontSize: rfs(1.5)
@@ -142,6 +146,8 @@ const styles = StyleSheet.create({
     amount: {
         alignItems: 'center',
         justifyContent: 'center',
+        width: '25%',
+        flexShrink: 1
     },
     amountText: {
         fontSize: rfs(2),
@@ -149,6 +155,6 @@ const styles = StyleSheet.create({
     },
     btns: {
         gap: rh(1),
-        flexShrink: 1,
+        // flexShrink: 1
     }
 })

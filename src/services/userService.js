@@ -9,11 +9,9 @@ export const checkUserExists = async (phoneNumber) => {
             .get();
 
         if (!querySnapshot.empty) {
-            // ✅ User exists, return the UID
             const userDoc = querySnapshot.docs[0]; // Get the first matched document
             return { exists: true, uid: userDoc.id };
         } else {
-            // ❌ User does not exist
             return { exists: false, uid: null };
         }
     } catch (error) {

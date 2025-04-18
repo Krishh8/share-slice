@@ -57,9 +57,9 @@ const GroupBalanceScreen = () => {
         <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
             <View style={styles.emptyContent}>
                 <Icon source="cash" size={rfs(8)} color={theme.colors.primary} />
-                <Text style={[styles.emptyText, { color: theme.colors.secondary }]}>No expenses yet</Text>
+                <Text style={[styles.emptyText, { color: theme.colors.secondary }]}>All Settled Up.</Text>
                 <Text style={[styles.emptySubtext, { color: theme.colors.secondary }]}>
-                    No Balances Remaining.
+                    You're all square with everyone. Enjoy the peace!
                 </Text>
             </View>
         </View>

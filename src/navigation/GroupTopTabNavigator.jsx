@@ -31,8 +31,8 @@ const GroupTopTabNavigator = ({ groupId }) => {
                     borderRadius: rh(1)
                 },
                 tabBarScrollEnabled: true,
-            }
-            }
+            }}
+
             initialRouteName='GroupExpenses'
         >
             <TopTab.Screen

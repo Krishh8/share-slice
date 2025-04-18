@@ -10,11 +10,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import CreateGroupModal from "../components/CreateGroupModal"
 import GroupComponent from "../components/GroupComponent"
-import { listenToBalances, stopListeningToBalances } from "../redux/listeners/balanceListener"
-import { clearBalances } from "../redux/slices/balancesSlice"
 import Animated, { FadeInDown } from "react-native-reanimated"
-
-
 
 const GroupsScreen = () => {
     const theme = useTheme()
@@ -23,7 +19,7 @@ const GroupsScreen = () => {
     const [selectedCategory, setSelectedCategory] = useState("All")
     const dispatch = useDispatch()
 
-    const { groups } = useSelector((state) => state.group)
+    const { groups, loadingGroups, errorGroups } = useSelector((state) => state.group)
     const { user } = useSelector((state) => state.userAuth)
     const uid = user.uid
     const [displayGroups, setDisplayGroups] = useState([])

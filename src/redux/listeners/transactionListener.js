@@ -16,6 +16,10 @@ export const listenToTransactions = () => dispatch => {
                 ...doc.data(),
             }));
 
+            if (transactions.length === 0) {
+                return {};
+            }
+
             // Fetch user details in one batch
             const userIds = new Set();
             transactions.forEach(({ creditorId, debtorId }) => {

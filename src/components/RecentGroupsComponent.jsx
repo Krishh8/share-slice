@@ -7,13 +7,14 @@ import CreateGroupModal from "./CreateGroupModal";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGroups } from "../redux/slices/groupSlice";
 import Animated, { FadeInLeft, FadeInRight } from "react-native-reanimated";
+import LoadingScreen from "../screens/LoadingScreen";
 
 const RecentGroupsComponent = () => {
     const theme = useTheme();
     const dispatch = useDispatch()
     const navigation = useNavigation();
     const [visible, setVisible] = useState(false);
-    const { groups } = useSelector(state => state.group)
+    const { groups, loadingGroups } = useSelector(state => state.group)
     const { user } = useSelector(state => state.userAuth);
     if (!user) {
         return null; // Don't render anything if user is null
@@ -36,6 +37,8 @@ const RecentGroupsComponent = () => {
     }, [groups]);
 
 
+    // if (loadingGroups) return <LoadingScreen />
+
     const renderItem = ({ item, index }) => (
         <Animated.View entering={FadeInRight.delay(index * 50)} style={[styles.groupContainer]}>
             <TouchableOpacity onPress={() => navigation.navigate('GroupDetails', { groupId: item.groupId })} style={[styles.avatarContainer, { backgroundColor: theme.colors.shadow }]}>
@@ -44,7 +47,8 @@ const RecentGroupsComponent = () => {
                     icon={item.category.icon}
                     size={rfs(4)}
                 />
-                <Text style={[styles.groupName, { color: theme.colors.primary }]}>{item.groupName}</Text>
+                <Text numberOfLines={1}
+                    ellipsizeMode="tail" style={[styles.groupName, { color: theme.colors.primary }]}>{item.groupName}</Text>
             </TouchableOpacity>
         </Animated.View >
     );
@@ -97,6 +101,7 @@ export const styles = StyleSheet.create({
         padding: rh(1),
         alignItems: "center",
         marginRight: rw(3),
+        width: rw(23)
     },
     createGroupText: {
         fontSize: rfs(2),

@@ -89,9 +89,9 @@ const GroupTransactionScreen = () => {
         <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
             <View style={styles.emptyContent}>
                 <Icon source="cash" size={rfs(8)} color={theme.colors.primary} />
-                <Text style={[styles.emptyText, { color: theme.colors.secondary }]}>No expenses yet</Text>
+                <Text style={[styles.emptyText, { color: theme.colors.secondary }]}>No Settlements yet.</Text>
                 <Text style={[styles.emptySubtext, { color: theme.colors.secondary }]}>
-                    No Balances Remaining.
+                    No Settlements to Display.
                 </Text>
             </View>
         </View>

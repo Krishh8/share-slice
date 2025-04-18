@@ -38,39 +38,6 @@ const EditAccountScreen = () => {
     const { fullName, email, avatar, uid, upiId } = user || ''
 
 
-
-    const updateEmail = async (newEmail) => {
-        const user = auth().currentUser;
-        if (!user) {
-            Alert.alert('Error', 'No user is currently logged in.');
-            return false;
-        }
-
-        try {
-            const providers = user.providerData.map((p) => p.providerId);
-            if (providers.includes(auth.EmailAuthProvider.PROVIDER_ID)) {
-                await user.unlink(auth.EmailAuthProvider.PROVIDER_ID);
-            }
-
-            const tempPassword = 'temporarypassword123';
-            const credential = auth.EmailAuthProvider.credential(newEmail, tempPassword);
-            await user.linkWithCredential(credential);
-
-            // Step 5: Send email verification
-            await user.sendEmailVerification();
-
-            return true;
-        } catch (error) {
-            if (error.code === 'auth/email-already-in-use') {
-                Alert.alert('Error', 'This email is already linked to another account.');
-            } else {
-                Alert.alert('Error', 'Could not link phone and email. Please try again.');
-            }
-            return false;
-        }
-    };
-
-
     const handleSubmit = async (values) => {
         const user = auth().currentUser;
         if (!user) {
@@ -79,18 +46,6 @@ const EditAccountScreen = () => {
         }
 
         try {
-            let emailUpdated = false;
-
-            // Check if email has changed
-            if (values.email && values.email !== user.email) {
-                emailUpdated = await updateEmail(values.email);
-                if (emailUpdated) {
-                    showToast('success', 'Email successfully linked to your phone!');
-                }
-                else {
-                    return
-                }
-            }
             // Update other profile details
             await dispatch(updateProfile({
                 uid,
@@ -98,26 +53,19 @@ const EditAccountScreen = () => {
                 email: values.email,
                 avatar: values.avatar || '0',
                 upiId: values.upiId
-            })).unwrap();
+            })).unwrap()
 
-            // Reload user state
-            // await user.reload();
-
-            if (emailUpdated) {
-                navigation.replace('AuthStack', { screen: 'VerifyEmail' });
-            } else {
-                navigation.goBack();
-            }
-
+            navigation.goBack()
         } catch (error) {
             Alert.alert('Error', error.message);
         }
     };
 
 
-    if (loading) {
-        return <LoadingScreen />
-    }
+    // if (loading) {
+    //     return <LoadingScreen />
+    // }
+
     return (
 
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -127,8 +75,8 @@ const EditAccountScreen = () => {
                 <View style={styles.card}>
                     <Card.Content>
                         <View style={styles.textContainer}>
-                            <Text variant="headlineMedium" style={{ color: theme.colors.primary }}>Complete Your Profile!</Text>
-                            <Text variant="bodyLarge" style={{ color: theme.colors.secondary, marginTop: rh(1) }}>Let's set up your account quickly</Text>
+                            <Text variant="headlineMedium" style={{ color: theme.colors.primary }}>Hey there!</Text>
+                            <Text variant="bodyLarge" style={{ color: theme.colors.secondary, marginTop: rh(1) }}>Let’s give your profile a quick refresh!</Text>
                         </View>
 
                         <Formik
@@ -230,8 +178,11 @@ const EditAccountScreen = () => {
                                         onPress={handleSubmit}
                                         style={styles.submitBtn}
                                         labelStyle={styles.buttonText}
+                                        loading={loading}
+                                        disabled={loading}
+                                        icon={loading ? 'loading' : ""}
                                     >
-                                        Submit
+                                        Update
                                     </Button>
                                 </View>
                             )}

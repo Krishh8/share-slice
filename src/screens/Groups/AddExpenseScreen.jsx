@@ -181,6 +181,8 @@ const AddExpenseScreen = () => {
                     <View style={[styles.expenseCard, { backgroundColor: theme.colors.background }]}>
                         <Card.Content style={styles.expenseCardContent}>
                             <TextInput
+                                textColor={theme.colors.secondary}
+                                outlineColor={theme.colors.primary}
                                 label="Description"
                                 value={description}
                                 onChangeText={setDescription}
@@ -196,6 +198,8 @@ const AddExpenseScreen = () => {
                                     label="Category"
                                     value={category ? category.label : ''}
                                     mode="outlined"
+                                    textColor={theme.colors.secondary}
+                                    outlineColor={theme.colors.primary}
                                     editable={false}
                                     style={[styles.expenseInput]}
                                     left={category ? <TextInput.Icon icon={category.icon} /> : <TextInput.Icon icon="tag" />}
@@ -208,6 +212,8 @@ const AddExpenseScreen = () => {
                             <TextInput
                                 label="Amount"
                                 value={amount}
+                                textColor={theme.colors.secondary}
+                                outlineColor={theme.colors.primary}
                                 onChangeText={setAmount}
                                 mode="outlined"
                                 keyboardType="numeric"
@@ -220,6 +226,8 @@ const AddExpenseScreen = () => {
                             <TouchableOpacity onPress={() => setPaidModalVisible(true)}>
                                 <TextInput
                                     label="Paid By"
+                                    textColor={theme.colors.secondary}
+                                    outlineColor={theme.colors.primary}
                                     value={
                                         paidBy
                                             ? paidBy.payer
@@ -292,10 +300,11 @@ const AddExpenseScreen = () => {
                                                     ]}
                                                 >
                                                     <View style={styles.memberChipContent}>
-                                                        <Text style={[
-                                                            styles.memberChipName,
-                                                            { color: isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant }
-                                                        ]}>
+                                                        <Text numberOfLines={1}
+                                                            ellipsizeMode="tail" style={[
+                                                                styles.memberChipName,
+                                                                { color: isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant }
+                                                            ]}>
                                                             {member.fullName}
                                                         </Text>
                                                         {amount && (
@@ -318,7 +327,8 @@ const AddExpenseScreen = () => {
                                                     ]}
                                                 >
                                                     <View style={styles.memberChipContent}>
-                                                        <Text style={[styles.memberChipName, { color: theme.colors.primary }]}>
+                                                        <Text numberOfLines={1}
+                                                            ellipsizeMode="tail" style={[styles.memberChipName, { color: theme.colors.primary }]}>
                                                             {member.fullName}
                                                         </Text>
                                                         <Text style={styles.memberChipAmount}>
@@ -421,6 +431,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         borderBottomWidth: rw(0.3),
         paddingBottom: rh(0.5),
+        flexShrink: 1
     },
     memberChipAmount: {
         fontSize: rfs(1.8),

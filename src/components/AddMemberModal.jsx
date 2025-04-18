@@ -1,6 +1,6 @@
-import { FlatList, Keyboard, Linking, StyleSheet, TouchableWithoutFeedback, View } from 'react-native'
+import { FlatList, Keyboard, Linking, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
 import React, { useEffect, useState, useCallback } from 'react'
-import { ActivityIndicator, Button, Modal, Portal, Searchbar, Text, TextInput, useTheme } from 'react-native-paper'
+import { ActivityIndicator, Button, Chip, Divider, IconButton, Modal, Portal, Searchbar, Text, TextInput, useTheme } from 'react-native-paper'
 import { responsiveFontSize as rfs, responsiveHeight as rh, responsiveWidth as rw } from 'react-native-responsive-dimensions'
 import { request, PERMISSIONS, RESULTS, check } from 'react-native-permissions'
 import Contacts from 'react-native-contacts'
@@ -12,7 +12,8 @@ import { addMember } from '../redux/slices/groupSlice'
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import queryString from 'query-string'
 import { showToast } from '../services/toastService'
-import LoadingScreen from '../screens/LoadingScreen'
+import { cachedCheckUserExists, clearUserExistenceCache, handleRefreshUserStatus } from '../services/checkIfUserExists'
+import { sendInviteViaSMS } from '../services/InviteServices'
 
 const AddMemberModal = ({ visible, onDismiss }) => {
     const theme = useTheme()
@@ -24,14 +25,40 @@ const AddMemberModal = ({ visible, onDismiss }) => {
     const [permissionGranted, setPermissionGranted] = useState(false)
     const [manualPhoneNumber, setManualPhoneNumber] = useState('')
     const [manualUserState, setManualUserState] = useState(null)
-    const [loadingContactId, setLoadingContactId] = useState(null)
-    const { groupDetails, loadingGroupDetails } = useSelector(state => state.group)
-    const groupId = groupDetails?.groupId
-    const [checkedUsers, setCheckedUsers] = useState({})
     const [isLoading, setIsLoading] = useState(false)
+    const [checkingManualUser, setCheckingManualUser] = useState(false)
+    const { groupDetails } = useSelector(state => state.group)
+    const groupId = groupDetails?.groupId
 
+    useEffect(() => {
+        checkContactsPermission()
+    }, [checkContactsPermission])
 
-    // Normalize phone number to standard format
+    useEffect(() => {
+        if (!searchQuery || searchQuery.trim() === '') {
+            setFilteredContacts(contacts)
+            setManualUserState(null)
+            return
+        }
+
+        const filtered = contacts.filter(contact =>
+            contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            contact.phoneNumber.replace(/\s+/g, '').includes(searchQuery.replace(/\s+/g, ''))
+        )
+
+        if (filtered.length > 0) {
+            setFilteredContacts(filtered)
+            setManualUserState(null)
+        } else if (/^\d{10}$/.test(searchQuery)) {
+            const formattedNumber = normalizePhoneNumber(searchQuery)
+            setManualPhoneNumber(formattedNumber)
+            handleManualCheck(formattedNumber)
+        } else {
+            setFilteredContacts([])
+            setManualUserState(null)
+        }
+    }, [searchQuery, contacts])
+
     const normalizePhoneNumber = useCallback((phoneNumber) => {
         if (!phoneNumber) return ''
         let cleanedNumber = phoneNumber.replace(/\D+/g, '')
@@ -41,56 +68,12 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         return `+91${cleanedNumber}`
     }, [])
 
-    // Generate invite link for sharing
-    const generateInviteLink = useCallback(async (groupId) => {
-        try {
-            return await dynamicLinks().buildShortLink({
-                link: `https://shareslice.com/groupInvite?groupId=${groupId}`,
-                domainUriPrefix: 'https://sharesliceapp.page.link',
-                android: {
-                    packageName: 'com.shareslice',
-                    fallbackUrl: 'https://play.google.com/store/apps/details?id=com.shareslice'
-                },
-            })
-        } catch (error) {
-            console.error('Error creating invite link:', error)
-            return null
-        }
-    }, [])
-
-    // Send invitation via SMS
-    const sendInviteViaSMS = useCallback(async (phoneNumber) => {
+    const checkUserStatus = useCallback(async (contactList) => {
         setIsLoading(true)
         try {
-            const inviteLink = await generateInviteLink(groupId)
-            console.log(`link: `, inviteLink)
-            if (!inviteLink) {
-                setIsLoading(false)
-                return
-            }
-
-            const message = `Hey! Join my group on ShareSlice using this link: ${inviteLink}`
-            const smsUrl = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`
-            await Linking.openURL(smsUrl)
-        } catch (error) {
-            console.error('Error sending SMS invite:', error)
-        } finally {
-            setIsLoading(false)
-        }
-    }, [generateInviteLink, groupId])
-
-    // Check if users exist in the system
-    const checkUserStatus = useCallback(async (contactList) => {
-        try {
             const updatedContacts = await Promise.all(contactList.map(async (contact) => {
-                setLoadingContactId(contact.id)
                 const formattedNumber = normalizePhoneNumber(contact.phoneNumber)
-                if (checkedUsers[formattedNumber]) {
-                    return { ...contact, phoneNumber: formattedNumber, userState: checkedUsers[formattedNumber] }
-                }
-                const userState = await checkUserExists(formattedNumber)
-                setCheckedUsers(prev => ({ ...prev, [formattedNumber]: userState }))
-
+                const userState = await cachedCheckUserExists(formattedNumber)
                 return { ...contact, phoneNumber: formattedNumber, userState }
             }))
             setContacts(updatedContacts)
@@ -98,15 +81,13 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         } catch (error) {
             console.error('Error checking user status:', error)
         } finally {
-            setLoadingContactId(null)
+            setIsLoading(false)
         }
-    }, [normalizePhoneNumber, checkedUsers])
+    }, [normalizePhoneNumber])
 
-    // Fetch contacts from device
     const fetchContacts = useCallback(async () => {
         setIsLoading(true)
         try {
-            // Try to get cached contacts first
             const storedContacts = await AsyncStorage.getItem("contacts")
             if (storedContacts) {
                 const parsedContacts = JSON.parse(storedContacts)
@@ -116,7 +97,6 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                 return
             }
 
-            // Fetch fresh contacts if none cached
             const contacts = await Contacts.getAll()
             const filteredContacts = contacts
                 .filter(contact => contact.phoneNumbers.length > 0)
@@ -135,7 +115,6 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         }
     }, [checkUserStatus])
 
-    // Check contacts permission
     const checkContactsPermission = useCallback(async () => {
         const status = await check(PERMISSIONS.ANDROID.READ_CONTACTS)
         if (status === RESULTS.GRANTED) {
@@ -144,7 +123,6 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         }
     }, [fetchContacts])
 
-    // Request contacts permission
     const askContactsPermission = useCallback(() => {
         request(PERMISSIONS.ANDROID.READ_CONTACTS).then((status) => {
             if (status === RESULTS.GRANTED) {
@@ -154,87 +132,55 @@ const AddMemberModal = ({ visible, onDismiss }) => {
         })
     }, [fetchContacts])
 
-    // Check manual phone number
+    const handleSendInviteViaSMS = (phoneNumber) => {
+        sendInviteViaSMS(phoneNumber, groupId, setIsLoading)
+    }
 
-
-    // Add member to group
     const handleAddMember = useCallback(async (uid) => {
+        console.log(uid)
         try {
+            onDismiss()
             await dispatch(addMember({ uid, groupId })).unwrap()
             showToast('success', 'Member added successfully.')
+        } catch (error) {
+            showToast('error', "Failed to add Member.", error)
         }
-        catch (error) {
-            showToast('error', "Failed to add Member.")
-        }
-        onDismiss()
-
     }, [dispatch, groupId])
 
-    // Filter contacts based on search query
-    useEffect(() => {
-        if (!searchQuery || searchQuery.trim() === '') {
-            setFilteredContacts(contacts)
-            setManualUserState(null) // Reset manual search state
-            return
-        }
-
-        const filtered = contacts.filter(contact =>
-            contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            contact.phoneNumber.replace(/\s+/g, '').includes(searchQuery.replace(/\s+/g, ''))
-        )
-
-        if (filtered.length > 0) {
-            setFilteredContacts(filtered)
-            setManualUserState(null) // Reset manual search state if found in contacts
-        } else if (/^\d{10}$/.test(searchQuery)) {
-            // If a valid 10-digit number is entered, check manually
-            const formattedNumber = normalizePhoneNumber(searchQuery)
-            setManualPhoneNumber(formattedNumber)
-            handleManualCheck(formattedNumber) // Automatically check user status
-        } else {
-            setFilteredContacts([])
-            setManualUserState(null)
-        }
-    }, [searchQuery, contacts])
-
-    // Modified handleManualCheck to accept input number
     const handleManualCheck = useCallback(async (number) => {
         if (!number) return
-
-        setIsLoading(true)
+        setCheckingManualUser(true)
         try {
-            const userState = await checkUserExists(number)
-            setManualUserState({ phoneNumber: number, ...userState })
+            const userState = await cachedCheckUserExists(number)
+            setManualUserState({ phoneNumber: number, userState })
         } catch (error) {
             console.error('Error checking number:', error)
         } finally {
-            setIsLoading(false)
+            setCheckingManualUser(false)
         }
     }, [])
 
-
-    // Check permission on mount
-    useEffect(() => {
-        checkContactsPermission()
-    }, [checkContactsPermission])
-
-    // Render contact item
     const renderContactItem = ({ item }) => {
         const isMemberAlready = groupDetails.members.some(
             member => member.phoneNumber === item.phoneNumber
         )
 
         return (
-            <View style={styles.contactRow}>
+
+            <View style={[styles.contactRow, { borderColor: theme.colors.secondary }]}>
                 <View style={styles.contactInfo}>
-                    <Text style={styles.contactName}>{item.name}</Text>
-                    <Text style={styles.contactPhone}>{item.phoneNumber}</Text>
+                    <IconButton icon="refresh" onPress={() => clearUserExistenceCache(item.phoneNumber)} size={rfs(3)} />
+                    <View >
+                        <Text style={styles.contactName}>{item.name}</Text>
+                        <Text style={styles.contactPhone}>{item.phoneNumber}</Text>
+                    </View>
                 </View>
-                {item.userState?.exists ? (
+                {item.userState === undefined ? (
+                    <ActivityIndicator size="small" />
+                ) : item.userState.exists ? (
                     <Button
                         mode="contained"
-                        loading={loadingContactId === item.id}
-                        disabled={isMemberAlready || loadingContactId === item.id}
+                        disabled={isMemberAlready}
                         onPress={() => handleAddMember(item.userState.uid)}
                         style={styles.actionButton}
                     >
@@ -242,15 +188,16 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                     </Button>
                 ) : (
                     <Button
-                        loading={isLoading}
                         mode="outlined"
-                        onPress={() => sendInviteViaSMS(item.phoneNumber)}
+                        disabled={isLoading}
+                        onPress={() => handleSendInviteViaSMS(item.phoneNumber)}
                         style={styles.actionButton}
                     >
                         Invite
                     </Button>
                 )}
             </View>
+
         )
     }
 
@@ -279,16 +226,20 @@ const AddMemberModal = ({ visible, onDismiss }) => {
             const isMemberAlready = groupDetails.members.some(
                 member => member.phoneNumber === manualUserState.phoneNumber
             )
+
             return (
-                <View style={styles.contactRow}>
+                <View style={[styles.contactRow, { borderColor: theme.colors.blue }]}>
                     <View style={styles.contactInfo}>
                         <Text style={styles.contactPhone}>{manualUserState.phoneNumber}</Text>
                     </View>
-                    {manualUserState?.exists ? (
+
+                    {checkingManualUser || manualUserState.userState === undefined ? (
+                        <ActivityIndicator size="small" />
+                    ) : manualUserState.userState.exists ? (
                         <Button
                             mode="contained"
                             disabled={isMemberAlready}
-                            onPress={() => handleAddMember(manualUserState.uid)}
+                            onPress={() => handleAddMember(manualUserState.userState.uid)}
                             style={styles.actionButton}
                         >
                             {isMemberAlready ? 'Added' : 'Add'}
@@ -296,7 +247,8 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                     ) : (
                         <Button
                             mode="outlined"
-                            onPress={() => sendInviteViaSMS(manualUserState.phoneNumber)}
+                            disabled={isLoading}
+                            onPress={() => handleSendInviteViaSMS(manualUserState.phoneNumber)}
                             style={styles.actionButton}
                         >
                             Invite
@@ -304,53 +256,76 @@ const AddMemberModal = ({ visible, onDismiss }) => {
                     )}
                 </View>
             )
-        } else if (!isLoading && searchQuery.length >= 10) {
-            return <Text style={styles.emptyListText}>User not found</Text>
+        } else if (!checkingManualUser && searchQuery.length === 10) {
+            return (
+                <Text style={[styles.emptyListText, { color: theme.colors.error }]}>
+                    User not found
+                </Text>
+            )
         }
         return null
     }
 
-    if (loadingGroupDetails) return <LoadingScreen />
-
     return (
-        <Portal>
-            <Modal
-                visible={visible}
-                onDismiss={onDismiss}
-                theme={{
-                    colors: {
-                        backdrop: "rgba(0, 0, 0, 0.7)", // Adjust opacity here (0.3 for lighter effect)
-                    },
-                }}
-                contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.secondaryContainer }]}
-            >
-                <View style={[styles.header]}>
-                    <Text style={[{ fontSize: rfs(2.5) }, { fontWeight: '700' }, { color: theme.colors.onSecondaryContainer }]} >Add a member</Text>
-                    <Button labelStyle={[{ fontSize: rfs(2.5) }]} onPress={() => (onDismiss())}>Done</Button>
-                </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            {/* <View style={{ flex: 1 }}> */}
+            <Portal>
+                <Modal
+                    visible={visible}
+                    onDismiss={onDismiss}
+                    theme={{
+                        colors: {
+                            backdrop: "rgba(0, 0, 0, 0.7)",
+                        },
+                    }}
+                    contentContainerStyle={[
+                        styles.modalContainer,
+                        { backgroundColor: theme.colors.secondaryContainer },
+                    ]}
+                >
+                    <View style={styles.header}>
+                        <Text
+                            style={{
+                                fontSize: rfs(2.5),
+                                fontWeight: "700",
+                                color: theme.colors.onSecondaryContainer,
+                            }}
+                        >
+                            Add a member
+                        </Text>
+                        <Button
+                            labelStyle={{ fontSize: rfs(2.5) }}
+                            onPress={onDismiss}
+                        >
+                            Done
+                        </Button>
+                    </View>
 
-                <Searchbar
-                    style={styles.searchbar}
-                    placeholder="Search friends"
-                    onChangeText={setSearchQuery}
-                    value={searchQuery}
-                    loading={isLoading}
-                />
+                    <Searchbar
+                        style={styles.searchbar}
+                        placeholder="Search friends"
+                        onChangeText={setSearchQuery}
+                        value={searchQuery}
+                        loading={isLoading}
+                    />
 
-                {!permissionGranted && (
-                    <Button
-                        mode='contained'
-                        style={styles.allowBtn}
-                        onPress={askContactsPermission}
-                    >
-                        Allow contacts
-                    </Button>
-                )}
+                    {!permissionGranted && (
+                        <Button
+                            mode="contained"
+                            style={styles.allowBtn}
+                            onPress={askContactsPermission}
+                        >
+                            Allow contacts
+                        </Button>
+                    )}
 
-                {renderResults()}
+                    {renderResults()}
+                </Modal>
+            </Portal>
+            {/* </View> */}
+        </TouchableWithoutFeedback>
 
-            </Modal>
-        </Portal>
+
     )
 }
 
@@ -378,14 +353,21 @@ const styles = StyleSheet.create({
     },
     contactRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        justifyContent: 'space-between',
+        paddingVertical: rh(1),
+        borderBottomWidth: rw(0.3)
+    },
+    contactInfo: {
+        flexDirection: 'row',
+        alignItems: 'center'
     },
     allowBtn: {
         marginTop: rh(1),
     },
+    actionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    }
 
 })

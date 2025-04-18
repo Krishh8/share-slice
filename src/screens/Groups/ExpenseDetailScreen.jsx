@@ -83,7 +83,8 @@ const ExpenseDetailScreen = () => {
                                 style={{ backgroundColor: theme.colors.primary }}
                             />
                             <View style={styles.expenseInfo}>
-                                <Text style={[styles.expenseDescription, { color: theme.colors.onSurface }]}>
+                                <Text numberOfLines={1}
+                                    ellipsizeMode="tail" style={[styles.expenseDescription, { color: theme.colors.onSurface }]}>
                                     {expenseDetails?.description}
                                 </Text>
                                 <Chip
@@ -141,7 +142,8 @@ const ExpenseDetailScreen = () => {
                                 style={[styles.sectionIcon, { backgroundColor: theme.colors.primary }]}
                                 color={theme.colors.onPrimary}
                             />
-                            <Text style={[styles.createdByText, { color: theme.colors.onSurfaceVariant }]}>
+                            <Text numberOfLines={1}
+                                ellipsizeMode="tail" style={[styles.createdByText, { color: theme.colors.onSurfaceVariant, }]}>
                                 {expenseDetails?.createdByDetails.fullName || "Unknown"}
                             </Text>
                         </View>
@@ -169,7 +171,8 @@ const ExpenseDetailScreen = () => {
                                             style={[styles.sectionIcon, { backgroundColor: theme.colors.primary }]}
                                             color={theme.colors.onPrimary}
                                         />
-                                        <Text style={[styles.payerName, { color: theme.colors.onSurface }]}>{payer.fullName}</Text>
+                                        <Text numberOfLines={1}
+                                            ellipsizeMode="tail" style={[styles.payerName, { color: theme.colors.onSurface }]}>{payer.fullName}</Text>
                                     </View>
                                     <View style={styles.shareContainer}>
                                         <Chip
@@ -208,7 +211,8 @@ const ExpenseDetailScreen = () => {
                                             style={[styles.sectionIcon, { backgroundColor: theme.colors.primary }]}
                                             color={theme.colors.onPrimary}
                                         />
-                                        <Text style={[styles.participantName, { color: theme.colors.onSurface }]}>
+                                        <Text numberOfLines={1}
+                                            ellipsizeMode="tail" style={[styles.participantName, { color: theme.colors.onSurface }]}>
                                             {participant.fullName}
                                         </Text>
                                     </View>
@@ -322,6 +326,7 @@ const styles = StyleSheet.create({
         fontSize: rfs(2),
         paddingVertical: rh(1),
         marginLeft: rw(3),
+        flexShrink: 1
     },
     payerItem: {
         flexDirection: "row",
@@ -332,10 +337,12 @@ const styles = StyleSheet.create({
     payerInfo: {
         flexDirection: "row",
         alignItems: "center",
+        flex: 1
     },
     payerName: {
         marginLeft: rw(3),
         fontSize: rfs(2),
+        flexShrink: 1
     },
     payerAmount: {
         fontSize: rfs(2),
@@ -355,6 +362,7 @@ const styles = StyleSheet.create({
     participantName: {
         marginLeft: rw(3),
         fontSize: rfs(2),
+        flexShrink: 1
     },
     shareContainer: {
         alignItems: "flex-end",
